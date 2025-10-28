@@ -364,14 +364,42 @@ const placeOrder = async (req, res) => {
 
 ---
 
+## ✅ Faz 2: İleri Özellikler (Tamamlandı)
+
+### 5. Raporlama Sistemi
+
+**Dosya:** `backend/controllers/ReportController.js`, `backend/routes/ReportRoute.js`
+
+**Özellikler:**
+- Günlük satış raporu (gelir, sipariş, ödeme yöntem dağılımı)
+- Haftalık satış trendleri (günlük breakdown)
+- Aylık satış istatistikleri
+- Ürün analizi (en çok satan ürünler, gelir, miktar)
+- Müşteri davranış analizi (tekrar oranı, top müşteriler)
+- Teslimat durumu raporu
+- Dashboard istatistikleri (KPI, büyüme metrikleri)
+
+**Admin Panel:** `admin/src/pages/Reports.jsx`
+- İnteraktif dashboard
+- Günlük satış raporu (tarih seçici)
+- Ürün analizi tablosu
+- Modern, renkli UI
+
+**API Endpoints:**
+- `GET /api/report/daily-sales` - Günlük satış verileri
+- `GET /api/report/weekly-sales` - Haftalık satış trendleri
+- `GET /api/report/monthly-sales` - Aylık istatistikler
+- `GET /api/report/product-analytics` - Ürün performans analitiği
+- `GET /api/report/user-behavior` - Müşteri davranış analizi
+- `GET /api/report/delivery-status` - Teslimat durum raporu
+- `GET /api/report/dashboard` - Genel sistem dashboard'u
+
+---
+
 ## 🎯 Bir Sonraki Adımlar
 
-### Faz 2 (Devam Eden)
-- ✅ SMS entegrasyonu
-- 🔄 Raporlama sistemi
+### Faz 3 (Planlı)
 - 🔄 Gerçek kurye entegrasyonu
-
-### Faz 3
 - Multi-admin sistemi
 - Logging ve error tracking
 - Önbellek sistemi (Redis)
@@ -390,5 +418,5 @@ Sorular veya öneriler için: backend@tulumbak.dev
 ---
 
 **Son Güncelleme:** 2025-10-28  
-**Durum:** Faz 1 tamamlandı, Faz 2 devam ediyor
+**Durum:** Faz 1 ve Faz 2 tamamlandı, Faz 3 planlanıyor
 

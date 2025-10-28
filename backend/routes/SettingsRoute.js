@@ -20,4 +20,3 @@ settingsRouter.post('/test-email', adminAuth, testEmail);
 settingsRouter.delete('/', adminAuth, deleteSetting);
 
 export default settingsRouter;
-
