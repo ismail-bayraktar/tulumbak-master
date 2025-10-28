@@ -73,7 +73,17 @@ const addSlider = async (req, res) => {
             order, startDate, endDate
         } = req.body;
 
-        let image = req.file ? `/uploads/${req.file.filename}` : '';
+        let image = '';
+
+        // Option 1: File path (original method)
+        if (req.file) {
+            image = `/uploads/${req.file.filename}`;
+        }
+
+        // Option 2: Base64 (alternative method - uncomment to use)
+        // if (req.body.imageBase64) {
+        //     image = req.body.imageBase64;
+        // }
 
         const slider = new Slider({
             template: template || 'split-left',

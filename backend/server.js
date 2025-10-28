@@ -25,6 +25,7 @@ import RateLimiterService from "./services/RateLimiter.js";
 import logger, { logInfo } from "./utils/logger.js";
 import { initSentry } from "./utils/sentry.js";
 import { errorHandler, notFoundHandler } from "./middleware/errorHandler.js";
+import { swaggerDocs } from "./config/swagger.js";
 
 // APP CONFIG
 const app = express();
@@ -72,16 +73,41 @@ app.use(ejsLayouts);
 
 
 // MIDDLEWARES
-app.use(helmet()); // Security headers
+app.use(helmet({
+    crossOriginResourcePolicy: { policy: "cross-origin" }
+})); // Security headers
 app.use(express.json({ limit: '10mb' })); // Limit payload size
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
-app.use(cors());
+app.use(cors({
+    origin: ['http://localhost:5173', 'http://localhost:5174', 'http://localhost:3000', 'http://localhost:4001'], // Admin and frontend dev servers
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'token']
+}));
 
 // Rate limiting
 app.use('/api', RateLimiterService.createGeneralLimiter(100, 15 * 60 * 1000)); // 100 requests per 15 minutes
 
-// Static files for uploads
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+// Static files for uploads with CORS - Alternative 1: Direct serve
+app.use('/uploads', cors(), express.static(path.join(__dirname, 'uploads')));
+
+// Alternative 2: Image proxy endpoint (ACTIVE SOLUTION)
+app.get('/api/image-proxy/:filename', (req, res) => {
+    const filename = req.params.filename;
+    const imagePath = path.join(__dirname, 'uploads', filename);
+
+    // Set CORS headers
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Methods', 'GET');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+
+    // Send image
+    res.sendFile(imagePath, (err) => {
+        if (err) {
+            res.status(404).json({ error: 'Image not found' });
+        }
+    });
+});
 
 // API ENDPOINTS
 app.use('/api/user', userRouter)
@@ -97,6 +123,9 @@ app.use('/api/corporate', corporateRouter);
 app.use('/api/settings', settingsRouter);
 app.use('/api/report', reportRouter);
 app.use('/api/admin', adminRouter);
+
+// Swagger Documentation
+swaggerDocs(app);
 app.get('/paytr/payment', (req, res) => {
     const token = req.query.token;
     res.render('layout', { iframetoken: token });
