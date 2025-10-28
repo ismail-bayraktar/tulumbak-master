@@ -145,7 +145,8 @@ const OrderCard = ({ order, token, onStatusUpdate }) => {
                 >
                     <option value="Siparişiniz Alındı">Siparişiniz Alındı</option>
                     <option value="Hazırlanıyor">Hazırlanıyor</option>
-                    <option value="Kargoya Verildi">Kargoya Verildi</option>
+                    <option value="Kurye Ata">Kurye Atandı</option>
+                    <option value="Yolda">Yolda</option>
                     <option value="Teslim Edildi">Teslim Edildi</option>
                     <option value="İptal Edildi">İptal Edildi</option>
                 </select>
