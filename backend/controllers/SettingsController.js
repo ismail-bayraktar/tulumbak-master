@@ -3,7 +3,7 @@ import settingsModel from "../models/SettingsModel.js";
 /**
  * Get all settings or by category
  */
-export const getSettings = async (req, res) => {
+const getSettings = async (req, res) => {
   try {
     const { category } = req.query;
     
@@ -30,7 +30,7 @@ export const getSettings = async (req, res) => {
 /**
  * Get single setting by key
  */
-export const getSetting = async (req, res) => {
+const getSetting = async (req, res) => {
   try {
     const { key } = req.body;
     const setting = await settingsModel.findOne({ key });
@@ -49,7 +49,7 @@ export const getSetting = async (req, res) => {
 /**
  * Create or update setting
  */
-export const updateSetting = async (req, res) => {
+const updateSetting = async (req, res) => {
   try {
     const { key, value, category, description } = req.body;
     
@@ -78,7 +78,7 @@ export const updateSetting = async (req, res) => {
 /**
  * Update multiple settings at once
  */
-export const updateSettings = async (req, res) => {
+const updateSettings = async (req, res) => {
   try {
     const { settings } = req.body; // Array of {key, value, category}
     
@@ -111,7 +111,7 @@ export const updateSettings = async (req, res) => {
 /**
  * Delete setting
  */
-export const deleteSetting = async (req, res) => {
+const deleteSetting = async (req, res) => {
   try {
     const { key } = req.body;
     
@@ -165,7 +165,7 @@ const testEmail = async (req, res) => {
 /**
  * Initialize default settings if not exists
  */
-export const initDefaultSettings = async () => {
+const initDefaultSettings = async () => {
   try {
     const defaultSettings = [
       {
