@@ -1,5 +1,6 @@
 import express from 'express';
 import cors from 'cors';
+import helmet from 'helmet';
 import "dotenv/config"
 import connectDB from "./config/mongodb.js";
 import connectCloudinary from "./config/cloudinary.js";
@@ -16,6 +17,7 @@ import deliveryRouter from "./routes/DeliveryRoute.js";
 import courierRouter from "./routes/CourierRoute.js";
 import couponRouter from "./routes/CouponRoute.js";
 import corporateRouter from "./routes/CorporateRoute.js";
+import RateLimiterService from "./services/RateLimiter.js";
 
 // APP CONFIG
 const app = express();
@@ -37,8 +39,13 @@ app.use(ejsLayouts);
 
 
 // MIDDLEWARES
-app.use(express.json());
+app.use(helmet()); // Security headers
+app.use(express.json({ limit: '10mb' })); // Limit payload size
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.use(cors());
+
+// Rate limiting
+app.use('/api', RateLimiterService.createGeneralLimiter(100, 15 * 60 * 1000)); // 100 requests per 15 minutes
 
 // Static files for uploads
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));

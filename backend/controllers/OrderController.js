@@ -1,5 +1,7 @@
 import orderModel from "../models/OrderModel.js";
 import userModel from "../models/UserModel.js";
+import emailService from "../services/EmailService.js";
+import { reduceStock, checkLowStockAlert } from "../middleware/StockCheck.js";
 
 // placing orders using cod method
 const placeOrder = async (req, res) => {
@@ -18,8 +20,27 @@ const placeOrder = async (req, res) => {
             giftNote,
         }
         const newOrder = new orderModel(orderData);
+        
+        // Reduce stock for all items
+        await reduceStock(items);
+        
         await newOrder.save();
         await userModel.findByIdAndUpdate(userId, {cartData: {}});
+        
+        // Check for low stock alerts
+        for (const item of items) {
+            await checkLowStockAlert(item.id);
+        }
+        
+        // Send order confirmation email
+        const user = await userModel.findById(userId);
+        if (user && user.email) {
+            await emailService.sendOrderConfirmation(
+                { ...orderData, orderId: newOrder._id.toString() },
+                user.email
+            );
+        }
+        
         res.json({success: true, message: "Order successfully placed"});
     } catch (error) {
         console.log(error);
@@ -64,7 +85,38 @@ const userOrders = async (req, res) => {
 const updateStatus = async (req, res) => {
     try {
         const { orderId, status } = req.body;
+        
+        // Get order before update
+        const order = await orderModel.findById(orderId);
+        if (!order) {
+            return res.json({success: false, message: "Order not found"});
+        }
+        
         await orderModel.findByIdAndUpdate(orderId, {status});
+        
+        // Send status update email
+        const user = await userModel.findById(order.userId);
+        if (user && user.email) {
+            await emailService.sendOrderStatusUpdate(
+                { ...order.toObject(), orderId: order._id.toString() },
+                status,
+                user.email
+            );
+            
+            // Send special emails based on status
+            if (status === 'Hazırlanıyor') {
+                await emailService.sendCourierAssignment(
+                    { ...order.toObject(), orderId: order._id.toString() },
+                    user.email
+                );
+            } else if (status === 'Teslim Edildi') {
+                await emailService.sendDeliveryCompleted(
+                    { ...order.toObject(), orderId: order._id.toString() },
+                    user.email
+                );
+            }
+        }
+        
         res.json({success: true, message: "Order status successfully updated"});
     } catch (error) {
         console.log(error);
