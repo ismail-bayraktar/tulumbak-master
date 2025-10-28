@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import Cookies from 'js-cookie';
+import { backendUrl } from '../App.jsx';
 
-const Reports = () => {
+const Reports = ({ token }) => {
   const [loading, setLoading] = useState(false);
   const [reports, setReports] = useState({
     dashboard: null,
     dailySales: null,
+    weeklySales: null,
     weeklySales: null,
     monthlySales: null,
     productAnalytics: null,
@@ -16,18 +17,19 @@ const Reports = () => {
   const [activeTab, setActiveTab] = useState('dashboard');
   const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
 
-  const token = Cookies.get('jwt');
-
   const fetchReport = async (endpoint, key) => {
     try {
       setLoading(true);
-      const response = await axios.get(`${import.meta.env.VITE_APP_API}/${endpoint}`, {
-        headers: { 'Authorization': `Bearer ${token}` },
+      const response = await axios.get(`${backendUrl}/${endpoint}`, {
+        headers: { 'token': token },
         params: key === 'dailySales' ? { date } : {}
       });
       
       if (response.data.success) {
-        setReports(prev => ({ ...prev, [key]: response.data[key] || response.data.report || response.data.analytics || response.data.behavior || response.data.delivery || response.data.dashboard }));
+        setReports(prev => ({ 
+          ...prev, 
+          [key]: response.data[key] || response.data.report || response.data.analytics || response.data.behavior || response.data.delivery || response.data.dashboard 
+        }));
       }
     } catch (error) {
       console.error(`Error fetching ${key}:`, error);
