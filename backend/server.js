@@ -18,6 +18,7 @@ import courierRouter from "./routes/CourierRoute.js";
 import couponRouter from "./routes/CouponRoute.js";
 import corporateRouter from "./routes/CorporateRoute.js";
 import settingsRouter from "./routes/SettingsRoute.js";
+import reportRouter from "./routes/ReportRoute.js";
 import RateLimiterService from "./services/RateLimiter.js";
 
 // APP CONFIG
@@ -73,6 +74,7 @@ app.use('/api/delivery', deliveryRouter);
 app.use('/api/coupon', couponRouter);
 app.use('/api/corporate', corporateRouter);
 app.use('/api/settings', settingsRouter);
+app.use('/api/report', reportRouter);
 app.get('/paytr/payment', (req, res) => {
     const token = req.query.token;
     res.render('layout', { iframetoken: token });
