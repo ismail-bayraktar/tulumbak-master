@@ -145,6 +145,26 @@ const Product = () => {
                     </button>
                     <hr className={"mt-8 sm:w-4/5"}/>
                     
+                    {/* Hızlı Özellikler */}
+                    {productData.freshType && (
+                        <div className="mt-6 flex gap-2">
+                            <span className="px-3 py-1 bg-orange-100 text-orange-700 text-xs rounded">
+                                {productData.freshType === 'taze' ? '🍃 Taze' : '✨ Kuru'}
+                            </span>
+                            {productData.packaging === 'özel' && (
+                                <span className="px-3 py-1 bg-purple-100 text-purple-700 text-xs rounded">🎁 Özel Ambalaj</span>
+                            )}
+                            {productData.giftWrap && (
+                                <span className="px-3 py-1 bg-pink-100 text-pink-700 text-xs rounded">🎀 Hediye Paketi</span>
+                            )}
+                            {productData.labels && productData.labels.length > 0 && (
+                                productData.labels.map((label, idx) => (
+                                    <span key={idx} className="px-3 py-1 bg-blue-100 text-blue-700 text-xs rounded">{label}</span>
+                                ))
+                            )}
+                        </div>
+                    )}
+
                     {/* Ürün Bilgi Kartları */}
                     <div className="mt-8 space-y-4">
                         {productData.allergens && (

@@ -138,6 +138,10 @@ const Collection = () => {
                                 id={item._id}
                                 price={item.basePrice}
                                 image={item.image}
+                                freshType={item.freshType}
+                                packaging={item.packaging}
+                                giftWrap={item.giftWrap}
+                                labels={item.labels}
                             />
                         ))
                     }

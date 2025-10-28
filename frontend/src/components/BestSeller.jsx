@@ -30,6 +30,10 @@ const BestSeller = () => {
                             image={item.image}
                             name={item.name}
                             price={item.basePrice}
+                            freshType={item.freshType}
+                            packaging={item.packaging}
+                            giftWrap={item.giftWrap}
+                            labels={item.labels}
                         />
                     ))
                 }

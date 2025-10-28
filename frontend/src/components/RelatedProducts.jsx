@@ -30,6 +30,10 @@ const RelatedProducts = ({category, subCategory}) => {
                             name={item.name}
                             price={item.basePrice}
                             image={item.image}
+                            freshType={item.freshType}
+                            packaging={item.packaging}
+                            giftWrap={item.giftWrap}
+                            labels={item.labels}
                         />
                     ))
                 }

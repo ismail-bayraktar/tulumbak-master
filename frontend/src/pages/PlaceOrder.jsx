@@ -8,11 +8,61 @@ import {toast} from "react-toastify";
 const PlaceOrder = () => {
     const [method, setMethod] = useState("HAVALE/EFT");
     const [ip, setIp] = useState("");
+    const [deliveryZone, setDeliveryZone] = useState("");
+    const [zones, setZones] = useState([]);
+    const [deliveryFee, setDeliveryFee] = useState(0);
+    const [couponCode, setCouponCode] = useState("");
+    const [couponDiscount, setCouponDiscount] = useState(0);
+    const [bankInfo, setBankInfo] = useState(null);
+    const [timeSlots, setTimeSlots] = useState([]);
+    const [selectedTimeSlot, setSelectedTimeSlot] = useState("");
+    
     useEffect(() => {
         fetch("https://api64.ipify.org?format=json")
             .then((res) => res.json())
             .then((data) => setIp(data.ip));
+        fetchZones();
+        fetchBankInfo();
+        fetchTimeSlots();
     }, []);
+
+    const fetchZones = async () => {
+        try {
+            const response = await axios.get(backendUrl + '/api/delivery/zones');
+            if (response.data.success) setZones(response.data.zones);
+        } catch (error) { console.error(error); }
+    };
+
+    const fetchBankInfo = async () => {
+        try {
+            const response = await axios.get(backendUrl + '/api/order/bank-info');
+            if (response.data.success) setBankInfo(response.data.bank);
+        } catch (error) { console.error(error); }
+    };
+
+    const fetchTimeSlots = async () => {
+        try {
+            const response = await axios.get(backendUrl + '/api/delivery/timeslots');
+            if (response.data.success) setTimeSlots(response.data.slots);
+        } catch (error) { console.error(error); }
+    };
+
+    const handleCouponApply = async () => {
+        if (!couponCode.trim()) return;
+        try {
+            const cartAmount = getCartAmount();
+            const response = await axios.post(backendUrl + '/api/coupon/validate', { code: couponCode, cartTotal: cartAmount });
+            if (response.data.success) {
+                setCouponDiscount(response.data.discount);
+                toast.success('Kupon uygulandı');
+            } else {
+                toast.error(response.data.message);
+            }
+        } catch (error) {
+            console.error(error);
+            toast.error('Kupon kontrolü sırasında hata oluştu');
+        }
+    };
 
     const {
         navigate,
@@ -129,9 +179,13 @@ const PlaceOrder = () => {
             switch (method) {
                 // api calls for cod
                 case 'HAVALE/EFT': {
-                    const response = await axios.post(backendUrl + '/api/order/place', orderData, {headers: {token}});
-                    //console.log(response.data);
-
+                    const finalOrderData = {
+                        ...orderData,
+                        paymentMethod: method,
+                        codFee: method === 'KAPIDA' ? 10 : 0,
+                        delivery: deliveryZone ? { zoneId: deliveryZone, timeSlotId: '', sameDay: false } : {}
+                    };
+                    const response = await axios.post(backendUrl + '/api/order/place', finalOrderData, {headers: {token}});
                     if (response.data.success) {
                         setCartItems({});
                         navigate("/orders");
@@ -270,12 +324,80 @@ const PlaceOrder = () => {
 
                 </div>
 
+                </div>
+
+            {/* DELIVERY ZONE SELECTION */}
+            <div className={"mt-4"}>
+                <p className={"mb-2 font-medium"}>Teslimat Bölgesi</p>
+                <select
+                    value={deliveryZone}
+                    onChange={(e) => {
+                        setDeliveryZone(e.target.value);
+                        const zone = zones.find(z => z._id === e.target.value);
+                        if (zone) setDeliveryFee(zone.fee);
+                    }}
+                    className={"w-full border border-gray-300 rounded py-2 px-3"}
+                >
+                    <option value="">Bölge seçiniz</option>
+                    {zones.map((zone) => (
+                        <option key={zone._id} value={zone._id}>
+                            {zone.district} - {zone.fee}₺
+                        </option>
+                    ))}
+                </select>
             </div>
+
+            {/* COUPON INPUT */}
+            <div className={"mt-4"}>
+                <p className={"mb-2 font-medium"}>Kupon Kodu</p>
+                <div className="flex gap-2">
+                    <input
+                        type="text"
+                        value={couponCode}
+                        onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
+                        placeholder="Kupon kodu girin"
+                        className="flex-1 border border-gray-300 rounded py-2 px-3"
+                    />
+                    <button
+                        type="button"
+                        onClick={handleCouponApply}
+                        className="px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded"
+                    >
+                        Uygula
+                    </button>
+                </div>
+                {couponDiscount > 0 && <p className="text-green-600 text-sm mt-2">İndirim: {couponDiscount.toFixed(2)}₺</p>}
+            </div>
+
+            {/* TIME SLOT SELECTION */}
+            {deliveryZone && timeSlots.length > 0 && (
+                <div className="mt-4">
+                    <p className="mb-2 font-medium">Teslimat Zamanı</p>
+                    <select
+                        value={selectedTimeSlot}
+                        onChange={(e) => setSelectedTimeSlot(e.target.value)}
+                        className="w-full border border-gray-300 rounded py-2 px-3"
+                    >
+                        <option value="">Zaman aralığı seçiniz</option>
+                        {timeSlots.map((slot) => (
+                            <option key={slot._id} value={slot._id}>
+                                {slot.label} ({slot.start} - {slot.end})
+                            </option>
+                        ))}
+                    </select>
+                </div>
+            )}
 
             { /* RIGHT SIDE */}
             <div className={"mt-8"}>
                 <div className={"mt-8 min-w-80"}>
                     <CartTotal/>
+                    {deliveryFee > 0 && (
+                        <div className="flex justify-between text-sm mt-2">
+                            <p>Teslimat Ücreti</p>
+                            <p>{currency} {deliveryFee.toFixed(2)}</p>
+                        </div>
+                    )}
                 </div>
 
                 <div className={"mt-12"}>
@@ -305,6 +427,11 @@ const PlaceOrder = () => {
                             />
                         </div>
 */}
+                        <div onClick={() => setMethod('KAPIDA')}
+                             className={"flex items-center gap-3 border p-2 px-3 cursor-pointer"}>
+                            <p className={`min-w-3.5 h-3.5 border rounded-full ${method === 'KAPIDA' ? 'bg-green-400' : ''}`}></p>
+                            <p className={"text-gray-800 text-sm font-medium mx-4"}>KAPIDA ÖDEME</p>
+                        </div>
                         <div onClick={() => setMethod('HAVALE/EFT')}
                              className={"flex items-center gap-3 border p-2 px-3 cursor-pointer"}>
                             <p className={`min-w-3.5 h-3.5 border rounded-full ${method === 'HAVALE/EFT' ? 'bg-green-400' : ''}`}></p>
@@ -315,20 +442,24 @@ const PlaceOrder = () => {
                             <p className="text-gray-800 text-sm font-medium mx-4">KREDİ/BANKA KARTI</p>
                         </div>
                     </div>
-                    {method === "HAVALE/EFT"
+                    {method === "HAVALE/EFT" && bankInfo
                         ? (
                             <div>
                                 <div className={"flex items-center justify-center border mt-4 p-2 px-3"}>
-                                    <p className={"text-gray-800 text-sm font-medium mx-4"}>IBAN </p>
+                                    <p className={"text-gray-800 text-sm font-medium mx-4"}>HAVALE / EFT BİLGİLERİ</p>
                                 </div>
-                                <div className={"flex items-center border p-2 px-3"}>
-                                    <p className={"text-gray-800 text-sm font-medium mx-4"}>MEHMET ÇOBAN </p>
-                                    <p className={"text-gray-800 text-sm font-medium mx-4"}>TR47 0001 0005 0439 5779
-                                        1550
-                                        06</p>
+                                <div className={"border p-2 px-3"}>
+                                    <p className={"text-gray-800 text-sm font-medium"}>Hesap Adı: {bankInfo.accountName}</p>
+                                    <p className={"text-gray-800 text-sm font-medium"}>Banka: {bankInfo.bankName}</p>
+                                    <p className={"text-gray-800 text-sm font-medium"}>IBAN: {bankInfo.iban}</p>
                                 </div>
                             </div>
                         ) : null}
+                    {method === "KAPIDA" && (
+                        <div className="border mt-4 p-2 px-3 text-sm text-orange-600">
+                            Kapıda ödeme ek ücreti: 10₺ eklenecektir.
+                        </div>
+                    )}
 
 
                     <div className={"w-full text-end mt-8"}>

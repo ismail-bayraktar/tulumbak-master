@@ -24,6 +24,14 @@ const Add = ({ token }) => {
     const [ingredients, setIngredients] = useState("");
     const [shelfLife, setShelfLife] = useState("");
     const [storageInfo, setStorageInfo] = useState("");
+    
+    // Yeni alanlar
+    const [weights, setWeights] = useState([]);
+    const [freshType, setFreshType] = useState("taze");
+    const [packaging, setPackaging] = useState("standart");
+    const [giftWrap, setGiftWrap] = useState(false);
+    const [labels, setLabels] = useState([]);
+    const [labelInput, setLabelInput] = useState("");
 
     const availableSizes = [250, 500, 1000, 2000]; // Gramajlar: 250gr, 500gr, 1kg, 2kg
 
@@ -44,6 +52,13 @@ const Add = ({ token }) => {
             formData.append("ingredients", ingredients);
             formData.append("shelfLife", shelfLife);
             formData.append("storageInfo", storageInfo);
+            
+            // Yeni alanlar
+            weights.forEach((w) => formData.append("weights", w));
+            formData.append("freshType", freshType);
+            formData.append("packaging", packaging);
+            formData.append("giftWrap", giftWrap);
+            labels.forEach((label) => formData.append("labels", label));
 
             image1 && formData.append("image1", image1);
             image2 && formData.append("image2", image2);
@@ -63,6 +78,16 @@ const Add = ({ token }) => {
                 setPrice("");
                 setSizes([]);
                 setStock("");
+                setAllergens("");
+                setIngredients("");
+                setShelfLife("");
+                setStorageInfo("");
+                setWeights([]);
+                setFreshType("taze");
+                setPackaging("standart");
+                setGiftWrap(false);
+                setLabels([]);
+                setPersonCounts([]);
             } else {
                 toast.error(response.data.message);
             }
@@ -277,6 +302,71 @@ const Add = ({ token }) => {
                     className="w-full px-3 py-2"
                     placeholder="Örn: Kuru ve serin yerde saklayın, buzdolabılır"
                 />
+            </div>
+
+            {/* YENİ ALANLAR */}
+            <div className="w-full">
+                <p className="mb-2">Taze/Kuru</p>
+                <select
+                    value={freshType}
+                    onChange={(e) => setFreshType(e.target.value)}
+                    className="w-full px-3 py-2"
+                >
+                    <option value="taze">Taze</option>
+                    <option value="kuru">Kuru</option>
+                </select>
+            </div>
+
+            <div className="w-full">
+                <p className="mb-2">Ambalaj</p>
+                <select
+                    value={packaging}
+                    onChange={(e) => setPackaging(e.target.value)}
+                    className="w-full px-3 py-2"
+                >
+                    <option value="standart">Standart</option>
+                    <option value="özel">Özel Ambalaj</option>
+                </select>
+            </div>
+
+            <div className="flex gap-2">
+                <input
+                    type="checkbox"
+                    checked={giftWrap}
+                    onChange={(e) => setGiftWrap(e.target.checked)}
+                    id="giftWrap"
+                />
+                <label htmlFor="giftWrap" className="cursor-pointer">Hediye Paketi Seçeneği</label>
+            </div>
+
+            <div className="w-full">
+                <p className="mb-2">Etiketler (örn: Hemen Yenir, Servis Gerektirir)</p>
+                <div className="flex gap-2 mb-2">
+                    <input
+                        type="text"
+                        value={labelInput}
+                        onChange={(e) => setLabelInput(e.target.value)}
+                        onKeyPress={(e) => {
+                            if (e.key === 'Enter') {
+                                e.preventDefault();
+                                if (labelInput.trim() && !labels.includes(labelInput.trim())) {
+                                    setLabels([...labels, labelInput.trim()]);
+                                    setLabelInput("");
+                                }
+                            }
+                        }}
+                        className="flex-1 px-3 py-2"
+                        placeholder="Etiket yazıp Enter'a basın"
+                    />
+                </div>
+                <div className="flex gap-2 flex-wrap">
+                    {labels.map((label, idx) => (
+                        <span key={idx} className="px-3 py-1 bg-gray-200 rounded">
+                            {label}
+                            <button type="button" onClick={() => setLabels(labels.filter((_, i) => i !== idx))} className="ml-2">×</button>
+                        </span>
+                    ))}
+                </div>
             </div>
             
             <div className={"flex gap-2 mt-2"}>

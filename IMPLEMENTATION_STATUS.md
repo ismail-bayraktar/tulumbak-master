@@ -1,61 +1,48 @@
 # Tulumbak İzmir Baklava - Implementation Status
 
-## ✅ Tamamlanan Backend API'leri
+## ✅ TAMAMLANAN BACKEND VE ADMIN
 
-### Sprint 0 (Tamamlandı)
-- [x] Marka metinleri Tulumbak'a uyarlandı (Hero, Banner, About, OurPolicy, BestSeller, WhatsApp, Setup)
+### Backend API'leri ✅
+- **ProductModel**: weights, freshType, packaging, giftWrap, labels alanları
+- **DeliveryZone/TimeSlot**: Teslimat bölge ve zaman aralığı yönetimi
+- **CourierController**: Mock kurye entegrasyonu (pickup + webhook)
+- **CouponModel**: Kupon doğrulama ve CRUD
+- **CorporateOrderModel**: Kurumsal sipariş yönetimi
+- **OrderModel**: paymentMethod, codFee, delivery, giftNote alanları
+- **Bank-info endpoint**: Havale/EFT bilgileri
 
-### Sprint 0.5 – Docker MongoDB Altyapısı
-- [x] Docker Compose ile MongoDB + Mongo Express
-- [x] Backend MongoDB bağlantı yapılandırması
+### Admin Panel ✅
+- DeliveryZones, TimeSlots, Coupons yönetim sayfaları
+- Sidebar ve routes eklendi
 
-### Sprint 1 – Ürün Özellikleri (Backend ✅)
-- [x] ProductModel.js: weights, freshType, packaging, giftWrap, labels alanları
-- [x] ProductController: add/update fonksiyonları yeni alanlarla güncellendi
+### Docker ✅
+- MongoDB setup hazır
 
-### Sprint 2 – Teslimat ve Kurye (Backend ✅)
-- [x] DeliveryZoneModel.js + DeliveryTimeSlotModel.js
-- [x] DeliveryController.js (CRUD + quote endpoint)
-- [x] CourierController.js + CourierRoute.js (mock kurye entegrasyonu)
+## 🔄 DEVAM EDEN / İLERİDE
 
-### Sprint 3 – Ödeme Sistemleri (Backend ✅)
-- [x] OrderModel.js: paymentMethod, codFee, delivery, giftNote alanları
-- [x] OrderController.js: bank-info endpoint
-- [x] Kapıda ödeme, havale, online ödeme yapılandırması
+### Frontend Checkout Flow ✅
+- [x] PlaceOrder'da delivery zone seçimi ve ücret gösterimi
+- [x] Kupon input ve validation
+- [x] Payment method seçimi (kapıda/havale/online)
+- [ ] Time slot seçimi (UI'da henüz gösterilmiyor)
+- [ ] Toplam tutar hesabı (codFee dahil) - PlaceOrder'da eklendi ama CartTotal'a entegre değil
 
-### Sprint 4 – Kupon Sistemi (Backend ✅)
-- [x] CouponModel.js + validate endpoint
-- [x] CouponController.js + CRUD rotaları
+### Frontend Ürün Detay ✅
+- [x] Gramaj seçim alanları (mevcut)
+- [x] Taze/kuru ve packaging badge'leri
+- [x] Gift wrap badge
+- [x] Labels (Hemen Yenir vb.) gösterimi
+- [x] Alerjen, malzeme, raf ömrü, saklama bilgileri
 
-### Sprint 5 – Kurumsal Sipariş (Backend ✅)
-- [x] CorporateOrderModel.js
-- [x] CorporateController.js + CRUD rotaları
+### Backend & Admin ✅
+- [x] Tüm API'ler hazır
+- [x] Delivery Zones, Time Slots, Coupons admin sayfaları
+- [x] Kurye mock entegrasyonu
+- [x] Kurumsal sipariş sistemi
 
-## 🔄 Devam Eden / İleride Yapılacak
+## 📋 Sonraki Adımlar
 
-### Frontend Checkout Akışı
-- [ ] Sepet sayfasında teslimat bölgesi seçimi
-- [ ] Time slot seçimi
-- [ ] Kupon alanı ve validasyonu
-- [ ] Ödeme yöntemi seçimi (kapıda/havale/online)
-- [ ] Toplam tutar hesabı (codFee dahil)
-
-### Admin Panel UI
-- [ ] Ürün Add/Edit formlarında yeni alanlar
-- [ ] Teslimat bölgeleri yönetim sayfası
-- [ ] Time slots yönetim sayfası
-- [ ] Kupon yönetim sayfası
-- [ ] Kurumsal sipariş listesi ve durum yönetimi
-- [ ] Kurye durumları görüntüleme
-
-### Frontend Özellikler
-- [ ] Kurumsal sipariş formu sayfası
-- [ ] Ürün detay sayfasında gramaj/taze/packaging seçenekleri
-- [ ] Ürün kartlarında yeni alanların gösterimi
-
-## 📋 Özet
-
-**Backend:** ✅ Tamamlandı (API'ler, modeller, controller'lar, kurye mock entegrasyonu)
-**Frontend:** 🔄 İleride
-**Admin:** 🔄 İleride
-
+1. Frontend checkout component oluştur (delivery/payment/coupon)
+2. PlaceOrder'ı güncelle ve yeni checkout'u bağla
+3. Ürün detay sayfasına gramaj/packaging seçenekleri ekle
+4. Sepet toplam hesaplama (codFee + delivery fee)
