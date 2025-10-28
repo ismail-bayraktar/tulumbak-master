@@ -127,7 +127,7 @@ export const deleteSetting = async (req, res) => {
 /**
  * Test email configuration
  */
-export const testEmail = async (req, res) => {
+const testEmail = async (req, res) => {
   try {
     const { email, subject, message } = req.body;
     
