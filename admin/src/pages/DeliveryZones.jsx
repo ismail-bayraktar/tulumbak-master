@@ -89,6 +89,7 @@ const DeliveryZones = ({ token }) => {
 
             {showForm && (
                 <form onSubmit={handleSubmit} className="mb-6 p-4 border">
+                    <label className="block mb-1 text-sm text-gray-700">Bölge/İlçe <span title="Teslimat yapılacak ilçe veya bölge adı" className="ml-2 text-gray-400 cursor-help">?</span></label>
                     <input
                         type="text"
                         placeholder="Bölge/İlçe"
@@ -97,6 +98,8 @@ const DeliveryZones = ({ token }) => {
                         className="w-full mb-2 px-3 py-2 border"
                         required
                     />
+
+                    <label className="block mb-1 text-sm text-gray-700">Teslimat Ücreti <span title="Bu bölge için kuryeye yansıtılacak ücret (₺)" className="ml-2 text-gray-400 cursor-help">?</span></label>
                     <input
                         type="number"
                         placeholder="Teslimat Ücreti"
@@ -105,6 +108,8 @@ const DeliveryZones = ({ token }) => {
                         className="w-full mb-2 px-3 py-2 border"
                         required
                     />
+
+                    <label className="block mb-1 text-sm text-gray-700">Minimum Sipariş <span title="Bu bölgeye teslimat için gereken minimum sepet tutarı (₺)" className="ml-2 text-gray-400 cursor-help">?</span></label>
                     <input
                         type="number"
                         placeholder="Minimum Sipariş"
@@ -113,21 +118,23 @@ const DeliveryZones = ({ token }) => {
                         className="w-full mb-2 px-3 py-2 border"
                         required
                     />
-                    <label className="flex items-center gap-2 mb-2">
+
+                    <label className="flex items-center gap-2 mb-2 text-sm text-gray-700">
                         <input
                             type="checkbox"
                             checked={formData.weekendAvailable}
                             onChange={(e) => setFormData({ ...formData, weekendAvailable: e.target.checked })}
                         />
-                        Hafta Sonu Teslimat
+                        Hafta Sonu Teslimat <span title="Cumartesi/Pazar günleri için teslimat uygunluğu" className="ml-1 text-gray-400 cursor-help">?</span>
                     </label>
-                    <label className="flex items-center gap-2 mb-4">
+
+                    <label className="flex items-center gap-2 mb-4 text-sm text-gray-700">
                         <input
                             type="checkbox"
                             checked={formData.sameDayAvailable}
                             onChange={(e) => setFormData({ ...formData, sameDayAvailable: e.target.checked })}
                         />
-                        Aynı Gün Teslimat
+                        Aynı Gün Teslimat <span title="Aynı gün içinde teslimat seçeneği" className="ml-1 text-gray-400 cursor-help">?</span>
                     </label>
                     <button type="submit" className="px-4 py-2 bg-black text-white">
                         Kaydet

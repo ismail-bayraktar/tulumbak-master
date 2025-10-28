@@ -3,6 +3,10 @@ import axios from "axios";
 import { backendUrl } from "../App.jsx";
 import { toast } from "react-toastify";
 
+const Hint = ({ text }) => (
+  <span title={text} className="ml-2 text-gray-400 select-none cursor-help">?</span>
+);
+
 const Coupons = ({ token }) => {
     const [coupons, setCoupons] = useState([]);
     const [showForm, setShowForm] = useState(false);
@@ -85,6 +89,7 @@ const Coupons = ({ token }) => {
 
             {showForm && (
                 <form onSubmit={handleSubmit} className="mb-6 p-4 border">
+                    <label className="block mb-1 text-sm text-gray-700">Kupon Kodu <Hint text="Müşterinin gireceği kod. Örn: TULUM10" /></label>
                     <input
                         type="text"
                         placeholder="Kupon Kodu"
@@ -93,6 +98,8 @@ const Coupons = ({ token }) => {
                         className="w-full mb-2 px-3 py-2 border"
                         required
                     />
+
+                    <label className="block mb-1 text-sm text-gray-700">İndirim Türü <Hint text="Yüzde: % indirim. Tutar: sabit ₺ indirim." /></label>
                     <select
                         value={formData.type}
                         onChange={(e) => setFormData({ ...formData, type: e.target.value })}
@@ -102,6 +109,8 @@ const Coupons = ({ token }) => {
                         <option value="yüzde">Yüzde</option>
                         <option value="tutar">Tutar</option>
                     </select>
+
+                    <label className="block mb-1 text-sm text-gray-700">Değer <Hint text="Yüzde ise 10 = %10; Tutar ise 50 = 50₺" /></label>
                     <input
                         type="number"
                         placeholder="Değer"
@@ -110,6 +119,8 @@ const Coupons = ({ token }) => {
                         className="w-full mb-2 px-3 py-2 border"
                         required
                     />
+
+                    <label className="block mb-1 text-sm text-gray-700">Minimum Sepet Tutarı <Hint text="Kuponun geçerli olması için en az sepet toplamı" /></label>
                     <input
                         type="number"
                         placeholder="Minimum Sepet Tutarı"
@@ -118,6 +129,8 @@ const Coupons = ({ token }) => {
                         className="w-full mb-2 px-3 py-2 border"
                         required
                     />
+
+                    <label className="block mb-1 text-sm text-gray-700">Kullanım Limiti <Hint text="0 = sınırsız; pozitif sayı = toplam kullanım" /></label>
                     <input
                         type="number"
                         placeholder="Kullanım Limiti (0=sınırsız)"
@@ -125,13 +138,14 @@ const Coupons = ({ token }) => {
                         onChange={(e) => setFormData({ ...formData, usageLimit: Number(e.target.value) })}
                         className="w-full mb-2 px-3 py-2 border"
                     />
-                    <label className="flex items-center gap-2 mb-4">
+
+                    <label className="flex items-center gap-2 mb-4 text-sm text-gray-700">
                         <input
                             type="checkbox"
                             checked={formData.active}
                             onChange={(e) => setFormData({ ...formData, active: e.target.checked })}
                         />
-                        Aktif
+                        Aktif <Hint text="Pasif ise kupon kullanılamaz" />
                     </label>
                     <button type="submit" className="px-4 py-2 bg-black text-white">
                         Kaydet

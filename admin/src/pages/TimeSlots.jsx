@@ -89,6 +89,7 @@ const TimeSlots = ({ token }) => {
 
             {showForm && (
                 <form onSubmit={handleSubmit} className="mb-6 p-4 border">
+                    <label className="block mb-1 text-sm text-gray-700">Etiket <span title="Gösterilecek isim. Örn: Sabah, Öğleden Sonra" className="ml-2 text-gray-400 cursor-help">?</span></label>
                     <input
                         type="text"
                         placeholder="Etiket (örn: Sabah, Öğleden Sonra)"
@@ -97,6 +98,8 @@ const TimeSlots = ({ token }) => {
                         className="w-full mb-2 px-3 py-2 border"
                         required
                     />
+
+                    <label className="block mb-1 text-sm text-gray-700">Başlangıç <span title="Başlangıç saati. Format: HH:mm" className="ml-2 text-gray-400 cursor-help">?</span></label>
                     <input
                         type="text"
                         placeholder="Başlangıç (HH:mm)"
@@ -105,6 +108,8 @@ const TimeSlots = ({ token }) => {
                         className="w-full mb-2 px-3 py-2 border"
                         required
                     />
+
+                    <label className="block mb-1 text-sm text-gray-700">Bitiş <span title="Bitiş saati. Format: HH:mm" className="ml-2 text-gray-400 cursor-help">?</span></label>
                     <input
                         type="text"
                         placeholder="Bitiş (HH:mm)"
@@ -113,6 +118,8 @@ const TimeSlots = ({ token }) => {
                         className="w-full mb-2 px-3 py-2 border"
                         required
                     />
+
+                    <label className="block mb-1 text-sm text-gray-700">Kapasite <span title="Bu zaman aralığında alınabilecek maksimum sipariş adedi" className="ml-2 text-gray-400 cursor-help">?</span></label>
                     <input
                         type="number"
                         placeholder="Kapasite"
@@ -120,13 +127,14 @@ const TimeSlots = ({ token }) => {
                         onChange={(e) => setFormData({ ...formData, capacity: Number(e.target.value) })}
                         className="w-full mb-2 px-3 py-2 border"
                     />
-                    <label className="flex items-center gap-2 mb-4">
+
+                    <label className="flex items-center gap-2 mb-4 text-sm text-gray-700">
                         <input
                             type="checkbox"
                             checked={formData.isWeekend}
                             onChange={(e) => setFormData({ ...formData, isWeekend: e.target.checked })}
                         />
-                        Hafta Sonu
+                        Hafta Sonu <span title="Sadece haftasonu için geçerli bir aralık" className="ml-1 text-gray-400 cursor-help">?</span>
                     </label>
                     <button type="submit" className="px-4 py-2 bg-black text-white">
                         Kaydet
