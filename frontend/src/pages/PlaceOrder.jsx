@@ -280,9 +280,9 @@ const PlaceOrder = () => {
                                     <input required onChange={onChangeHandler} name="state" value={formData.state} className="border border-gray-300 rounded-md py-2.5 px-3" type="text" placeholder="Mahalle" />
                                     <input required onChange={onChangeHandler} name="zipcode" value={formData.zipcode} className="border border-gray-300 rounded-md py-2.5 px-3" type="number" placeholder="Posta Kodu" />
                                 </div>
-                                <div className="flex gap-2 mt-3">
-                                    <span className="text-gray-500 py-2">+90</span>
-                                    <input required onChange={onChangeHandler} name="phone" value={formData.phone} className="border border-gray-300 rounded-md py-2.5 px-3 flex-1" type="tel" placeholder="Telefon" minLength={10} maxLength={10} />
+                                <div className="relative mt-3">
+                                    <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none">+90</div>
+                                    <input required onChange={onChangeHandler} name="phone" value={formData.phone} className="border border-gray-300 rounded-md py-2.5 pl-14 pr-3 w-full" type="tel" placeholder="5XX XXX XX XX" minLength={10} maxLength={10} />
                                 </div>
                                 <input required onChange={onChangeHandler} name="city" value="İzmir" className="border border-gray-300 rounded-md py-2.5 px-3 w-full mt-3 bg-gray-100" type="text" disabled />
                             </div>
