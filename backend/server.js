@@ -4,7 +4,6 @@ import helmet from 'helmet';
 import "dotenv/config"
 import connectDB from "./config/mongodb.js";
 import connectCloudinary from "./config/cloudinary.js";
-import { initDefaultSettings } from "./controllers/SettingsController.js";
 import path, {dirname} from "path";
 import userRouter from "./routes/UserRoute.js";
 import productRouter from "./routes/ProductRoute.js";
@@ -27,10 +26,15 @@ const port = process.env.PORT || 4001;
 connectDB();
 connectCloudinary();
 
-// Initialize default settings on startup
-setTimeout(() => {
-  initDefaultSettings();
-}, 2000); // Wait 2 seconds for DB connection
+// Initialize default settings on startup (dynamic import to avoid circular dependency)
+setTimeout(async () => {
+  try {
+    const { initDefaultSettings } = await import("./controllers/SettingsController.js");
+    await initDefaultSettings();
+  } catch (error) {
+    console.error("Error initializing settings:", error);
+  }
+}, 2000);
 
 // PAYTR
 const __filename = fileURLToPath(import.meta.url);
