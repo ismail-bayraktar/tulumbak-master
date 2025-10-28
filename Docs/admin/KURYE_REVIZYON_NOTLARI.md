@@ -86,3 +86,110 @@ GET    /api/admin/courier/:id/performance  # Performans
 
 **Not:** Bu sistem kurye paneliyle de entegre olacak ve gerçek zamanlı takip sağlayacak.
 
+## 🔄 Otomatik Durum Güncellemeleri
+
+### Kurye Uygulaması API Entegrasyonu
+
+**Sistem Akışı:**
+1. Admin siparişe "Kurye Atandı" seçer → Backend'e istek gider
+2. Backend kurye uygulamasına webhook gönderir
+3. Kurye uygulaması kuryeye bildirim gönderir
+4. Kurye onaylar → Kurye uygulaması API'ye durum günceller
+5. Backend webhook alır → Sipariş durumunu "Yolda" yapar
+6. Kurye teslim eder → API ile "Teslim Edildi" olur
+
+### Webhook Endpoints (Kurye Uygulaması → Backend)
+
+```
+POST /api/courier/webhook/status-update
+{
+  "orderId": "ORDER_ID",
+  "courierId": "COURIER_ID",
+  "status": "yolda" | "teslim_edildi" | "iptal",
+  "location": {
+    "lat": 38.4242,
+    "lng": 27.1428
+  },
+  "timestamp": 1234567890
+}
+```
+
+### Backend Webhook Handler
+
+```javascript
+// backend/controllers/CourierController.js
+const handleWebhookStatusUpdate = async (req, res) => {
+  try {
+    const { orderId, courierId, status, location } = req.body;
+    
+    // Update order status
+    const order = await OrderModel.findById(orderId);
+    if (!order) return res.json({ success: false, message: 'Order not found' });
+    
+    // Map status
+    const statusMap = {
+      'yolda': 'Yolda',
+      'teslim_edildi': 'Teslim Edildi',
+      'iptal': 'İptal Edildi'
+    };
+    
+    order.status = statusMap[status];
+    order.courierStatus = status;
+    
+    // Add to history
+    order.statusHistory.push({
+      status: statusMap[status],
+      timestamp: Date.now(),
+      location: location ? `${location.lat}, ${location.lng}` : '',
+      note: 'Kurye uygulamasından güncellendi',
+      updatedBy: 'courier'
+    });
+    
+    await order.save();
+    
+    // Send notification to customer
+    // ...
+    
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Webhook error:', error);
+    res.json({ success: false, message: error.message });
+  }
+};
+```
+
+### Gerekli Backend İyileştirmeleri
+
+1. **Webhook Authentication:** Kurye uygulaması API key doğrulaması
+2. **Rate Limiting:** Webhook endpoint için özel rate limit
+3. **Logging:** Tüm webhook istekleri loglanmalı
+4. **Error Handling:** Webhook hatalarında kuryeye bildirim
+5. **Notification System:** Durum değiştiğinde müşteriye otomatik bildirim (SMS/Email)
+
+### Frontend Değişiklikleri
+
+1. **Sipariş listesinde** otomatik güncellenen durumlar "live" gösterilecek
+2. **WebSocket** veya **Polling** ile gerçek zamanlı güncelleme
+3. **Kurye konum** haritada gösterilecek (opsiyonel)
+
+### Güvenlik
+
+- Webhook endpoint için özel API key
+- IP whitelist kontrolü (kurye uygulaması IP'leri)
+- HMAC signature doğrulaması
+- Rate limiting (her sipariş için limit)
+
+### Konfigürasyon
+
+Backend'de `courierApp` ayarları:
+```javascript
+{
+  apiKey: process.env.COURIER_API_KEY,
+  webhookUrl: process.env.COURIER_WEBHOOK_URL,
+  autoStatusUpdate: true,
+  notificationEnabled: true
+}
+```
+
+Admin panel Settings'den konfigüre edilebilir hale getirilecek.
+
