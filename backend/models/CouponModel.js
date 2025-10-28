@@ -12,6 +12,11 @@ const couponSchema = new mongoose.Schema({
     active: { type: Boolean, default: true }
 });
 
+// Performance indexes
+couponSchema.index({ code: 1 });
+couponSchema.index({ active: 1, validFrom: 1, validUntil: 1 });
+couponSchema.index({ usageLimit: 1, usageCount: 1 });
+
 const couponModel = mongoose.models.coupon || mongoose.model("coupon", couponSchema);
 
 export default couponModel;

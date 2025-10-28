@@ -1,9 +1,21 @@
 import Slider from '../models/SliderModel.js';
 
-// Get all sliders
+// Get all sliders for frontend
 const listSliders = async (req, res) => {
     try {
-        const sliders = await Slider.find({ isActive: true }).sort({ order: 1 });
+        const now = new Date();
+        const sliders = await Slider.find({
+            isActive: true,
+            $or: [
+                { startDate: { $exists: false } },
+                { startDate: { $lte: now } }
+            ],
+            $or: [
+                { endDate: { $exists: false } },
+                { endDate: { $gte: now } }
+            ]
+        }).sort({ order: 1 });
+
         res.json({ success: true, sliders });
     } catch (error) {
         console.log(error);
@@ -11,21 +23,76 @@ const listSliders = async (req, res) => {
     }
 };
 
+// Get all sliders for admin (including inactive)
+const listSlidersAdmin = async (req, res) => {
+    try {
+        const sliders = await Slider.find({}).sort({ order: 1 });
+        res.json({ success: true, sliders });
+    } catch (error) {
+        console.log(error);
+        res.status(500).json({ success: false, message: "Sliderler listelenemedi" });
+    }
+};
+
+// Track slider view
+const trackSliderView = async (req, res) => {
+    try {
+        const { id } = req.params;
+        await Slider.findByIdAndUpdate(id, {
+            $inc: { viewCount: 1 },
+            lastViewed: new Date()
+        });
+        res.json({ success: true });
+    } catch (error) {
+        console.log(error);
+        res.status(500).json({ success: false, message: "View takibi yapılamadı" });
+    }
+};
+
+// Track slider click
+const trackSliderClick = async (req, res) => {
+    try {
+        const { id } = req.params;
+        await Slider.findByIdAndUpdate(id, {
+            $inc: { clickCount: 1 }
+        });
+        res.json({ success: true });
+    } catch (error) {
+        console.log(error);
+        res.status(500).json({ success: false, message: "Click takibi yapılamadı" });
+    }
+};
+
 // Add new slider
 const addSlider = async (req, res) => {
     try {
-        const { title, subtitle, description, buttonText, buttonLink, order } = req.body;
-        
+        const {
+            title, subtitle, description, buttonText, buttonLink,
+            template, buttonStyle, mobileImage, backgroundImage,
+            overlayOpacity, textColor, altText, seoTitle,
+            order, startDate, endDate
+        } = req.body;
+
         let image = req.file ? `/uploads/${req.file.filename}` : '';
 
         const slider = new Slider({
+            template: template || 'split-left',
             title,
             subtitle,
             description,
             buttonText,
             buttonLink: buttonLink || '/collection',
+            buttonStyle: buttonStyle || 'primary',
             image,
-            order: parseInt(order) || 0
+            mobileImage,
+            backgroundImage,
+            overlayOpacity: parseInt(overlayOpacity) || 0,
+            textColor: textColor || 'auto',
+            altText: altText || '',
+            seoTitle: seoTitle || '',
+            order: parseInt(order) || 0,
+            startDate: startDate ? new Date(startDate) : undefined,
+            endDate: endDate ? new Date(endDate) : undefined
         });
 
         await slider.save();
@@ -40,14 +107,25 @@ const addSlider = async (req, res) => {
 const updateSlider = async (req, res) => {
     try {
         const { id } = req.params;
-        const { title, subtitle, description, buttonText, buttonLink, order, isActive } = req.body;
-        
+        const {
+            title, subtitle, description, buttonText, buttonLink,
+            template, buttonStyle, mobileImage, backgroundImage,
+            overlayOpacity, textColor, altText, seoTitle,
+            order, isActive, startDate, endDate
+        } = req.body;
+
         const updateData = {
+            template: template || 'split-left',
             title,
             subtitle,
             description,
             buttonText,
             buttonLink: buttonLink || '/collection',
+            buttonStyle: buttonStyle || 'primary',
+            overlayOpacity: parseInt(overlayOpacity) || 0,
+            textColor: textColor || 'auto',
+            altText: altText || '',
+            seoTitle: seoTitle || '',
             order: parseInt(order) || 0,
             isActive: isActive !== undefined ? isActive : true
         };
@@ -55,6 +133,11 @@ const updateSlider = async (req, res) => {
         if (req.file) {
             updateData.image = `/uploads/${req.file.filename}`;
         }
+
+        if (mobileImage) updateData.mobileImage = mobileImage;
+        if (backgroundImage) updateData.backgroundImage = backgroundImage;
+        if (startDate) updateData.startDate = new Date(startDate);
+        if (endDate) updateData.endDate = new Date(endDate);
 
         await Slider.findByIdAndUpdate(id, updateData);
         res.json({ success: true, message: "Slider güncellendi" });
@@ -76,4 +159,12 @@ const deleteSlider = async (req, res) => {
     }
 };
 
-export { listSliders, addSlider, updateSlider, deleteSlider };
+export {
+    listSliders,
+    listSlidersAdmin,
+    trackSliderView,
+    trackSliderClick,
+    addSlider,
+    updateSlider,
+    deleteSlider
+};

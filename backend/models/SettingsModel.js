@@ -16,6 +16,10 @@ const settingsSchema = new mongoose.Schema({
   updatedAt: { type: Date, default: Date.now }
 });
 
+// Performance indexes
+settingsSchema.index({ key: 1 });
+settingsSchema.index({ category: 1 });
+
 const settingsModel = mongoose.models.settings || mongoose.model("settings", settingsSchema);
 
 export default settingsModel;

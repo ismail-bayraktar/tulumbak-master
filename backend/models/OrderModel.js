@@ -32,6 +32,16 @@ const orderSchema = new mongoose.Schema({
     trackingLink: { type: String }
 });
 
+// Performance indexes
+orderSchema.index({ userId: 1, date: -1 });
+orderSchema.index({ status: 1 });
+orderSchema.index({ courierStatus: 1 });
+orderSchema.index({ trackingId: 1 }, { unique: true, sparse: true });
+orderSchema.index({ courierTrackingId: 1 });
+orderSchema.index({ date: -1 });
+orderSchema.index({ payment: 1 });
+orderSchema.index({ 'delivery.zoneId': 1 });
+
 const orderModel = mongoose.models.order || mongoose.model("order", orderSchema);
 
 export default orderModel;

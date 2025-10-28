@@ -24,6 +24,14 @@ const productSchema = new mongoose.Schema({
     storageInfo: {type: String} // Saklama koşulları
 })
 
+// Performance indexes
+productSchema.index({ category: 1, subCategory: 1 });
+productSchema.index({ bestseller: 1 });
+productSchema.index({ stock: 1 });
+productSchema.index({ basePrice: 1 });
+productSchema.index({ date: -1 });
+productSchema.index({ 'sizePrices.price': 1 });
+
 const productModel = mongoose.models.product || mongoose.model("product", productSchema);
 
 export default productModel;
