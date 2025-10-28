@@ -167,7 +167,16 @@ const addProduct = async (req, res) => {
 // List product
 const listProducts = async (req, res) => {
     try {
-        const products = await productModel.find({});
+        const { inStockOnly = false } = req.query; // Optional filter for stock availability
+        
+        let products;
+        if (inStockOnly === 'true') {
+            // Only return products with stock > 0
+            products = await productModel.find({ stock: { $gt: 0 } });
+        } else {
+            products = await productModel.find({});
+        }
+        
         res.json({success: true, products});
     } catch (error) {
         console.log(error);

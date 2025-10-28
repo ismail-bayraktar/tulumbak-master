@@ -3,6 +3,8 @@ import {placeOrder, placeOrderStripe, placeOrderRazorpay, allOrders, userOrders,
 import adminAuth from "../middleware/AdminAuth.js";
 import authUser from "../middleware/Auth.js";
 import {updatePayTrOrderItemsAndAddress} from "../controllers/PayTrController.js";
+import RateLimiterService from "../services/RateLimiter.js";
+import { checkStockAvailability } from "../middleware/StockCheck.js";
 
 const orderRouter = express.Router();
 
@@ -10,10 +12,10 @@ const orderRouter = express.Router();
 orderRouter.post("/list", adminAuth, allOrders);
 orderRouter.post("/status", adminAuth, updateStatus);
 
-// payment features
-orderRouter.post("/place", authUser, placeOrder);
-orderRouter.post("/stripe", authUser, placeOrderStripe);
-orderRouter.post("/razorpay", authUser, placeOrderRazorpay);
+// payment features with stock check and rate limiting
+orderRouter.post("/place", authUser, checkStockAvailability, RateLimiterService.createOrderLimiter(), placeOrder);
+orderRouter.post("/stripe", authUser, checkStockAvailability, RateLimiterService.createOrderLimiter(), placeOrderStripe);
+orderRouter.post("/razorpay", authUser, checkStockAvailability, RateLimiterService.createOrderLimiter(), placeOrderRazorpay);
 
 // user feature
 orderRouter.post("/userorders", authUser, userOrders);

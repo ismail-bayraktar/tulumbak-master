@@ -78,6 +78,27 @@ import cross_icon from './cross_icon.png'
 import banner from './banner.png'
 import whatsapp_icon from './whatsapp-icon.png'
 
+// Hero section background images (using existing assets)
+import hero_bg_1 from './hero_img.png'
+import hero_bg_2 from './hero_image2.png'
+import hero_bg_3 from './slider-1.png'
+import hero_pattern_1 from './banner.png'
+import hero_pattern_2 from './about_img.png'
+
+// Blog and content images (using existing assets)
+import blog_1 from './p_img1.png'
+import blog_2 from './p_img2.png'
+import blog_3 from './p_img3.png'
+
+// Quick purchase and checkout images (using existing assets)
+import quick_purchase_bg from './contact_img.png'
+import checkout_decor from './banner.png'
+
+// Special occasion images (using existing assets)
+import special_occasion_1 from './slider-1.png'
+import special_occasion_2 from './slider-2.png'
+import special_occasion_3 from './slider-3.png'
+
 
 export const assets = {
     slider1: slider_1,
@@ -102,7 +123,28 @@ export const assets = {
     stripe_logo,
     cross_icon,
     banner,
-    whatsapp_icon
+    whatsapp_icon,
+
+    // Hero section backgrounds
+    hero_bg_1,
+    hero_bg_2,
+    hero_bg_3,
+    hero_pattern_1,
+    hero_pattern_2,
+
+    // Blog images
+    blog_1,
+    blog_2,
+    blog_3,
+
+    // Quick purchase and checkout
+    quick_purchase_bg,
+    checkout_decor,
+
+    // Special occasions
+    special_occasion_1,
+    special_occasion_2,
+    special_occasion_3
 }
 
 export const products = [
@@ -731,3 +773,123 @@ export const products = [
     }
 
 ]
+
+// Hero section slides data
+export const heroSlides = [
+    {
+        id: 1,
+        title: "Taze Baklava Dünyası",
+        subtitle: "Geleneksel Lezzet, Modern Sunum",
+        description: "İzmir'in en taze baklavaları ve tatlıları kapınızda",
+        backgroundImage: hero_bg_1,
+        primaryCTA: {
+            text: "Baklavaları Keşfet",
+            link: "/collection"
+        },
+        secondaryCTA: {
+            text: "Hızlı Sipariş",
+            link: "/collection"
+        },
+        features: ["Aynı Gün Teslimat", "%100 Taze Ürünler", "Güvenli Ödeme"]
+    },
+    {
+        id: 2,
+        title: "Özel Gün Paketleri",
+        subtitle: "Sevdiklerinizi Mutlu Edin",
+        description: "Düğün, bayram, yılbaızı özel tasarımlı baklava paketleri",
+        backgroundImage: hero_bg_2,
+        primaryCTA: {
+            text: "Paketleri İncele",
+            link: "/collection?category=special"
+        },
+        secondaryCTA: {
+            text: "Kurumsal Sipariş",
+            link: "/corporate"
+        },
+        features: ["Özel Paketleme", "Hediye Notu", "Kurumsal İndirim"]
+    },
+    {
+        id: 3,
+        title: "İzmir'in Tadı",
+        subtitle: "150 Yıllık Gelenek",
+        description: "Grandmother's tarifiyle, modern sunumla",
+        backgroundImage: hero_bg_3,
+        primaryCTA: {
+            text: "Hikayemizi Oku",
+            link: "/about"
+        },
+        secondaryCTA: {
+            text: "Mağazayı Ziyaret Et",
+            link: "/contact"
+        },
+        features: ["Geleneksel Lezzet", "Hijyenik Üretim", "Memnuniyet Garantisi"]
+    }
+];
+
+// Blog posts data
+export const blogPosts = [
+    {
+        id: 1,
+        title: "Baklavanın Tarihi Yolculuğu",
+        excerpt: "Osmanlı İmparatorluğu'ndan günümüze baklavanın hikayesi...",
+        image: blog_1,
+        author: "Elif Yılmaz",
+        date: "2024-01-15",
+        readTime: "5 dk",
+        category: "Tarih",
+        slug: "baklavanin-tarihi-yolculugu"
+    },
+    {
+        id: 2,
+        title: "Antep Fıstığı Baklava Nasıl Anlaşılır?",
+        excerpt: "Gerçek Antep fıstıklı baklavayı diğerlerinden ayıran özellikler...",
+        image: blog_2,
+        author: "Ahmet Demir",
+        date: "2024-01-12",
+        readTime: "3 dk",
+        category: "Rehber",
+        slug: "antep-fistigi-baklava-nasil-anlasilir"
+    },
+    {
+        id: 3,
+        title: "Bayramlarda Baklava İkram Etmenin Incelikleri",
+        excerpt: "Bayram sofralarında baklava sunumunun püf noktaları...",
+        image: blog_3,
+        author: "Zeynep Kaya",
+        date: "2024-01-10",
+        readTime: "4 dk",
+        category: "Kültür",
+        slug: "bayramlarda-baklava-ikram-etmenin-incelikleri"
+    }
+];
+
+// Special occasions data
+export const specialOccasions = [
+    {
+        id: 1,
+        name: "Düğün Paketi",
+        description: "Geniş misafir kitlesi için özel tasarlanmış abartılı baklava paketi",
+        image: special_occasion_1,
+        minPersons: 50,
+        price: 750,
+        features: ["Ücretsiz Teslimat", "İsim Baskılı Paket", "Hediye Çikolata"]
+    },
+    {
+        id: 2,
+        name: "Bayram Paketi",
+        description: "Bayram sevincini yaşatan özel paket",
+        image: special_occasion_2,
+        minPersons: 20,
+        price: 350,
+        features: ["Bayram Temalı Paket", "İkramlık Lokum", "İsim Kartı"]
+    },
+    {
+        id: 3,
+        name: "Yılbaşı Paketi",
+        description: "Yeni yıla tatlı bir başlangıç",
+        image: special_occasion_3,
+        minPersons: 15,
+        price: 280,
+        features: ["Yılbaşı Teması", "Şampanya İkramı", "Mini Kuru Meyve"]
+    }
+];
