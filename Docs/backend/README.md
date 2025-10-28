@@ -21,6 +21,10 @@ Backend, Node.js + Express.js ile geliştirilmiş RESTful API servisidir. MongoD
 - **JWT** (Authentication)
 - **Multer** (File Upload)
 - **PayTR** (Payment Gateway)
+- **Nodemailer** (Email Notifications)
+- **Helmet** (Security Headers)
+- **Express Rate Limit** (Brute Force Protection)
+- **Express Validator** (Input Validation)
 
 ### Çalıştırma
 
@@ -113,6 +117,51 @@ Backend `http://localhost:4001` üzerinde çalışacaktır.
 - `courierTrackingId: String` - Takip ID
 
 **Dosya:** `backend/models/OrderModel.js`
+
+### 7. Email Bildirim Sistemi
+
+**Yeni Servis:**
+- `EmailService` - Email gönderimi
+
+**Özellikler:**
+- Sipariş onayı email'i
+- Sipariş durum değişiklik bildirimi
+- Kurye atandığında bildirim
+- Teslim edildiğinde teşekkür email'i
+- HTML template'ler
+
+**Dosya:** `backend/services/EmailService.js`
+
+### 8. Stok Yönetimi Otomasyonu
+
+**Yeni Middleware:**
+- `StockCheck` - Stok kontrolü ve azaltma
+
+**Özellikler:**
+- Sipariş verildiğinde stok otomatik azaltma
+- Stok kontrolü middleware
+- Minimum stok uyarısı
+- Stokta olmayan ürün filtresi
+
+**Dosyalar:**
+- `backend/middleware/StockCheck.js`
+
+### 9. Güvenlik İyileştirmeleri
+
+**Yeni Servisler:**
+- `RateLimiterService` - API rate limiting
+- Helmet middleware - Security headers
+
+**Özellikler:**
+- Rate limiting (brute force koruması)
+- Authentication endpoint'lerinde sıkı limit
+- Order placement limit
+- File upload limit
+- Security headers (Helmet)
+
+**Dosyalar:**
+- `backend/services/RateLimiter.js`
+- `backend/server.js` (güncelleme)
 
 ## 📡 API Endpoint'leri
 
@@ -277,16 +326,34 @@ POST   /api/courier/webhook
 ### Environment Variables
 
 ```env
+# MongoDB
 MONGODB_URI=mongodb://root:example@localhost:27017/ecommerce?authSource=admin
+
+# JWT & Admin
 JWT_SECRET=your_secret_key
+ADMIN_EMAIL=admin@example.com
+ADMIN_PASSWORD=admin123
+
+# Server
 PORT=4001
+
+# Email Configuration
+SMTP_HOST=smtp.gmail.com
+SMTP_PORT=587
+SMTP_USER=your-email@gmail.com
+SMTP_PASSWORD=your-app-password
+
+# Bank Information
+BANK_IBAN=TR00 0000 0000 0000 0000 0000 00
+BANK_ACCOUNT_NAME=Tulumbak Gıda
+BANK_NAME=Banka Adı
 ```
 
 ## 📋 Yapılacak Geliştirmeler
 
 ### Yüksek Öncelik
 
-- [ ] **Email Bildirimleri**
+✅ **Email Bildirimleri** - Tamamlandı
   - Sipariş onayı
   - Kurye atandığında
   - Teslim edildiğinde
@@ -306,7 +373,7 @@ PORT=4001
   - Ürün bazlı analizler
   - Kullanıcı davranış analizi
 
-- [ ] **Stok Yönetimi**
+✅ **Stok Yönetimi** - Tamamlandı
   - Otomatik stok azaltma
   - Stok uyarıları
   - Tedarik yönetimi
@@ -314,6 +381,11 @@ PORT=4001
 - [ ] **Multi-Admin Sistemi**
   - Role-based access
   - Permission yönetimi
+
+✅ **Güvenlik İyileştirmeleri** - Tamamlandı
+  - Rate limiting
+  - Helmet security headers
+  - Input validation
 
 ### Düşük Öncelik
 
