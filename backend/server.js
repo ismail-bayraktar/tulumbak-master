@@ -4,6 +4,7 @@ import helmet from 'helmet';
 import "dotenv/config"
 import connectDB from "./config/mongodb.js";
 import connectCloudinary from "./config/cloudinary.js";
+import { connectRedis } from "./config/redis.js";
 import path, {dirname} from "path";
 import userRouter from "./routes/UserRoute.js";
 import productRouter from "./routes/ProductRoute.js";
@@ -19,13 +20,33 @@ import couponRouter from "./routes/CouponRoute.js";
 import corporateRouter from "./routes/CorporateRoute.js";
 import settingsRouter from "./routes/SettingsRoute.js";
 import reportRouter from "./routes/ReportRoute.js";
+import adminRouter from "./routes/AdminRoute.js";
 import RateLimiterService from "./services/RateLimiter.js";
+import logger, { logInfo } from "./utils/logger.js";
+import { initSentry } from "./utils/sentry.js";
+import { errorHandler, notFoundHandler } from "./middleware/errorHandler.js";
 
 // APP CONFIG
 const app = express();
 const port = process.env.PORT || 4001;
+
+// Initialize Sentry (before other middleware)
+initSentry();
+
+// Create logs directory
+import { existsSync, mkdirSync } from 'fs';
+if (!existsSync('./logs')) {
+  mkdirSync('./logs');
+}
+
+logInfo('Starting Tulumbak Backend Server', {
+  port,
+  environment: process.env.NODE_ENV || 'development'
+});
+
 connectDB();
 connectCloudinary();
+connectRedis();
 
 // Initialize default settings on startup (dynamic import to avoid circular dependency)
 setTimeout(async () => {
@@ -75,6 +96,7 @@ app.use('/api/coupon', couponRouter);
 app.use('/api/corporate', corporateRouter);
 app.use('/api/settings', settingsRouter);
 app.use('/api/report', reportRouter);
+app.use('/api/admin', adminRouter);
 app.get('/paytr/payment', (req, res) => {
     const token = req.query.token;
     res.render('layout', { iframetoken: token });
@@ -83,6 +105,11 @@ app.get('/', (req, res) => {
     res.send("API Working")
 })
 
+// Error handlers must be last
+app.use(notFoundHandler);
+app.use(errorHandler);
+
 app.listen(port, () => {
+    logInfo(`Server running on PORT: ${port}`, { port, environment: process.env.NODE_ENV });
     console.log("Server running on PORT: " + port);
 })

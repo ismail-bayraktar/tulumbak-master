@@ -3,6 +3,7 @@ import {listProducts, addProduct, removeProduct, singleProduct, updateProduct} f
 import adminAuth from "../middleware/AdminAuth.js";
 import uploadImagesWithMulter from "../config/uploadImagesWithMulter.js";
 import RateLimiterService from "../services/RateLimiter.js";
+import { cache, invalidateCache } from "../middleware/cache.js";
 
 const productRouter = express.Router();
 
@@ -13,13 +14,13 @@ const imageUploadMiddleware = uploadImagesWithMulter.fields([
     {name: 'image4', maxCount: 1}
 ]);
 
-// Admin routes with rate limiting
-productRouter.post('/add', adminAuth, RateLimiterService.createUploadLimiter(), imageUploadMiddleware, addProduct);
-productRouter.post('/update', adminAuth, RateLimiterService.createUploadLimiter(), imageUploadMiddleware, updateProduct);
-productRouter.post('/remove', adminAuth, removeProduct);
+// Admin routes with rate limiting and cache invalidation
+productRouter.post('/add', adminAuth, RateLimiterService.createUploadLimiter(), imageUploadMiddleware, invalidateCache('products:*'), addProduct);
+productRouter.post('/update', adminAuth, RateLimiterService.createUploadLimiter(), imageUploadMiddleware, invalidateCache('products:*'), updateProduct);
+productRouter.post('/remove', adminAuth, invalidateCache('products:*'), removeProduct);
 
-// Public routes
-productRouter.post('/single', singleProduct);
-productRouter.get('/list', listProducts);
+// Public routes with caching
+productRouter.post('/single', cache(300), singleProduct);
+productRouter.get('/list', cache(300), listProducts);
 
 export default productRouter;
