@@ -1,42 +1,218 @@
-# Tulumbak İzmir Baklava - E-Ticaret Platformu
+# 🧁 Tulumbak İzmir Baklava - E-Ticaret Platformu
 
-Tulumbak İzmir Baklava için full-stack e-ticaret uygulaması. Baklava, tatlı ve özel paketler için tasarlanmış modern bir platform.
+Modern teknolojilerle geliştirilmiş, İzmir ve çevresinde baklava ve tatlı ürünleri satışı yapan e-ticaret platformu.
 
-## Özellikler
+## 🚀 Özellikler
 
-### Backend API ✅
-- Ürün yönetimi (gramaj, taze/kuru, ambalaj seçenekleri)
-- Teslimat bölgeleri ve zaman aralığı yönetimi
-- Kurye entegrasyonu (mock API)
-- Kupon sistemi (yüzde/tutar indirimler)
-- Kurumsal sipariş yönetimi
-- Ödeme yöntemleri (kapıda, havale, online)
-- Docker MongoDB setup
+### ✅ Tamamlanan Özellikler
 
-### Admin Panel ✅
-- Ürün CRUD
-- Teslimat bölgeleri ve zaman aralıkları yönetimi
+**Ürün Yönetimi**
+- Ürün ekleme/düzenleme/silme
+- Gramaj seçenekleri (250g, 500g, 1kg, 2kg)
+- Taze/Kuru seçimi
+- Özel ambalaj seçenekleri
+- Hediye paketi
+- Etiket sistemi (Hemen Yenir, vb.)
+- Çoklu görsel yükleme
+- Stok yönetimi
+
+**Teslimat Sistemi**
+- Bölge bazlı teslimat ücretleri
+- Zaman aralığı seçimi
+- Aynı gün teslimat
+- Minimum sipariş tutarı
+- Hafta sonu teslimatı
+- Kurye entegrasyonu (Mock)
+
+**Ödeme Sistemi**
+- Havale/EFT
+- Kapıda ödeme
+- Online ödeme (PayTR)
+- Otomatik ücret hesaplama
+
+**Kupon Sistemi**
+- Kupon oluşturma
+- Kupon doğrulama
+- İndirim hesaplama
+- Kullanım limiti
+
+**Kurumsal Siparişler**
+- Kurumsal sipariş formu
+- Durum yönetimi
+- Not ekleme
+
+**Admin Panel**
+- Ürün yönetimi
+- Sipariş yönetimi
+- Teslimat bölgeleri
+- Zaman aralıkları
 - Kupon yönetimi
-- Sipariş takibi
-- Slider yönetimi
+- Kurye durumları
+
+## 🏗️ Teknoloji Stack
+
+### Backend
+- Node.js + Express.js
+- MongoDB (Mongoose)
+- JWT Authentication
+- Multer (File Upload)
+- PayTR Payment Gateway
 
 ### Frontend
-- Ürün katalog ve detay sayfaları
-- Sepet ve checkout akışı
-- Kullanıcı girişi/kayıt
-- Sipariş takibi
+- React + Vite
+- Tailwind CSS
+- Axios
+- React Router
+- Context API
 
-## Teknolojiler
+### Admin Panel
+- React + Vite
+- Tailwind CSS
+- React Router
 
-- **Backend**: Node.js, Express, MongoDB, Docker
-- **Admin**: React, Vite, Tailwind CSS
-- **Frontend**: React, Vite, Tailwind CSS
-- **Ödeme**: PayTR entegrasyonu
+### Database
+- MongoDB (Docker)
 
-## Kurulum
+## 📦 Kurulum
 
-Detaylı kurulum için [SETUP.md](SETUP.md) dosyasına bakın.
+### Gereksinimler
+- Node.js 18+
+- MongoDB (Docker ile)
+- Git
 
-## Özelleştirmeler
+### Adımlar
 
-Backend API'ler, Docker MongoDB ve admin panel tamamlandı. Frontend checkout ve ürün detay sayfaları için yeni özellikler eklenecek.
+1. **Repository'yi klonlayın:**
+```bash
+git clone https://github.com/ismail-bayraktar/tulumbak-nextjs-eticaret.git
+cd tulumbak-nextjs-eticaret
+```
+
+2. **Docker ile MongoDB'yi başlatın:**
+```bash
+docker compose up -d
+```
+
+3. **Backend'i başlatın:**
+```bash
+cd backend
+npm install
+npm start
+```
+
+4. **Frontend'i başlatın:**
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+5. **Admin Panel'i başlatın:**
+```bash
+cd admin
+npm install
+npm run dev
+```
+
+## 🌐 Erişim
+
+- **Frontend:** http://localhost:5174
+- **Admin Panel:** http://localhost:5173
+- **Backend API:** http://localhost:4001
+- **Mongo Express:** http://localhost:8081
+
+## 📚 Dökümantasyon
+
+Detaylı dökümantasyon için `Docs/` klasörüne bakın:
+
+- [Genel Bakış](Docs/01-overview.md)
+- [Backend Dökümantasyonu](Docs/backend/README.md)
+- [Frontend Dökümantasyonu](Docs/frontend/README.md)
+- [Admin Panel Dökümantasyonu](Docs/admin/README.md)
+
+## 📁 Proje Yapısı
+
+```
+tulumbak-master/
+├── backend/          # Node.js API
+│   ├── controllers/ # İş mantığı
+│   ├── models/      # Veritabanı modelleri
+│   ├── routes/      # API route'ları
+│   └── middleware/  # Middleware'ler
+│
+├── frontend/         # React Müşteri Arayüzü
+│   ├── src/
+│   │   ├── components/
+│   │   ├── pages/
+│   │   └── context/
+│
+├── admin/            # React Admin Panel
+│   └── src/
+│       ├── components/
+│       └── pages/
+│
+└── Docs/             # Dökümantasyon
+    ├── backend/
+    ├── frontend/
+    └── admin/
+```
+
+## 🔑 Environment Variables
+
+### Backend (.env)
+```env
+MONGODB_URI=mongodb://root:example@localhost:27017/ecommerce?authSource=admin
+JWT_SECRET=your_secret_key
+PORT=4001
+```
+
+### Frontend (.env)
+```env
+VITE_BACKEND_URL=http://localhost:4001
+```
+
+### Admin (.env)
+```env
+VITE_BACKEND_URL=http://localhost:4001
+```
+
+## 🧪 Test
+
+```bash
+# Backend testleri (gelecek)
+cd backend && npm test
+
+# Frontend testleri (gelecek)
+cd frontend && npm test
+```
+
+## 📝 Notlar
+
+- MongoDB verileri `tulumbak-mongo_data` volume'ünde saklanır
+- Docker konteynerleri yeniden başlatıldığında veriler korunur
+- Tüm API endpoint'leri RESTful standartlara uygundur
+- Admin panel JWT token bazlı authentication kullanır
+
+## 🤝 Katkıda Bulunma
+
+1. Fork edin
+2. Feature branch oluşturun (`git checkout -b feature/amazing-feature`)
+3. Commit edin (`git commit -m 'feat: amazing feature'`)
+4. Push edin (`git push origin feature/amazing-feature`)
+5. Pull Request oluşturun
+
+## 📞 İletişim
+
+Proje ile ilgili sorularınız için:
+- Email: ismail.bayraktar.dev@gmail.com
+
+## 📄 Lisans
+
+Bu proje özel bir projedir.
+
+## 🙏 Teşekkürler
+
+- MongoDB Community
+- React Team
+- Vite Team
+- Tailwind CSS Team
