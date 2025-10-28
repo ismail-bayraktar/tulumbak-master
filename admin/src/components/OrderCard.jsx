@@ -3,11 +3,15 @@ import axios from 'axios';
 import { backendUrl } from '../App.jsx';
 import { toast } from 'react-toastify';
 import OrderDetailModal from './OrderDetailModal.jsx';
+import PrintInvoice from './PrintInvoice.jsx';
+import PrintDeliveryNote from './PrintDeliveryNote.jsx';
 
 const OrderCard = ({ order, token, onStatusUpdate }) => {
     const [status, setStatus] = useState(order.status || 'Siparişiniz Alındı');
     const [loading, setLoading] = useState(false);
     const [showModal, setShowModal] = useState(false);
+    const [showInvoice, setShowInvoice] = useState(false);
+    const [showDeliveryNote, setShowDeliveryNote] = useState(false);
 
     const statusHandler = async (newStatus) => {
         setLoading(true);
@@ -137,11 +141,26 @@ const OrderCard = ({ order, token, onStatusUpdate }) => {
                     👁️ Detaylar
                 </button>
                 
+                <div className="flex-1 flex gap-2">
+                    <button
+                        onClick={() => setShowInvoice(true)}
+                        className="px-3 py-2 bg-green-100 text-green-700 rounded-md hover:bg-green-200 text-sm font-medium"
+                    >
+                        📄 Fatura
+                    </button>
+                    <button
+                        onClick={() => setShowDeliveryNote(true)}
+                        className="px-3 py-2 bg-orange-100 text-orange-700 rounded-md hover:bg-orange-200 text-sm font-medium"
+                    >
+                        📋 İrsaliye
+                    </button>
+                </div>
+                
                 <select
                     value={status}
                     onChange={(e) => statusHandler(e.target.value)}
                     disabled={loading}
-                    className="flex-1 px-3 py-2 border border-gray-300 rounded-md text-sm font-medium bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="px-3 py-2 border border-gray-300 rounded-md text-sm font-medium bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
                     <option value="Siparişiniz Alındı">Siparişiniz Alındı</option>
                     <option value="Hazırlanıyor">Hazırlanıyor</option>
@@ -159,11 +178,21 @@ const OrderCard = ({ order, token, onStatusUpdate }) => {
                 </span>
             </div>
 
-            {/* Modal */}
+            {/* Modals */}
             <OrderDetailModal
                 order={order}
                 isOpen={showModal}
                 onClose={() => setShowModal(false)}
+            />
+            
+            <PrintInvoice
+                order={order}
+                onClose={() => setShowInvoice(false)}
+            />
+            
+            <PrintDeliveryNote
+                order={order}
+                onClose={() => setShowDeliveryNote(false)}
             />
         </div>
     );
