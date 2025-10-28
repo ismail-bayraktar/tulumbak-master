@@ -75,6 +75,22 @@ const Orders = ({token}) => {
                             <p className={"mt-3"}>Ödeme Yöntemi : {order.paymentMethod}</p>
                             <p>Payment : {order.payment ? 'Done' : 'Pending'}</p>
                             <p>Date : {new Date(order.date).toLocaleDateString()}</p>
+                            {order.courierStatus && (
+                                <p className="mt-2 text-xs">
+                                    Kurye: <span className={`font-semibold ${
+                                        order.courierStatus === 'delivered' ? 'text-green-600' :
+                                        order.courierStatus === 'on_the_way' ? 'text-blue-600' :
+                                        order.courierStatus === 'picked_up' ? 'text-orange-600' :
+                                        'text-gray-600'
+                                    }`}>
+                                        {order.courierStatus === 'waiting' ? 'Bekleniyor' :
+                                         order.courierStatus === 'picked_up' ? 'Kuryede' :
+                                         order.courierStatus === 'on_the_way' ? 'Yolda' :
+                                         order.courierStatus === 'delivered' ? 'Teslim Edildi' :
+                                         order.courierStatus}
+                                    </span>
+                                </p>
+                            )}
                         </div>
                         <p className={"text-sm sm:text-[15px]"}>{currency} {order.paymentMethod === "PayTR" ? (order.amount / 100) : order.amount}</p>
                         <select onChange={(event) => statusHandler(event, order._id)} value={order.status}

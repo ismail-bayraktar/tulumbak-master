@@ -75,27 +75,25 @@ const Collection = () => {
                     <p className={'mb-3 text-sm font-medium'}>KATEGORİLER</p>
                     <div className={"flex flex-col gap-2 text-sm font-light text-gray-700"}>
                         <p className={"flex gap-2"}>
-                            <input className={"w-3"} type={"checkbox"} value={"Ceviz"} onChange={toggleCategory}/> Ceviz
+                            <input className={"w-3"} type={"checkbox"} value={"Baklava"} onChange={toggleCategory}/> Baklava
                         </p>
                         <p className={"flex gap-2"}>
-                            <input className={"w-3"} type={"checkbox"} value={"İncir"} onChange={toggleCategory}/> İncir
+                            <input className={"w-3"} type={"checkbox"} value={"Kadayıf"} onChange={toggleCategory}/> Kadayıf
                         </p>
                         <p className={"flex gap-2"}>
-                            <input className={"w-3"} type={"checkbox"} value={"Fındık"}
-                                   onChange={toggleCategory}/> Fındık
+                            <input className={"w-3"} type={"checkbox"} value={"Sütlü Tatlı"} onChange={toggleCategory}/> Sütlü Tatlı
                         </p>
                         <p className={"flex gap-2"}>
-                            <input className={"w-3"} type={"checkbox"} value={"Badem"} onChange={toggleCategory}/> Badem
+                            <input className={"w-3"} type={"checkbox"} value={"Kuru Tatlı"} onChange={toggleCategory}/> Kuru Tatlı
                         </p>
                         <p className={"flex gap-2"}>
-                            <input className={"w-3"} type={"checkbox"} value={"Fasulye"}
-                                   onChange={toggleCategory}/> Fasulye
+                            <input className={"w-3"} type={"checkbox"} value={"Möğürlü Tatlı"} onChange={toggleCategory}/> Möğürlü Tatlı
                         </p>
                         <p className={"flex gap-2"}>
-                            <input className={"w-3"} type={"checkbox"} value={"Mürdüm Eriği"} onChange={toggleCategory}/> Mürdüm Eriği
+                            <input className={"w-3"} type={"checkbox"} value={"Şerbetli Tatlı"} onChange={toggleCategory}/> Şerbetli Tatlı
                         </p>
                         <p className={"flex gap-2"}>
-                            <input className={"w-3"} type={"checkbox"} value={"Cennet Hurması"} onChange={toggleCategory}/> Cennet Hurması
+                            <input className={"w-3"} type={"checkbox"} value={"Özel Paket"} onChange={toggleCategory}/> Özel Paket
                         </p>
                     </div>
                 </div>
