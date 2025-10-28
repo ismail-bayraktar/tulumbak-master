@@ -5,7 +5,7 @@ import Add from "./pages/Add.jsx";
 import List from "./pages/List.jsx";
 import Orders from "./pages/Orders.jsx";
 import Edit from "./pages/Edit.jsx";
-import Slider from "./pages/Slider.jsx";
+import Slider from "./components/ModernSlider.jsx";
 import DeliveryZones from "./pages/DeliveryZones.jsx";
 import TimeSlots from "./pages/TimeSlots.jsx";
 import Coupons from "./pages/Coupons.jsx";
@@ -14,6 +14,7 @@ import Settings from "./pages/Settings.jsx";
 import BackendStatus from "./pages/BackendStatus.jsx";
 import Reports from "./pages/Reports.jsx";
 import CourierManagement from "./pages/CourierManagement.jsx";
+import Dashboard from "./pages/Dashboard.jsx";
 import {useEffect, useState} from "react";
 import Login from "./components/Login.jsx";
 import { ToastContainer } from 'react-toastify';
@@ -40,6 +41,8 @@ const App = () => {
                         <Sidebar/>
                         <div className={"w-[70%] mx-auto ml-[max(5vw,25px)] my-8 text-gray-600 text-base"}>
                             <Routes>
+                                <Route path={"/"} element={<Dashboard token={token} />}/>
+                                <Route path={"/dashboard"} element={<Dashboard token={token} />}/>
                                 <Route path={"/add"} element={<Add token={token} />}/>
                                 <Route path={"/list"} element={<List token={token} />}/>
                                 <Route path={"/slider"} element={<Slider token={token} />}/>

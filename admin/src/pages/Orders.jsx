@@ -2,110 +2,176 @@ import {useEffect, useState} from 'react'
 import axios from "axios";
 import {backendUrl, currency} from "../App.jsx";
 import {toast} from "react-toastify";
-import {assets} from "../assets/assets.js";
+import OrderCard from "../components/OrderCard.jsx";
 
 const Orders = ({token}) => {
-
-    const [orders, setOrders] = useState([])
+    const [orders, setOrders] = useState([]);
+    const [filteredOrders, setFilteredOrders] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [filters, setFilters] = useState({
+        status: 'all',
+        paymentMethod: 'all',
+        searchQuery: ''
+    });
 
     const fetchAllOrders = async () => {
         if (!token) {
             return null;
         }
         try {
+            setLoading(true);
             const response = await axios.post(backendUrl + '/api/order/list', {}, {headers: {token}})
             if (response.data.success) {
                 setOrders(response.data.orders.reverse());
+                setFilteredOrders(response.data.orders.reverse());
             } else {
                 toast.error(response.data.message)
             }
         } catch (error) {
             toast.error(error.message)
+        } finally {
+            setLoading(false);
         }
     }
-    const statusHandler = async (event, orderId) => {
-        try {
-            const response = await axios.post(backendUrl + '/api/order/status', {
-                orderId,
-                status: event.target.value
-            }, {headers: {token}})
-            if (response.data.success) {
-                await fetchAllOrders()
-            }
-        } catch (error) {
-            console.log(error);
-            toast.error(error.message)
-        }
-    }
+
     useEffect(() => {
         fetchAllOrders();
     }, [token])
-    return (
-        <div>
-            <h3>Order Page</h3>
-            <div>
-                {orders.map((order, index) => (
-                    <div
-                        className={"grid grid-cols-1 sm:grid-cols-[0.5fr_2fr_1fr] lg:grid-cols-[0.5fr_2fr_1fr_1fr_1fr] gap-3 items-start border-2 border-gray-200 p-5 md:p-8 my-3 md:my-4 text-xs sm:text-sm text-gray-700"}
-                        key={index}>
-                        <img className={"w-12"} src={assets.parcel_icon} alt={""}/>
-                        <div>
-                            <div>
-                                {order.items.map((item, index) => {
-                                    if (index === order.items.length - 1) {
-                                        return <p className={"py-0.5"} key={index}> {item.name} - {item.quantity} adet
-                                            <span> {item.size} KG </span>
-                                        </p>
 
-                                    } else {
-                                        return <p className={"py-0.5"} key={index}> {item.name} - {item.quantity} adet
-                                            <span> {item.size} KG </span> , </p>
-                                    }
-                                })}
-                            </div>
-                            <p className={"mt-3 mb-2 font-medium"}>{order.address.firstName + " " + order.address.lastName}</p>
-                            <div>
-                                <p>{order.address.street + ","}</p>
-                                <p>{order.address.city + ", " + order.address.state + ", " + order.address.country + ", " + order.address.zipcode}</p>
-                            </div>
-                            <p>{order.address.phone}</p>
-                        </div>
-                        <div>
-                            <p className={"text-sm sm:text-[15px]"}>Ürün Adeti : {order.items.length}</p>
-                            <p className={"mt-3"}>Ödeme Yöntemi : {order.paymentMethod}</p>
-                            <p>Payment : {order.payment ? 'Done' : 'Pending'}</p>
-                            <p>Date : {new Date(order.date).toLocaleDateString()}</p>
-                            {order.courierStatus && (
-                                <p className="mt-2 text-xs">
-                                    Kurye: <span className={`font-semibold ${
-                                        order.courierStatus === 'delivered' ? 'text-green-600' :
-                                        order.courierStatus === 'on_the_way' ? 'text-blue-600' :
-                                        order.courierStatus === 'picked_up' ? 'text-orange-600' :
-                                        'text-gray-600'
-                                    }`}>
-                                        {order.courierStatus === 'waiting' ? 'Bekleniyor' :
-                                         order.courierStatus === 'picked_up' ? 'Kuryede' :
-                                         order.courierStatus === 'on_the_way' ? 'Yolda' :
-                                         order.courierStatus === 'delivered' ? 'Teslim Edildi' :
-                                         order.courierStatus}
-                                    </span>
-                                </p>
-                            )}
-                        </div>
-                        <p className={"text-sm sm:text-[15px]"}>{currency} {order.paymentMethod === "PayTR" ? (order.amount / 100) : order.amount}</p>
-                        <select onChange={(event) => statusHandler(event, order._id)} value={order.status}
-                                className={"p-2 font-semibold"}>
+    // Filter orders based on filters
+    useEffect(() => {
+        let filtered = orders;
+
+        // Status filter
+        if (filters.status !== 'all') {
+            filtered = filtered.filter(order => order.status === filters.status);
+        }
+
+        // Payment method filter
+        if (filters.paymentMethod !== 'all') {
+            filtered = filtered.filter(order => order.paymentMethod === filters.paymentMethod);
+        }
+
+        // Search query filter
+        if (filters.searchQuery) {
+            const query = filters.searchQuery.toLowerCase();
+            filtered = filtered.filter(order =>
+                order.address?.firstName?.toLowerCase().includes(query) ||
+                order.address?.lastName?.toLowerCase().includes(query) ||
+                order.address?.phone?.includes(query) ||
+                order._id?.toLowerCase().includes(query) ||
+                order.trackingId?.toLowerCase().includes(query)
+            );
+        }
+
+        setFilteredOrders(filtered);
+    }, [filters, orders]);
+
+    const handleStatusUpdate = () => {
+        fetchAllOrders();
+    };
+
+    if (loading) {
+        return (
+            <div className="flex justify-center items-center h-64">
+                <p className="text-gray-500">Yükleniyor...</p>
+            </div>
+        );
+    }
+
+    return (
+        <div className="space-y-6">
+            {/* Header */}
+            <div>
+                <h1 className="text-3xl font-bold text-gray-800">Sipariş Yönetimi</h1>
+                <p className="text-gray-600 mt-2">Tüm siparişleri görüntüleyin ve yönetin</p>
+            </div>
+
+            {/* Filters */}
+            <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    {/* Status Filter */}
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Durum Filtrele
+                        </label>
+                        <select
+                            value={filters.status}
+                            onChange={(e) => setFilters({...filters, status: e.target.value})}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        >
+                            <option value="all">Tümü</option>
                             <option value="Siparişiniz Alındı">Siparişiniz Alındı</option>
                             <option value="Hazırlanıyor">Hazırlanıyor</option>
                             <option value="Kargoya Verildi">Kargoya Verildi</option>
-                            {/*<option value="Out for delivery">Out for delivery</option>*/}
-                            {/*<option value="Delivered">Delivered</option>*/}
+                            <option value="Teslim Edildi">Teslim Edildi</option>
+                            <option value="İptal Edildi">İptal Edildi</option>
                         </select>
                     </div>
-                ))
-                }
+
+                    {/* Payment Method Filter */}
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Ödeme Yöntemi
+                        </label>
+                        <select
+                            value={filters.paymentMethod}
+                            onChange={(e) => setFilters({...filters, paymentMethod: e.target.value})}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        >
+                            <option value="all">Tümü</option>
+                            <option value="KAPIDA">Kapıda Ödeme</option>
+                            <option value="PayTR">PayTR</option>
+                            <option value="Stripe">Stripe</option>
+                            <option value="Razorpay">Razorpay</option>
+                        </select>
+                    </div>
+
+                    {/* Search */}
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Arama
+                        </label>
+                        <input
+                            type="text"
+                            value={filters.searchQuery}
+                            onChange={(e) => setFilters({...filters, searchQuery: e.target.value})}
+                            placeholder="Müşteri adı, telefon, sipariş ID..."
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        />
+                    </div>
+                </div>
+            </div>
+
+            {/* Orders List */}
+            <div className="space-y-4">
+                {filteredOrders.length === 0 ? (
+                    <div className="text-center py-12 bg-white rounded-lg border border-gray-200">
+                        <p className="text-gray-500 text-lg">Sipariş bulunamadı</p>
+                    </div>
+                ) : (
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                        {filteredOrders.map((order, index) => (
+                            <OrderCard
+                                key={index}
+                                order={order}
+                                token={token}
+                                onStatusUpdate={handleStatusUpdate}
+                            />
+                        ))}
+                    </div>
+                )}
+            </div>
+
+            {/* Stats */}
+            <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
+                <p className="text-sm text-gray-600">
+                    Toplam <span className="font-semibold text-gray-800">{orders.length}</span> sipariş,
+                    gösterilen: <span className="font-semibold text-gray-800">{filteredOrders.length}</span>
+                </p>
             </div>
         </div>
     )
 }
+
 export default Orders;
