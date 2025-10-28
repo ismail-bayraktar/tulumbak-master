@@ -37,13 +37,13 @@ const Reports = ({ token }) => {
     }
   };
 
-  const fetchDashboard = () => fetchReport('report/dashboard', 'dashboard');
-  const fetchDailySales = () => fetchReport('report/daily-sales', 'dailySales');
-  const fetchWeeklySales = () => fetchReport('report/weekly-sales', 'weeklySales');
-  const fetchMonthlySales = () => fetchReport('report/monthly-sales', 'monthlySales');
-  const fetchProductAnalytics = () => fetchReport('report/product-analytics', 'productAnalytics');
-  const fetchUserBehavior = () => fetchReport('report/user-behavior', 'userBehavior');
-  const fetchDeliveryStatus = () => fetchReport('report/delivery-status', 'deliveryStatus');
+  const fetchDashboard = () => fetchReport('api/report/dashboard', 'dashboard');
+  const fetchDailySales = () => fetchReport('api/report/daily-sales', 'dailySales');
+  const fetchWeeklySales = () => fetchReport('api/report/weekly-sales', 'weeklySales');
+  const fetchMonthlySales = () => fetchReport('api/report/monthly-sales', 'monthlySales');
+  const fetchProductAnalytics = () => fetchReport('api/report/product-analytics', 'productAnalytics');
+  const fetchUserBehavior = () => fetchReport('api/report/user-behavior', 'userBehavior');
+  const fetchDeliveryStatus = () => fetchReport('api/report/delivery-status', 'deliveryStatus');
 
   useEffect(() => {
     fetchDashboard();
