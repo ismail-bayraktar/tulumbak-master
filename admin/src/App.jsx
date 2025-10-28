@@ -10,6 +10,7 @@ import DeliveryZones from "./pages/DeliveryZones.jsx";
 import TimeSlots from "./pages/TimeSlots.jsx";
 import Coupons from "./pages/Coupons.jsx";
 import CorporateOrders from "./pages/CorporateOrders.jsx";
+import Settings from "./pages/Settings.jsx";
 import {useEffect, useState} from "react";
 import Login from "./components/Login.jsx";
 import { ToastContainer } from 'react-toastify';
@@ -45,6 +46,7 @@ const App = () => {
                                 <Route path={"/time-slots"} element={<TimeSlots token={token} />}/>
                                 <Route path={"/coupons"} element={<Coupons token={token} />}/>
                                 <Route path={"/corporate-orders"} element={<CorporateOrders token={token} />}/>
+                                <Route path={"/settings"} element={<Settings token={token} />}/>
                             </Routes>
                         </div>
                     </div>
