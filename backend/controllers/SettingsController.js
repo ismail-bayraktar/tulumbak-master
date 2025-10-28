@@ -125,36 +125,6 @@ const deleteSetting = async (req, res) => {
 };
 
 /**
- * Test SMS configuration
- */
-const testSms = async (req, res) => {
-  try {
-    const { phone, message } = req.body;
-    
-    if (!phone) {
-      return res.json({ success: false, message: "Phone number is required" });
-    }
-
-    // Import SMS service dynamically
-    const { default: smsService } = await import("../services/SmsService.js");
-    
-    const result = await smsService.sendSms(
-      phone,
-      message || 'Test SMS - Tulumbak Baklava. Ayarlarınız doğru yapılandırılmış!'
-    );
-
-    if (result.success) {
-      res.json({ success: true, message: "Test SMS sent successfully" });
-    } else {
-      res.json({ success: false, message: result.message || "Failed to send test SMS" });
-    }
-  } catch (error) {
-    console.log(error);
-    res.json({ success: false, message: error.message });
-  }
-};
-
-/**
  * Test email configuration
  */
 const testEmail = async (req, res) => {
@@ -262,5 +232,5 @@ const initDefaultSettings = async () => {
   }
 };
 
-export { getSettings, getSetting, updateSetting, updateSettings, deleteSetting, testEmail, testSms, initDefaultSettings };
+export { getSettings, getSetting, updateSetting, updateSettings, deleteSetting, testEmail, initDefaultSettings };
 

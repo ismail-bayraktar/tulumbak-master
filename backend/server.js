@@ -17,6 +17,7 @@ import deliveryRouter from "./routes/DeliveryRoute.js";
 import courierRouter from "./routes/CourierRoute.js";
 import couponRouter from "./routes/CouponRoute.js";
 import corporateRouter from "./routes/CorporateRoute.js";
+import settingsRouter from "./routes/SettingsRoute.js";
 import RateLimiterService from "./services/RateLimiter.js";
 
 // APP CONFIG
@@ -24,6 +25,16 @@ const app = express();
 const port = process.env.PORT || 4001;
 connectDB();
 connectCloudinary();
+
+// Initialize default settings on startup (dynamic import to avoid circular dependency)
+setTimeout(async () => {
+  try {
+    const { initDefaultSettings } = await import("./controllers/SettingsController.js");
+    await initDefaultSettings();
+  } catch (error) {
+    console.error("Error initializing settings:", error);
+  }
+}, 2000);
 
 // PAYTR
 const __filename = fileURLToPath(import.meta.url);
@@ -61,6 +72,7 @@ app.use('/api/courier', courierRouter);
 app.use('/api/delivery', deliveryRouter);
 app.use('/api/coupon', couponRouter);
 app.use('/api/corporate', corporateRouter);
+app.use('/api/settings', settingsRouter);
 app.get('/paytr/payment', (req, res) => {
     const token = req.query.token;
     res.render('layout', { iframetoken: token });

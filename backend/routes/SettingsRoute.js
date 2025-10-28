@@ -5,8 +5,7 @@ import {
   updateSetting,
   updateSettings,
   deleteSetting,
-  testEmail,
-  testSms
+  testEmail
 } from '../controllers/SettingsController.js';
 import adminAuth from '../middleware/AdminAuth.js';
 
@@ -18,9 +17,6 @@ settingsRouter.post('/single', adminAuth, getSetting);
 settingsRouter.post('/update', adminAuth, updateSetting);
 settingsRouter.post('/update-multiple', adminAuth, updateSettings);
 settingsRouter.post('/test-email', adminAuth, testEmail);
-settingsRouter.post('/test-sms', adminAuth, testSms);
 settingsRouter.delete('/', adminAuth, deleteSetting);
 
 export default settingsRouter;
-
-

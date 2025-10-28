@@ -32,6 +32,31 @@ class EmailService {
   }
 
   /**
+   * Update SMTP configuration from settings
+   */
+  updateConfiguration(smtpConfig) {
+    const { host, port, user, password, enabled } = smtpConfig;
+    
+    if (!enabled) {
+      console.log('Email service disabled in settings');
+      this.transporter = null;
+      return;
+    }
+
+    this.transporter = nodemailer.createTransport({
+      host: host || process.env.SMTP_HOST,
+      port: port || parseInt(process.env.SMTP_PORT) || 587,
+      secure: false,
+      auth: {
+        user: user || process.env.SMTP_USER,
+        pass: password || process.env.SMTP_PASSWORD,
+      },
+    });
+
+    console.log('Email service configuration updated');
+  }
+
+  /**
    * Send email with confirmation
    * @param {Object} mailOptions - Email options
    * @returns {Promise<Object>}
