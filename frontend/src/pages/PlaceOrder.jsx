@@ -299,37 +299,6 @@ const PlaceOrder = () => {
                                 )}
                             </div>
 
-                            {/* Payment */}
-                            <div className="bg-white p-4 rounded-lg border">
-                                <h3 className="font-medium mb-4">Ödeme Yöntemi</h3>
-                                <div className="space-y-3">
-                                    <label className="flex items-center gap-3 p-3 border rounded-md cursor-pointer hover:bg-gray-50">
-                                        <input type="radio" name="method" value="KAPIDA" checked={method === 'KAPIDA'} onChange={() => setMethod('KAPIDA')} className="w-4 h-4" />
-                                        <span className="text-sm">Kapıda Ödeme</span>
-                                    </label>
-                                    <label className="flex items-center gap-3 p-3 border rounded-md cursor-pointer hover:bg-gray-50">
-                                        <input type="radio" name="method" value="HAVALE/EFT" checked={method === 'HAVALE/EFT'} onChange={() => setMethod('HAVALE/EFT')} className="w-4 h-4" />
-                                        <span className="text-sm">Havale / EFT</span>
-                                    </label>
-                                    <label className="flex items-center gap-3 p-3 border rounded-md cursor-pointer hover:bg-gray-50">
-                                        <input type="radio" name="method" value="paytr" checked={method === 'paytr'} onChange={() => setMethod('paytr')} className="w-4 h-4" />
-                                        <span className="text-sm">Kredi/Banka Kartı</span>
-                                    </label>
-                                </div>
-                                
-                                {method === "HAVALE/EFT" && bankInfo && (
-                                    <div className="mt-4 border p-3 text-sm">
-                                        <p className="font-semibold mb-1">HAVALE / EFT BİLGİLERİ</p>
-                                        <p>Hesap Adı: {bankInfo.accountName}</p>
-                                        <p>Banka: {bankInfo.bankName}</p>
-                                        <p>IBAN: {bankInfo.iban}</p>
-                                    </div>
-                                )}
-                                {method === "KAPIDA" && (
-                                    <div className="mt-3 border p-3 text-sm text-orange-600">Kapıda ödeme ek ücreti: 10₺ eklenecektir.</div>
-                                )}
-                            </div>
-
                             <button type="submit" className="w-full bg-black text-white px-6 py-4 rounded-md font-medium hover:bg-gray-800 transition">
                                 Siparişi Tamamla
                             </button>
@@ -344,6 +313,9 @@ const PlaceOrder = () => {
                                 setCouponCode={setCouponCode} 
                                 setCouponDiscount={setCouponDiscount} 
                                 handleCouponApply={handleCouponApply}
+                                method={method}
+                                setMethod={setMethod}
+                                bankInfo={bankInfo}
                             />
                         </div>
                     </div>

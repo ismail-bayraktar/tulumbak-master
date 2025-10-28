@@ -1,7 +1,7 @@
 import { useContext } from 'react';
 import { ShopContext } from '../context/ShopContext';
 
-const OrderSummary = ({ deliveryFee = 0, couponDiscount = 0, couponCode = '', setCouponCode, setCouponDiscount, handleCouponApply, zones = [], deliveryZone = '', timeSlots = [], selectedTimeSlot = '' }) => {
+const OrderSummary = ({ deliveryFee = 0, couponDiscount = 0, couponCode = '', setCouponCode, setCouponDiscount, handleCouponApply, method, setMethod, bankInfo }) => {
     const { cartItems, products, currency } = useContext(ShopContext);
     
     // Calculate cart amount
@@ -56,7 +56,23 @@ const OrderSummary = ({ deliveryFee = 0, couponDiscount = 0, couponCode = '', se
 
             {/* İndirim Kodu */}
             <div className="mb-6">
-                {!couponCode ? (
+                {couponDiscount > 0 ? (
+                    <div className="flex items-center gap-2">
+                        <span className="inline-flex items-center gap-1 bg-gray-100 px-3 py-1 rounded-full text-xs">
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+                            </svg>
+                            {couponCode}
+                        </span>
+                        <button 
+                            type="button" 
+                            onClick={() => { setCouponCode(''); setCouponDiscount(0); }}
+                            className="text-gray-400 hover:text-gray-600 text-sm"
+                        >
+                            ×
+                        </button>
+                    </div>
+                ) : (
                     <div className="flex gap-2">
                         <input 
                             type="text" 
@@ -73,23 +89,7 @@ const OrderSummary = ({ deliveryFee = 0, couponDiscount = 0, couponCode = '', se
                             Uygula
                         </button>
                     </div>
-                ) : couponDiscount > 0 ? (
-                    <div className="flex items-center gap-2">
-                        <span className="inline-flex items-center gap-1 bg-gray-100 px-3 py-1 rounded-full text-xs">
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
-                            </svg>
-                            {couponCode}
-                        </span>
-                        <button 
-                            type="button" 
-                            onClick={() => { setCouponCode(''); setCouponDiscount(0); }}
-                            className="text-gray-400 hover:text-gray-600 text-sm"
-                        >
-                            ×
-                        </button>
-                    </div>
-                ) : null}
+                )}
             </div>
 
             {/* Fiyat Detayları */}
@@ -133,6 +133,39 @@ const OrderSummary = ({ deliveryFee = 0, couponDiscount = 0, couponCode = '', se
                     <span>Toplam</span>
                     <span>{currency}{finalTotal.toFixed(2)}</span>
                 </div>
+            </div>
+
+            {/* Ödeme Yöntemi */}
+            <div className="mt-6 border-t pt-6">
+                <h3 className="font-medium mb-4 text-sm">Ödeme Yöntemi</h3>
+                <div className="space-y-2 text-sm">
+                    <label className="flex items-center gap-3 p-3 border rounded-md cursor-pointer hover:bg-gray-50">
+                        <input type="radio" name="method" value="HAVALE/EFT" checked={method === 'HAVALE/EFT'} onChange={() => setMethod('HAVALE/EFT')} className="w-4 h-4" />
+                        <span>Havale / EFT</span>
+                    </label>
+                    <label className="flex items-center gap-3 p-3 border rounded-md cursor-pointer hover:bg-gray-50">
+                        <input type="radio" name="method" value="KAPIDA" checked={method === 'KAPIDA'} onChange={() => setMethod('KAPIDA')} className="w-4 h-4" />
+                        <span>Kapıda Ödeme</span>
+                    </label>
+                    <label className="flex items-center gap-3 p-3 border rounded-md cursor-pointer hover:bg-gray-50">
+                        <input type="radio" name="method" value="paytr" checked={method === 'paytr'} onChange={() => setMethod('paytr')} className="w-4 h-4" />
+                        <span>Kredi/Banka Kartı</span>
+                    </label>
+                </div>
+                
+                {method === "HAVALE/EFT" && bankInfo && (
+                    <div className="mt-3 p-3 bg-gray-50 border rounded-md text-xs">
+                        <p className="font-semibold mb-1">HAVALE / EFT BİLGİLERİ</p>
+                        <p>Hesap Adı: {bankInfo.accountName}</p>
+                        <p>Banka: {bankInfo.bankName}</p>
+                        <p>IBAN: {bankInfo.iban}</p>
+                    </div>
+                )}
+                {method === "KAPIDA" && (
+                    <div className="mt-3 p-3 bg-orange-50 border border-orange-200 rounded-md text-xs text-orange-700">
+                        Kapıda ödeme ek ücreti: 10₺ eklenecektir.
+                    </div>
+                )}
             </div>
         </div>
     );
