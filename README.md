@@ -1,43 +1,42 @@
-# E-Commerce Platform
+# Tulumbak İzmir Baklava - E-Ticaret Platformu
 
-This is a full-stack e-commerce application built using **React**, **Tailwind CSS**, **Node.js**, **Express.js** and **MongoDB**. The platform allows users to browse, search, and purchase products, providing a seamless shopping experience.
+Tulumbak İzmir Baklava için full-stack e-ticaret uygulaması. Baklava, tatlı ve özel paketler için tasarlanmış modern bir platform.
 
-## Screenshoots
-![Ekran Resmi 2025-01-13 18 32 22](https://github.com/user-attachments/assets/f6eb42c7-a52a-4e12-8a36-9ddfe3c9b1a5)
-![Ekran Resmi 2025-01-13 18 31 35](https://github.com/user-attachments/assets/73afcb50-438d-4532-9831-5924ed2f7ba5)
+## Özellikler
 
+### Backend API ✅
+- Ürün yönetimi (gramaj, taze/kuru, ambalaj seçenekleri)
+- Teslimat bölgeleri ve zaman aralığı yönetimi
+- Kurye entegrasyonu (mock API)
+- Kupon sistemi (yüzde/tutar indirimler)
+- Kurumsal sipariş yönetimi
+- Ödeme yöntemleri (kapıda, havale, online)
+- Docker MongoDB setup
 
-### Frontend
-- **Responsive Design**: Built with Tailwind CSS for a mobile-first, adaptive interface.
-- **Product Management**: Display products with images, descriptions, prices, and stock availability.
-- **Search and Filter**: Users can search and filter products by categories and other criteria.
-- **Shopping Cart**: Add, update, and remove items from the cart.
-- **User Authentication**: Secure login and registration.
-- **Order Management**: Place orders and view order history.
-
-### Backend
-- **RESTful API**: Built with Express.js to handle CRUD operations.
-- **Authentication**: Secure authentication using JWT (JSON Web Tokens).
-- **Database Integration**: Connection to a database (e.g., MongoDB, PostgreSQL) for storing user and product data.
-- **Error Handling**: Robust error handling and validation for API endpoints.
-- **Scalability**: Designed for scalability with a modular structure.
-
-## Technologies Used
+### Admin Panel ✅
+- Ürün CRUD
+- Teslimat bölgeleri ve zaman aralıkları yönetimi
+- Kupon yönetimi
+- Sipariş takibi
+- Slider yönetimi
 
 ### Frontend
-- **React**: For building the user interface.
-- **Tailwind CSS**: For styling and responsiveness.
-- **Axios**: For handling API requests.
+- Ürün katalog ve detay sayfaları
+- Sepet ve checkout akışı
+- Kullanıcı girişi/kayıt
+- Sipariş takibi
 
-### Backend
-- **Node.js**: As the JavaScript runtime.
-- **Express.js**: For building the server and APIs.
-- **Database**: MongoDB (or any other database of choice).
-- **JWT**: For authentication and session management.
-- **Multer**: For handling file uploads.
-- **Cloudinary**: For uploading images.
+## Teknolojiler
 
+- **Backend**: Node.js, Express, MongoDB, Docker
+- **Admin**: React, Vite, Tailwind CSS
+- **Frontend**: React, Vite, Tailwind CSS
+- **Ödeme**: PayTR entegrasyonu
 
-### Acknowledgments
+## Kurulum
 
-- [@birgulkurtcu](https://www.github.com/birgulkurtcu): I would like to express my heartfelt thanks to **Birgül Kurtçu** for their invaluable contribution to this project. Your dedication, expertise, and collaborative spirit have been instrumental in bringing this project to life. It was a pleasure working with you, and I deeply appreciate all your efforts and support.
+Detaylı kurulum için [SETUP.md](SETUP.md) dosyasına bakın.
+
+## Özelleştirmeler
+
+Backend API'ler, Docker MongoDB ve admin panel tamamlandı. Frontend checkout ve ürün detay sayfaları için yeni özellikler eklenecek.
