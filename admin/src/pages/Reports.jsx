@@ -8,7 +8,6 @@ const Reports = ({ token }) => {
     dashboard: null,
     dailySales: null,
     weeklySales: null,
-    weeklySales: null,
     monthlySales: null,
     productAnalytics: null,
     userBehavior: null,
