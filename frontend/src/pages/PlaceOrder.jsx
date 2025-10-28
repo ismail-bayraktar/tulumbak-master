@@ -1,5 +1,6 @@
 import Title from "../components/Title.jsx";
 import CartTotal from "../components/CartTotal.jsx";
+import OrderSummary from "../components/OrderSummary.jsx";
 import {useContext, useEffect, useState} from "react";
 import {ShopContext} from "../context/ShopContext.jsx";
 import axios from "axios";
@@ -16,7 +17,7 @@ const PlaceOrder = () => {
     const [bankInfo, setBankInfo] = useState(null);
     const [timeSlots, setTimeSlots] = useState([]);
     const [selectedTimeSlot, setSelectedTimeSlot] = useState("");
-    
+
     useEffect(() => {
         fetch("https://api64.ipify.org?format=json")
             .then((res) => res.json())
@@ -74,6 +75,7 @@ const PlaceOrder = () => {
         getShippingFee,
         products
     } = useContext(ShopContext);
+
     const [formData, setFormData] = useState({
         firstName: "",
         lastName: "",
@@ -85,6 +87,7 @@ const PlaceOrder = () => {
         country: "Türkiye",
         phone: "",
     });
+
     const onChangeHandler = (event) => {
         const name = event.target.name;
         const value = event.target.value;
@@ -95,6 +98,7 @@ const PlaceOrder = () => {
 
         setFormData(data => ({...data, [name]: value}))
     }
+
     const handlePayment = async () => {
         const userBasket = Object.entries(cartItems)
             .flatMap(([id, sizes]) => {
@@ -148,12 +152,13 @@ const PlaceOrder = () => {
             console.error('Bir hata oluştu:', error);
         }
     };
+
     const onSubmitHandler = async (event) => {
         event.preventDefault();
         if (!token) {
             toast.error("Lütfen giriş yapınız.");
             navigate('/login');
-            return; // Eğer token yoksa işlemi durdur
+            return;
         }
         try {
             const cartAmount = getCartAmount();
@@ -177,15 +182,16 @@ const PlaceOrder = () => {
                 amount: cartAmount + shippingFee,
             }
             switch (method) {
-                // api calls for cod
                 case 'HAVALE/EFT': {
                     const finalOrderData = {
                         ...orderData,
                         paymentMethod: method,
                         codFee: method === 'KAPIDA' ? 10 : 0,
-                        delivery: deliveryZone ? { zoneId: deliveryZone, timeSlotId: '', sameDay: false } : {}
+                        delivery: deliveryZone ? { zoneId: deliveryZone, timeSlotId: selectedTimeSlot || '', sameDay: false } : {}
                     };
+                    finalOrderData.amount = cartAmount - (couponDiscount || 0) + (deliveryFee || 0);
                     const response = await axios.post(backendUrl + '/api/order/place', finalOrderData, {headers: {token}});
+
                     if (response.data.success) {
                         setCartItems({});
                         navigate("/orders");
@@ -202,8 +208,8 @@ const PlaceOrder = () => {
                         method: 'PUT',
                         headers: { 'Content-Type': 'application/json', token: token },
                         body: JSON.stringify({
-                            address: formData, // Object formatında adres
-                            items: orderItems // Array formatında ürünler
+                            address: formData,
+                            items: orderItems
                         }),
                     });
 
@@ -215,263 +221,143 @@ const PlaceOrder = () => {
                     break;
             }
         } catch (error) {
-            //console.log(error);
             toast.error(error.message);
         }
     }
 
+    const [showNewsletter, setShowNewsletter] = useState(false);
 
     return (
-        <form onSubmit={onSubmitHandler}
-              className={"flex flex-col sm:flex-row justify-between gap-4 pt-5 sm:pt-14 min-h-[80vh] border-t"}>
-            {/* LEFT SIDE */}
-            <div className={"flex flex-col gap-4 w-full sm:max-w-[480px]"}>
-                <div className={"text-xl sm:text-2xl my-3"}>
-                    <Title primaryText={"TESLİMAT"} secondaryText={"BİLGİLERİ"}/>
-                </div>
-                <div className={"flex gap-3"}>
-                    <input
-                        required
-                        onChange={onChangeHandler}
-                        name={"firstName"}
-                        value={formData.firstName}
-                        className={"border border-gray-300 rounded py-1.5 px-3.5 w-full"}
-                        type={"text"}
-                        placeholder={"Adınız"}
-                    />
-                    <input
-                        required
-                        onChange={onChangeHandler}
-                        name={"lastName"}
-                        value={formData.lastName}
-                        className={"border border-gray-300 rounded py-1.5 px-3.5 w-full"}
-                        type={"text"}
-                        placeholder={"Soyadınız"}
-                    />
-                </div>
-                <input
-                    required
-                    onChange={onChangeHandler}
-                    name={"email"}
-                    value={formData.email}
-                    className={"border border-gray-300 rounded py-1.5 px-3.5 w-full"}
-                    type={"email"}
-                    placeholder={"Email Adresiniz"}
-                />
-                <input
-                    required
-                    onChange={onChangeHandler}
-                    name={"street"}
-                    value={formData.street}
-                    className={"border border-gray-300 rounded py-1.5 px-3.5 w-full"}
-                    type={"text"}
-                    placeholder={"Sokak Adı, Bina No, Kapı No"}
-                />
-                <div className={"flex gap-3"}>
-                    <input
-                        required
-                        onChange={onChangeHandler}
-                        name={"city"}
-                        value={formData.city}
-                        className={"border border-gray-300 rounded py-1.5 px-3.5 w-full"}
-                        type={"text"}
-                        placeholder={"Şehir"}
-                    />
-                    <input
-                        required
-                        onChange={onChangeHandler}
-                        name={"state"}
-                        value={formData.state}
-                        className={"border border-gray-300 rounded py-1.5 px-3.5 w-full"}
-                        type={"text"}
-                        placeholder={"Mahalle"}
-                    />
-                </div>
-                <div className={"flex gap-3"}>
-                    <input
-                        required
-                        onChange={onChangeHandler}
-                        name={"zipcode"}
-                        value={formData.zipcode}
-                        className={"border border-gray-300 rounded py-1.5 px-3.5 w-full"}
-                        type={"number"}
-                        placeholder={"Posta Kodu"}
-                    />
-                    <input
-                        required
-                        onChange={onChangeHandler}
-                        name={"country"}
-                        value={formData.country}
-                        className={"border border-gray-300 rounded py-1.5 px-3.5 w-full"}
-                        type={"text"}
-                        placeholder={"Ülke"}
-                        disabled={true}
-                    />
-                </div>
-                <div className={"flex gap-3"}>
-                    <p className={"text-m mt-2"}>+90</p>
-                    <input
-                        required
-                        onChange={onChangeHandler}
-                        name={"phone"}
-                        value={formData.phone}
-                        className={"border border-gray-300 rounded py-1.5 px-3.5 w-full"}
-                        type={"tel"}
-                        placeholder={"Telefon Numaranız"}
-                        minLength={10}
-                        maxLength={10}
-                    />
-
-                </div>
-
-                </div>
-
-            {/* DELIVERY ZONE SELECTION */}
-            <div className={"mt-4"}>
-                <p className={"mb-2 font-medium"}>Teslimat Bölgesi</p>
-                <select
-                    value={deliveryZone}
-                    onChange={(e) => {
-                        setDeliveryZone(e.target.value);
-                        const zone = zones.find(z => z._id === e.target.value);
-                        if (zone) setDeliveryFee(zone.fee);
-                    }}
-                    className={"w-full border border-gray-300 rounded py-2 px-3"}
-                >
-                    <option value="">Bölge seçiniz</option>
-                    {zones.map((zone) => (
-                        <option key={zone._id} value={zone._id}>
-                            {zone.district} - {zone.fee}₺
-                        </option>
-                    ))}
-                </select>
-            </div>
-
-            {/* COUPON INPUT */}
-            <div className={"mt-4"}>
-                <p className={"mb-2 font-medium"}>Kupon Kodu</p>
-                <div className="flex gap-2">
-                    <input
-                        type="text"
-                        value={couponCode}
-                        onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
-                        placeholder="Kupon kodu girin"
-                        className="flex-1 border border-gray-300 rounded py-2 px-3"
-                    />
-                    <button
-                        type="button"
-                        onClick={handleCouponApply}
-                        className="px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded"
-                    >
-                        Uygula
-                    </button>
-                </div>
-                {couponDiscount > 0 && <p className="text-green-600 text-sm mt-2">İndirim: {couponDiscount.toFixed(2)}₺</p>}
-            </div>
-
-            {/* TIME SLOT SELECTION */}
-            {deliveryZone && timeSlots.length > 0 && (
-                <div className="mt-4">
-                    <p className="mb-2 font-medium">Teslimat Zamanı</p>
-                    <select
-                        value={selectedTimeSlot}
-                        onChange={(e) => setSelectedTimeSlot(e.target.value)}
-                        className="w-full border border-gray-300 rounded py-2 px-3"
-                    >
-                        <option value="">Zaman aralığı seçiniz</option>
-                        {timeSlots.map((slot) => (
-                            <option key={slot._id} value={slot._id}>
-                                {slot.label} ({slot.start} - {slot.end})
-                            </option>
-                        ))}
-                    </select>
-                </div>
-            )}
-
-            { /* RIGHT SIDE */}
-            <div className={"mt-8"}>
-                <div className={"mt-8 min-w-80"}>
-                    <CartTotal/>
-                    {deliveryFee > 0 && (
-                        <div className="flex justify-between text-sm mt-2">
-                            <p>Teslimat Ücreti</p>
-                            <p>{currency} {deliveryFee.toFixed(2)}</p>
-                        </div>
-                    )}
-                </div>
-
-                <div className={"mt-12"}>
-                    <Title primaryText={"ÖDEME"} secondaryText={"YÖNTEMİ"}/>
-                    {/* --- Payment Method Selection --- */}
-                    <div className={"flex gap-3 flex-col lg:flex-row"}>
-
-
-                        {/*
-                       <div onClick={() => setMethod('stripe')}
-                             className={"flex items-center gap-3 border p-2 px-3 cursor-pointer"}>
-                            <p className={`min-w-3.5 h-3.5 border rounded-full ${method === 'stripe' ? 'bg-green-400' : ''}`}></p>
-                            <img
-                                className={"h-5 mx-4"}
-                                src={assets.stripe_logo}
-                                alt={"stripe-logo"}
-                            />
-                        </div>
-
-                        <div onClick={() => setMethod('razorpay')}
-                             className={"flex items-center gap-3 border p-2 px-3 cursor-pointer"}>
-                            <p className={`min-w-3.5 h-3.5 border rounded-full ${method === 'razorpay' ? 'bg-green-400' : ''}`}></p>
-                            <img
-                                className={"h-5 mx-4"}
-                                src={assets.razorpay_logo}
-                                alt={"razorpay-logo"}
-                            />
-                        </div>
-*/}
-                        <div onClick={() => setMethod('KAPIDA')}
-                             className={"flex items-center gap-3 border p-2 px-3 cursor-pointer"}>
-                            <p className={`min-w-3.5 h-3.5 border rounded-full ${method === 'KAPIDA' ? 'bg-green-400' : ''}`}></p>
-                            <p className={"text-gray-800 text-sm font-medium mx-4"}>KAPIDA ÖDEME</p>
-                        </div>
-                        <div onClick={() => setMethod('HAVALE/EFT')}
-                             className={"flex items-center gap-3 border p-2 px-3 cursor-pointer"}>
-                            <p className={`min-w-3.5 h-3.5 border rounded-full ${method === 'HAVALE/EFT' ? 'bg-green-400' : ''}`}></p>
-                            <p className={"text-gray-800 text-sm font-medium mx-4"}>HAVALE / EFT</p>
-                        </div>
-                        <div onClick={() => setMethod('paytr')} className="flex items-center gap-3 border p-2 px-3 cursor-pointer">
-                            <p className={`min-w-3.5 h-3.5 border rounded-full ${method === 'paytr' ? 'bg-green-400' : ''}`}></p>
-                            <p className="text-gray-800 text-sm font-medium mx-4">KREDİ/BANKA KARTI</p>
-                        </div>
+        <div className="min-h-screen bg-gray-50">
+            {/* Breadcrumb */}
+            <div className="bg-white border-b py-4">
+                <div className="max-w-6xl mx-auto px-4">
+                    <div className="flex gap-2 text-sm text-gray-600">
+                        <span>Sepet</span>
+                        <span>/</span>
+                        <span className="text-black font-medium">Bilgiler</span>
+                        <span>/</span>
+                        <span>Teslimat</span>
+                        <span>/</span>
+                        <span>Ödeme</span>
                     </div>
-                    {method === "HAVALE/EFT" && bankInfo
-                        ? (
-                            <div>
-                                <div className={"flex items-center justify-center border mt-4 p-2 px-3"}>
-                                    <p className={"text-gray-800 text-sm font-medium mx-4"}>HAVALE / EFT BİLGİLERİ</p>
+                </div>
+            </div>
+            
+            <form onSubmit={onSubmitHandler} className="py-8">
+                <div className="max-w-6xl mx-auto px-4">
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                        {/* LEFT: FORMS */}
+                        <div className="space-y-6">
+
+                            {/* Contact */}
+                            <div className="bg-white p-4 rounded-lg border">
+                                <h3 className="font-medium mb-4">İletişim Bilgileri</h3>
+                                <input required onChange={onChangeHandler} name="email" value={formData.email} className="border border-gray-300 rounded-md py-2.5 px-3 w-full" type="email" placeholder="E-posta" />
+                                
+                                <label className="flex items-center gap-2 mt-3 text-sm">
+                                    <input type="checkbox" checked={showNewsletter} onChange={(e) => setShowNewsletter(e.target.checked)} className="rounded" />
+                                    <span>Haberler ve özel tekliflerden beni haberdar et</span>
+                                </label>
+                            </div>
+
+                            {/* Address */}
+                            <div className="bg-white p-4 rounded-lg border">
+                                <h3 className="font-medium mb-4">Teslimat Adresi</h3>
+                                <div className="grid grid-cols-2 gap-3">
+                                    <input required onChange={onChangeHandler} name="firstName" value={formData.firstName} className="border border-gray-300 rounded-md py-2.5 px-3" type="text" placeholder="Ad (isteğe bağlı)" />
+                                    <input required onChange={onChangeHandler} name="lastName" value={formData.lastName} className="border border-gray-300 rounded-md py-2.5 px-3" type="text" placeholder="Soyad" />
                                 </div>
-                                <div className={"border p-2 px-3"}>
-                                    <p className={"text-gray-800 text-sm font-medium"}>Hesap Adı: {bankInfo.accountName}</p>
-                                    <p className={"text-gray-800 text-sm font-medium"}>Banka: {bankInfo.bankName}</p>
-                                    <p className={"text-gray-800 text-sm font-medium"}>IBAN: {bankInfo.iban}</p>
+                                <input required onChange={onChangeHandler} name="street" value={formData.street} className="border border-gray-300 rounded-md py-2.5 px-3 w-full mt-3" type="text" placeholder="Adres" />
+                                <input onChange={onChangeHandler} name="apartment" value="" className="border border-gray-300 rounded-md py-2.5 px-3 w-full mt-3" type="text" placeholder="Daire, süit vb. (isteğe bağlı)" />
+                                <input required onChange={onChangeHandler} name="city" value={formData.city} className="border border-gray-300 rounded-md py-2.5 px-3 w-full mt-3" type="text" placeholder="Şehir" />
+                                <div className="grid grid-cols-3 gap-3 mt-3">
+                                    <select onChange={onChangeHandler} name="country" value={formData.country} className="border border-gray-300 rounded-md py-2.5 px-3" disabled>
+                                        <option value="Türkiye">Türkiye</option>
+                                    </select>
+                                    <input required onChange={onChangeHandler} name="state" value={formData.state} className="border border-gray-300 rounded-md py-2.5 px-3" type="text" placeholder="Bölge" />
+                                    <input required onChange={onChangeHandler} name="zipcode" value={formData.zipcode} className="border border-gray-300 rounded-md py-2.5 px-3" type="number" placeholder="Posta Kodu" />
+                                </div>
+                                <div className="flex gap-2 mt-3">
+                                    <span className="py-2 px-3">+90</span>
+                                    <input required onChange={onChangeHandler} name="phone" value={formData.phone} className="border border-gray-300 rounded-md py-2.5 px-3 flex-1" type="tel" placeholder="Telefon" minLength={10} maxLength={10} />
                                 </div>
                             </div>
-                        ) : null}
-                    {method === "KAPIDA" && (
-                        <div className="border mt-4 p-2 px-3 text-sm text-orange-600">
-                            Kapıda ödeme ek ücreti: 10₺ eklenecektir.
+
+                            {/* Delivery */}
+                            <div className="bg-white p-4 rounded-lg border">
+                                <h3 className="font-medium mb-4">Teslimat</h3>
+                                <select value={deliveryZone} onChange={(e) => { setDeliveryZone(e.target.value); const zone = zones.find(z => z._id === e.target.value); if (zone) setDeliveryFee(zone.fee); }} className="w-full border border-gray-300 rounded-md py-2.5 px-3">
+                                    <option value="">Bölge seçiniz</option>
+                                    {zones.map((zone) => (<option key={zone._id} value={zone._id}>{zone.district} - {zone.fee}₺</option>))}
+                                </select>
+                                {deliveryZone && timeSlots.length > 0 && (
+                                    <select value={selectedTimeSlot} onChange={(e) => setSelectedTimeSlot(e.target.value)} className="w-full border border-gray-300 rounded-md py-2.5 px-3 mt-3">
+                                        <option value="">Zaman aralığı seçiniz</option>
+                                        {timeSlots.map((slot) => (<option key={slot._id} value={slot._id}>{slot.label} ({slot.start} - {slot.end})</option>))}
+                                    </select>
+                                )}
+                            </div>
+
+                            {/* Coupon */}
+                            <div className="bg-white p-4 rounded-lg border">
+                                <h3 className="font-medium mb-4">İndirim Kodu</h3>
+                                <div className="flex gap-2">
+                                    <input type="text" value={couponCode} onChange={(e) => setCouponCode(e.target.value.toUpperCase())} placeholder="İndirim kodu" className="flex-1 border border-gray-300 rounded-md py-2.5 px-3" />
+                                    <button type="button" onClick={handleCouponApply} className="px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded-md">Uygula</button>
+                                </div>
+                                {couponDiscount > 0 && (
+                                    <div className="mt-2 flex items-center gap-2">
+                                        <span className="bg-gray-200 px-2 py-1 rounded-full text-xs">{couponCode}</span>
+                                        <button type="button" onClick={() => { setCouponCode(''); setCouponDiscount(0); }} className="text-gray-400 hover:text-gray-600">×</button>
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* Payment */}
+                            <div className="bg-white p-4 rounded-lg border">
+                                <h3 className="font-medium mb-4">Ödeme Yöntemi</h3>
+                                <div className="space-y-3">
+                                    <label className="flex items-center gap-3 p-3 border rounded-md cursor-pointer hover:bg-gray-50">
+                                        <input type="radio" name="method" value="KAPIDA" checked={method === 'KAPIDA'} onChange={() => setMethod('KAPIDA')} className="w-4 h-4" />
+                                        <span className="text-sm">Kapıda Ödeme</span>
+                                    </label>
+                                    <label className="flex items-center gap-3 p-3 border rounded-md cursor-pointer hover:bg-gray-50">
+                                        <input type="radio" name="method" value="HAVALE/EFT" checked={method === 'HAVALE/EFT'} onChange={() => setMethod('HAVALE/EFT')} className="w-4 h-4" />
+                                        <span className="text-sm">Havale / EFT</span>
+                                    </label>
+                                    <label className="flex items-center gap-3 p-3 border rounded-md cursor-pointer hover:bg-gray-50">
+                                        <input type="radio" name="method" value="paytr" checked={method === 'paytr'} onChange={() => setMethod('paytr')} className="w-4 h-4" />
+                                        <span className="text-sm">Kredi/Banka Kartı</span>
+                                    </label>
+                                </div>
+                                
+                                {method === "HAVALE/EFT" && bankInfo && (
+                                    <div className="mt-4 border p-3 text-sm">
+                                        <p className="font-semibold mb-1">HAVALE / EFT BİLGİLERİ</p>
+                                        <p>Hesap Adı: {bankInfo.accountName}</p>
+                                        <p>Banka: {bankInfo.bankName}</p>
+                                        <p>IBAN: {bankInfo.iban}</p>
+                                    </div>
+                                )}
+                                {method === "KAPIDA" && (
+                                    <div className="mt-3 border p-3 text-sm text-orange-600">Kapıda ödeme ek ücreti: 10₺ eklenecektir.</div>
+                                )}
+                            </div>
+
+                            <button type="submit" className="w-full bg-black text-white px-6 py-4 rounded-md font-medium hover:bg-gray-800 transition">
+                                Siparişi Tamamla
+                            </button>
                         </div>
-                    )}
 
-
-                    <div className={"w-full text-end mt-8"}>
-                        <button
-                            type="submit"
-                            className={"bg-black text-white px-16 py-3 text-sm"}
-                        >SİPARİŞİ TAMAMLA
-                        </button>
+                        {/* RIGHT: SUMMARY */}
+                        <div>
+                            <OrderSummary deliveryFee={deliveryFee} couponDiscount={couponDiscount} />
+                        </div>
                     </div>
                 </div>
-            </div>
-        </form>
+            </form>
+        </div>
     );
 };
 

@@ -2,7 +2,7 @@ import { ShopContext } from "../context/ShopContext.jsx";
 import { useContext } from "react";
 import Title from "./Title.jsx";
 
-const CartTotal = ({ isBelowMinimum }) => {
+const CartTotal = ({ isBelowMinimum, deliveryFee = 0, couponDiscount = 0 }) => {
     const { currency, getCartAmount, getShippingFee, freeShippingThreshold } = useContext(ShopContext);
     const cartAmount = getCartAmount();
     const shippingFee = getShippingFee();
@@ -10,6 +10,10 @@ const CartTotal = ({ isBelowMinimum }) => {
     const formattedThreshold = Number.isInteger(freeShippingThreshold)
         ? freeShippingThreshold.toFixed(0)
         : freeShippingThreshold.toFixed(2);
+    
+    // PlaceOrder'da kullanılan ücretleri hesaba kat
+    const finalShippingFee = deliveryFee > 0 ? deliveryFee : shippingFee;
+    const finalTotal = cartAmount - couponDiscount + finalShippingFee;
 
     return (
         <div className={"w-full"}>
@@ -24,15 +28,39 @@ const CartTotal = ({ isBelowMinimum }) => {
                 </div>
                 <hr />
 
-                <div className={"flex justify-between"}>
-                    <p>Kargo Bedeli</p>
-                    <p> {currency} {shippingFee.toFixed(2)} </p>
-                </div>
-                <hr />
+                {couponDiscount > 0 && (
+                    <>
+                        <div className={"flex justify-between text-green-600"}>
+                            <p>İndirim</p>
+                            <p>- {currency} {couponDiscount.toFixed(2)} </p>
+                        </div>
+                        <hr />
+                    </>
+                )}
+
+                {deliveryFee > 0 && (
+                    <>
+                        <div className={"flex justify-between"}>
+                            <p>Teslimat Ücreti</p>
+                            <p> {currency} {deliveryFee.toFixed(2)} </p>
+                        </div>
+                        <hr />
+                    </>
+                )}
+
+                {deliveryFee === 0 && (
+                    <>
+                        <div className={"flex justify-between"}>
+                            <p>Kargo Bedeli</p>
+                            <p> {currency} {shippingFee.toFixed(2)} </p>
+                        </div>
+                        <hr />
+                    </>
+                )}
 
                 <div className={"flex justify-between"}>
                     <b>Toplam</b>
-                    <b> {currency} {(cartAmount === 0 ? 0 : cartAmount + shippingFee).toFixed(2)} </b>
+                    <b> {currency} {finalTotal.toFixed(2)} </b>
                 </div>
             </div>
 

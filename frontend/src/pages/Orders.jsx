@@ -20,6 +20,8 @@ const Orders = () => {
                         item['payment'] = order.payment;
                         item['paymentMethod'] = order.paymentMethod;
                         item['date'] = order.date;
+                        item['orderAmount'] = order.amount;
+                        item['courierStatus'] = order.courierStatus || '';
                         allOrdersItem.push(item);
                     })
                 })
@@ -56,17 +58,19 @@ const Orders = () => {
                                         <p>Adet: {item.quantity}</p>
                                         <p>Kilo: {item.size}</p>
                                     </div>
-                                    {/*<p className={"mt-1"}>Sipariş Tarihi: <span className={"text-gray-400"}>{new Date(item.date).toDateString()}</span> </p>*/}
                                     <p className={"mt-1"}>Sipariş Tarihi: <span className={"text-gray-400"}>{new Date(item.date).toLocaleDateString()}</span> </p>
                                     <p className={"mt-1"}>Ödeme Yöntemi: <span className={"text-gray-400"}>{item.paymentMethod}</span> </p>
+                                    {item.courierStatus && <p className={"mt-1"}>Kurye Durumu: <span className={"text-gray-400"}>{item.courierStatus}</span></p>}
                                 </div>
                             </div>
-                            <div className={"md:w-1/2 flex justify-between"}>
+                            <div className={"md:w-1/2 flex justify-between items-center"}>
                                 <div className={"flex items-center gap-2"}>
                                     <p className={"min-w-2 h-2 rounded-full bg-green-500"}></p>
                                     <p className={"text-sm md:text-base"}>{item.status}</p>
                                 </div>
-                                {/*<button onClick={loadOrderData} className={"border px-4 py-2 text-sm font-medium rounded-sm"}>Track Order</button>*/}
+                                <div className={"text-sm md:text-base font-semibold"}>
+                                    Toplam: {currency}{Number(item.orderAmount).toFixed(2)}
+                                </div>
                             </div>
                         </div>
                     ))
