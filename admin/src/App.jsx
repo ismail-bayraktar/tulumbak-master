@@ -15,6 +15,8 @@ import BackendStatus from "./pages/BackendStatus.jsx";
 import Reports from "./pages/Reports.jsx";
 import CourierManagement from "./pages/CourierManagement.jsx";
 import Dashboard from "./pages/Dashboard.jsx";
+import EmailLogs from "./pages/EmailLogs.jsx";
+import SmsLogs from "./pages/SmsLogs.jsx";
 import {useEffect, useState} from "react";
 import Login from "./components/Login.jsx";
 import { ToastContainer } from 'react-toastify';
@@ -53,7 +55,8 @@ const App = () => {
                                 <Route path={"/coupons"} element={<Coupons token={token} />}/>
                                 <Route path={"/corporate-orders"} element={<CorporateOrders token={token} />}/>
                                 <Route path={"/settings"} element={<Settings token={token} />}/>
-                                <Route path={"/backend-status"} element={<BackendStatus token={token} />}/>
+                                <Route path={"/email-logs"} element={<EmailLogs token={token} />}/>
+                                <Route path={"/sms-logs"} element={<SmsLogs token={token} />}/>
                                 <Route path={"/reports"} element={<Reports token={token} />}/>
                                 <Route path={"/courier-management"} element={<CourierManagement token={token} />}/>
                             </Routes>
