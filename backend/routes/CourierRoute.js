@@ -1,13 +1,20 @@
 import express from 'express';
-import { requestCourierPickup, courierWebhook } from "../controllers/CourierController.js";
+import { requestCourierPickup, courierWebhook, getOrderTracking, updateCourierStatus } from "../controllers/CourierController.js";
+import adminAuth from "../middleware/AdminAuth.js";
 
 const courierRouter = express.Router();
 
-// Admin veya sistem içinden kurye çağırma
-courierRouter.post('/request-pickup', requestCourierPickup);
+// Public: Get order tracking (no auth required)
+courierRouter.get('/track/:trackingId', getOrderTracking);
 
-// Kurye sisteminden durum güncellemesi (webhook)
-courierRouter.post('/webhook', courierWebhook);
+// Admin: Request courier pickup
+courierRouter.post('/request-pickup', adminAuth, requestCourierPickup);
+
+// Courier service: Status update webhook
+courierRouter.post('/webhook', updateCourierStatus);
+
+// Legacy support
+courierRouter.post('/update-status', updateCourierStatus);
 
 export default courierRouter;
 

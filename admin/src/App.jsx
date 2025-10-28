@@ -13,6 +13,7 @@ import CorporateOrders from "./pages/CorporateOrders.jsx";
 import Settings from "./pages/Settings.jsx";
 import BackendStatus from "./pages/BackendStatus.jsx";
 import Reports from "./pages/Reports.jsx";
+import CourierManagement from "./pages/CourierManagement.jsx";
 import {useEffect, useState} from "react";
 import Login from "./components/Login.jsx";
 import { ToastContainer } from 'react-toastify';
@@ -51,6 +52,7 @@ const App = () => {
                                 <Route path={"/settings"} element={<Settings token={token} />}/>
                                 <Route path={"/backend-status"} element={<BackendStatus token={token} />}/>
                                 <Route path={"/reports"} element={<Reports token={token} />}/>
+                                <Route path={"/courier-management"} element={<CourierManagement token={token} />}/>
                             </Routes>
                         </div>
                     </div>

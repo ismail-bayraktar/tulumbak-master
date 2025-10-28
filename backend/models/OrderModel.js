@@ -8,6 +8,15 @@ const orderSchema = new mongoose.Schema({
     status: {type: String, required: true , default: 'Siparişiniz Alındı'},
     courierStatus: { type: String, default: 'hazırlanıyor' }, // hazırlanıyor | yolda | teslim edildi | iptal
     courierTrackingId: { type: String },
+    statusHistory: [{
+        status: { type: String, required: true },
+        timestamp: { type: Number, default: Date.now },
+        location: { type: String },
+        note: { type: String },
+        updatedBy: { type: String, enum: ['system', 'admin', 'courier'], default: 'system' }
+    }],
+    estimatedDelivery: { type: Number },
+    actualDelivery: { type: Number },
     paymentMethod: {type: String, required: true},
     codFee: { type: Number, default: 0 },
     delivery: {
@@ -18,7 +27,9 @@ const orderSchema = new mongoose.Schema({
     payment: { type: Boolean, required: true , default: false },
     date: {type: Number, required:true},
     orderId: {type: String},
-    phone: {type: String} // Customer phone for SMS notifications
+    phone: {type: String}, // Customer phone for SMS notifications
+    trackingId: { type: String, unique: true }, // Public tracking ID (ABC123)
+    trackingLink: { type: String }
 });
 
 const orderModel = mongoose.models.order || mongoose.model("order", orderSchema);

@@ -2,10 +2,51 @@ import orderModel from "../models/OrderModel.js";
 import userModel from "../models/UserModel.js";
 import { reduceStock, checkLowStockAlert } from "../middleware/StockCheck.js";
 
+// Generate unique tracking ID
+const generateTrackingId = () => {
+    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+    let trackingId = '';
+    for (let i = 0; i < 8; i++) {
+        trackingId += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    return trackingId;
+};
+
+// Add status to order history
+const addStatusHistory = async (orderId, status, location = '', note = '', updatedBy = 'system') => {
+    try {
+        const order = await orderModel.findById(orderId);
+        if (!order) return;
+
+        const historyEntry = {
+            status,
+            timestamp: Date.now(),
+            location,
+            note,
+            updatedBy
+        };
+
+        if (!order.statusHistory) {
+            order.statusHistory = [historyEntry];
+        } else {
+            order.statusHistory.push(historyEntry);
+        }
+
+        await order.save();
+    } catch (error) {
+        console.error('Error adding status history:', error);
+    }
+};
+
 // placing orders using cod method
 const placeOrder = async (req, res) => {
     try {
         const { userId, items, amount, address, paymentMethod, delivery, codFee, giftNote } = req.body;
+        
+        // Generate tracking ID
+        const trackingId = generateTrackingId();
+        const trackingLink = `${process.env.FRONTEND_URL || 'http://localhost:5173'}/track/${trackingId}`;
+        
         const orderData = {
             userId,
             items,
@@ -17,7 +58,17 @@ const placeOrder = async (req, res) => {
             delivery: delivery || {},
             codFee: Number(codFee || 0),
             giftNote,
+            trackingId,
+            trackingLink,
+            statusHistory: [{
+                status: 'Siparişiniz Alındı',
+                timestamp: Date.now(),
+                location: address?.address || '',
+                note: 'Siparişiniz sisteme kaydedildi',
+                updatedBy: 'system'
+            }]
         }
+        
         const newOrder = new orderModel(orderData);
         
         // Reduce stock for all items
@@ -50,12 +101,13 @@ const placeOrder = async (req, res) => {
                 const { default: smsService } = await import("../services/SmsService.js");
                 await smsService.sendOrderConfirmation(user.phone, { 
                     ...orderData, 
-                    orderId: newOrder._id.toString() 
+                    orderId: newOrder._id.toString(),
+                    trackingLink
                 });
             }
         }
         
-        res.json({success: true, message: "Order successfully placed"});
+        res.json({ success: true, order: newOrder, trackingId, trackingLink });
     } catch (error) {
         console.log(error);
         res.json({success: false, message: error.message});
@@ -105,6 +157,9 @@ const updateStatus = async (req, res) => {
         if (!order) {
             return res.json({success: false, message: "Order not found"});
         }
+        
+        // Add to status history
+        await addStatusHistory(orderId, status, order.address?.address || '', `Durum güncellendi: ${status}`, 'admin');
         
         await orderModel.findByIdAndUpdate(orderId, {status});
         
