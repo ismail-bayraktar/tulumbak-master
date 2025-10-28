@@ -1,7 +1,7 @@
 import React, { useRef } from 'react';
 import { useReactToPrint } from 'react-to-print';
 
-const PrintDeliveryNote = ({ order, onClose }) => {
+const PrintDeliveryNote = ({ order, onClose, isOpen = false }) => {
     const componentRef = useRef();
 
     const handlePrint = useReactToPrint({
@@ -11,6 +11,8 @@ const PrintDeliveryNote = ({ order, onClose }) => {
             onClose && onClose();
         }
     });
+
+    if (!isOpen) return null;
 
     const formatDate = (timestamp) => {
         return new Date(timestamp).toLocaleDateString('tr-TR', {

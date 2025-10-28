@@ -185,15 +185,21 @@ const OrderCard = ({ order, token, onStatusUpdate }) => {
                 onClose={() => setShowModal(false)}
             />
             
-            <PrintInvoice
-                order={order}
-                onClose={() => setShowInvoice(false)}
-            />
+            {showInvoice && (
+                <PrintInvoice
+                    order={order}
+                    isOpen={showInvoice}
+                    onClose={() => setShowInvoice(false)}
+                />
+            )}
             
-            <PrintDeliveryNote
-                order={order}
-                onClose={() => setShowDeliveryNote(false)}
-            />
+            {showDeliveryNote && (
+                <PrintDeliveryNote
+                    order={order}
+                    isOpen={showDeliveryNote}
+                    onClose={() => setShowDeliveryNote(false)}
+                />
+            )}
         </div>
     );
 };
