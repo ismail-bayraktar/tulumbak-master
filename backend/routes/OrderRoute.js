@@ -1,5 +1,5 @@
 import express from 'express';
-import {placeOrder, placeOrderStripe, placeOrderRazorpay, allOrders, userOrders, updateStatus, bankInfo} from '../controllers/OrderController.js';
+import {placeOrder, placeOrderStripe, placeOrderRazorpay, allOrders, userOrders, updateStatus, bankInfo, getOrderStatus, getOrderHistory, getOrderTimeline} from '../controllers/OrderController.js';
 import adminAuth from "../middleware/AdminAuth.js";
 import authUser from "../middleware/Auth.js";
 import {updatePayTrOrderItemsAndAddress} from "../controllers/PayTrController.js";
@@ -21,5 +21,10 @@ orderRouter.post("/razorpay", authUser, checkStockAvailability, RateLimiterServi
 orderRouter.post("/userorders", authUser, userOrders);
 orderRouter.put("/update-paytr-order", authUser, updatePayTrOrderItemsAndAddress);
 orderRouter.get("/bank-info", bankInfo);
+
+// Order tracking endpoints (public, no auth required for tracking)
+orderRouter.get("/:orderId/status", getOrderStatus);
+orderRouter.get("/:orderId/history", getOrderHistory);
+orderRouter.get("/:orderId/timeline", getOrderTimeline);
 
 export default orderRouter;

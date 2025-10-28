@@ -358,14 +358,17 @@ Delivery status raporu statusHistory verilerini kullanır.
 
 ## 🔄 İyileştirmeler ve Gelecek Planlar
 
-### MVP Özellikleri (Mevcut)
+### ✅ MVP Özellikleri (Tamamlandı)
 - ✅ Tracking ID oluşturma
 - ✅ Status history
 - ✅ Webhook support
 - ✅ Kurye durum güncelleme
 - ✅ Email/SMS bildirimleri
+- ✅ Order status API
+- ✅ Order history API
+- ✅ Order timeline API
 
-### Gelecek Özellikler
+### 🔄 Gelecek Özellikler
 - [ ] Gerçek zamanlı konum takibi
 - [ ] Google Maps entegrasyonu
 - [ ] Kurye uygulaması API entegrasyonu
@@ -382,6 +385,6 @@ Sorular ve öneriler için: backend@tulumbak.dev
 ---
 
 **Son Güncelleme:** 2025-10-28  
-**Versiyon:** 1.0  
-**Durum:** Production Ready
+**Versiyon:** 2.0  
+**Durum:** Production Ready ✅
 

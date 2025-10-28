@@ -16,6 +16,27 @@ courierRouter.post('/webhook', updateCourierStatus);
 // Legacy support
 courierRouter.post('/update-status', updateCourierStatus);
 
+/**
+ * @swagger
+ * /api/courier/track/{trackingId}:
+ *   get:
+ *     summary: Get order tracking by tracking ID
+ *     tags: [Courier]
+ *     parameters:
+ *       - in: path
+ *         name: trackingId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Order tracking ID
+ *     responses:
+ *       200:
+ *         description: Order tracking information
+ *       404:
+ *         description: Order not found
+ */
+courierRouter.get('/track/:trackingId', getOrderTracking);
+
 export default courierRouter;
 
 

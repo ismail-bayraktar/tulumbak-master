@@ -234,4 +234,111 @@ const bankInfo = async (_req, res) => {
     }
 }
 
-export {placeOrder, placeOrderStripe, placeOrderRazorpay, allOrders, userOrders, updateStatus, bankInfo};
+// Get order status by ID
+const getOrderStatus = async (req, res) => {
+    try {
+        const { orderId } = req.params;
+        
+        const order = await orderModel.findById(orderId);
+        if (!order) {
+            return res.json({ success: false, message: 'Order not found' });
+        }
+
+        res.json({
+            success: true,
+            status: order.status || order.courierStatus,
+            lastUpdate: order.statusHistory?.[order.statusHistory.length - 1] || {},
+            nextSteps: getNextSteps(order.status || order.courierStatus)
+        });
+    } catch (error) {
+        console.log(error);
+        res.json({ success: false, message: error.message });
+    }
+};
+
+// Get order history
+const getOrderHistory = async (req, res) => {
+    try {
+        const { orderId } = req.params;
+        
+        const order = await orderModel.findById(orderId);
+        if (!order) {
+            return res.json({ success: false, message: 'Order not found' });
+        }
+
+        res.json({
+            success: true,
+            history: order.statusHistory || []
+        });
+    } catch (error) {
+        console.log(error);
+        res.json({ success: false, message: error.message });
+    }
+};
+
+// Get order timeline
+const getOrderTimeline = async (req, res) => {
+    try {
+        const { orderId } = req.params;
+        
+        const order = await orderModel.findById(orderId);
+        if (!order) {
+            return res.json({ success: false, message: 'Order not found' });
+        }
+
+        const statusSteps = [
+            { status: 'Siparişiniz Alındı', completed: false, current: false },
+            { status: 'Siparişiniz Hazırlanıyor', completed: false, current: false },
+            { status: 'Kuryeye Verildi', completed: false, current: false },
+            { status: 'Siparişiniz Yola Çıktı', completed: false, current: false },
+            { status: 'Teslim Edildi', completed: false, current: false }
+        ];
+
+        const history = order.statusHistory || [];
+        const completedSteps = [];
+        let currentStep = null;
+
+        statusSteps.forEach((step, index) => {
+            const found = history.find(h => h.status === step.status);
+            if (found) {
+                completedSteps.push(step);
+                step.completed = true;
+                
+                // Find current step (last completed)
+                if (!currentStep || (found.timestamp > (currentStep.timestamp || 0))) {
+                    currentStep = { ...step, index, found };
+                }
+            }
+        });
+
+        // Set current step
+        if (currentStep && statusSteps[currentStep.index + 1]) {
+            statusSteps[currentStep.index + 1].current = true;
+        }
+
+        res.json({
+            success: true,
+            completedSteps: completedSteps.length,
+            currentStep: currentStep ? currentStep.status : statusSteps[0].status,
+            upcomingSteps: statusSteps.filter(s => !s.completed && !s.current),
+            timeline: statusSteps
+        });
+    } catch (error) {
+        console.log(error);
+        res.json({ success: false, message: error.message });
+    }
+};
+
+// Helper function for next steps
+const getNextSteps = (status) => {
+    const steps = {
+        'Siparişiniz Alındı': ['Siparişiniz Hazırlanıyor', 'Siparişiniz Kuryeye Verilecek'],
+        'Siparişiniz Hazırlanıyor': ['Kuryeye Verildi', 'Teslim İçin Hazır'],
+        'Kuryeye Verildi': ['Yola Çıkacak', 'Teslim Edilecek'],
+        'Siparişiniz Yola Çıktı': ['Teslim Edilecek', 'Müşteriye Ulaşacak'],
+        'Teslim Edildi': []
+    };
+    return steps[status] || [];
+};
+
+export {placeOrder, placeOrderStripe, placeOrderRazorpay, allOrders, userOrders, updateStatus, bankInfo, getOrderStatus, getOrderHistory, getOrderTimeline};
