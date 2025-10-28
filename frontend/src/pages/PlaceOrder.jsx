@@ -34,6 +34,18 @@ const PlaceOrder = () => {
         } catch (error) { console.error(error); }
     };
 
+    // Delivery zone seçildiğinde ücreti güncelle
+    useEffect(() => {
+        if (deliveryZone) {
+            const selectedZone = zones.find(z => z._id === deliveryZone);
+            if (selectedZone) {
+                setDeliveryFee(selectedZone.fee);
+            }
+        } else {
+            setDeliveryFee(0);
+        }
+    }, [deliveryZone, zones]);
+
     const fetchBankInfo = async () => {
         try {
             const response = await axios.get(backendUrl + '/api/order/bank-info');
@@ -73,7 +85,8 @@ const PlaceOrder = () => {
         setCartItems,
         getCartAmount,
         getShippingFee,
-        products
+        products,
+        currency
     } = useContext(ShopContext);
 
     const [formData, setFormData] = useState({
@@ -285,6 +298,48 @@ const PlaceOrder = () => {
                                     <input required onChange={onChangeHandler} name="phone" value={formData.phone} className="border border-gray-300 rounded-md py-2.5 pl-14 pr-3 w-full" type="tel" placeholder="5XX XXX XX XX" minLength={10} maxLength={10} />
                                 </div>
                                 <input required onChange={onChangeHandler} name="city" value="İzmir" className="border border-gray-300 rounded-md py-2.5 px-3 w-full mt-3 bg-gray-100" type="text" disabled />
+                                
+                                {/* Teslimat Bölgesi Seçimi */}
+                                {zones.length > 0 && (
+                                    <div className="mt-4">
+                                        <label className="text-sm font-medium text-gray-700 block mb-2">Teslimat Bölgesi</label>
+                                        <select
+                                            value={deliveryZone}
+                                            onChange={(e) => setDeliveryZone(e.target.value)}
+                                            className="border border-gray-300 rounded-md py-2.5 px-3 w-full"
+                                            required
+                                        >
+                                            <option value="">Bölge seçin...</option>
+                                            {zones.map((zone) => (
+                                                <option key={zone._id} value={zone._id}>
+                                                    {zone.district} - {currency}{zone.fee}
+                                                </option>
+                                            ))}
+                                        </select>
+                                        {deliveryFee > 0 && (
+                                            <p className="text-xs text-gray-500 mt-1">Teslimat ücreti: {currency}{deliveryFee}</p>
+                                        )}
+                                    </div>
+                                )}
+                                
+                                {/* Teslimat Zaman Aralığı Seçimi */}
+                                {timeSlots.length > 0 && deliveryZone && (
+                                    <div className="mt-4">
+                                        <label className="text-sm font-medium text-gray-700 block mb-2">Teslimat Saati</label>
+                                        <select
+                                            value={selectedTimeSlot}
+                                            onChange={(e) => setSelectedTimeSlot(e.target.value)}
+                                            className="border border-gray-300 rounded-md py-2.5 px-3 w-full"
+                                        >
+                                            <option value="">Zaman aralığı seçin...</option>
+                                            {timeSlots.map((slot) => (
+                                                <option key={slot._id} value={slot._id}>
+                                                    {slot.label} ({slot.start} - {slot.end})
+                                                </option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                )}
                             </div>
                         </div>
                     </div>
