@@ -1,5 +1,4 @@
 import settingsModel from "../models/SettingsModel.js";
-import emailService from "../services/EmailService.js";
 
 /**
  * Get all settings or by category
@@ -136,6 +135,9 @@ export const testEmail = async (req, res) => {
       return res.json({ success: false, message: "Email address is required" });
     }
 
+    // Import emailService dynamically to avoid circular dependency
+    const { default: emailService } = await import("../services/EmailService.js");
+    
     const result = await emailService.sendEmail({
       from: `"Tulumbak Baklava" <${process.env.SMTP_USER}>`,
       to: email,
@@ -230,5 +232,5 @@ export const initDefaultSettings = async () => {
   }
 };
 
-export { getSettings, getSetting, updateSetting, updateSettings, deleteSetting, testEmail };
+export { getSettings, getSetting, updateSetting, updateSettings, deleteSetting, testEmail, initDefaultSettings };
 
