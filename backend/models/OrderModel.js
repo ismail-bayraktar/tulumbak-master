@@ -18,6 +18,7 @@ const orderSchema = new mongoose.Schema({
     payment: { type: Boolean, required: true , default: false },
     date: {type: Number, required:true},
     orderId: {type: String},
+    phone: {type: String} // Customer phone for SMS notifications
 });
 
 const orderModel = mongoose.models.order || mongoose.model("order", orderSchema);

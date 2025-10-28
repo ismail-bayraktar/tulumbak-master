@@ -1,6 +1,5 @@
 import orderModel from "../models/OrderModel.js";
 import userModel from "../models/UserModel.js";
-import emailService from "../services/EmailService.js";
 import { reduceStock, checkLowStockAlert } from "../middleware/StockCheck.js";
 
 // placing orders using cod method
@@ -32,13 +31,28 @@ const placeOrder = async (req, res) => {
             await checkLowStockAlert(item.id);
         }
         
-        // Send order confirmation email
+        // Get user data
         const user = await userModel.findById(userId);
-        if (user && user.email) {
-            await emailService.sendOrderConfirmation(
-                { ...orderData, orderId: newOrder._id.toString() },
-                user.email
-            );
+        
+        // Send notifications
+        if (user) {
+            // Email notification
+            if (user.email) {
+                const { default: emailService } = await import("../services/EmailService.js");
+                await emailService.sendOrderConfirmation(
+                    { ...orderData, orderId: newOrder._id.toString() },
+                    user.email
+                );
+            }
+            
+            // SMS notification
+            if (user.phone && process.env.SMS_ENABLED === 'true') {
+                const { default: smsService } = await import("../services/SmsService.js");
+                await smsService.sendOrderConfirmation(user.phone, { 
+                    ...orderData, 
+                    orderId: newOrder._id.toString() 
+                });
+            }
         }
         
         res.json({success: true, message: "Order successfully placed"});
@@ -94,26 +108,53 @@ const updateStatus = async (req, res) => {
         
         await orderModel.findByIdAndUpdate(orderId, {status});
         
-        // Send status update email
+        // Get user data
         const user = await userModel.findById(order.userId);
-        if (user && user.email) {
-            await emailService.sendOrderStatusUpdate(
-                { ...order.toObject(), orderId: order._id.toString() },
-                status,
-                user.email
-            );
+        
+        if (user) {
+            // Email notifications
+            if (user.email) {
+                const { default: emailService } = await import("../services/EmailService.js");
+                
+                await emailService.sendOrderStatusUpdate(
+                    { ...order.toObject(), orderId: order._id.toString() },
+                    status,
+                    user.email
+                );
+                
+                // Send special emails based on status
+                if (status === 'Hazırlanıyor') {
+                    await emailService.sendCourierAssignment(
+                        { ...order.toObject(), orderId: order._id.toString() },
+                        user.email
+                    );
+                } else if (status === 'Teslim Edildi') {
+                    await emailService.sendDeliveryCompleted(
+                        { ...order.toObject(), orderId: order._id.toString() },
+                        user.email
+                    );
+                }
+            }
             
-            // Send special emails based on status
-            if (status === 'Hazırlanıyor') {
-                await emailService.sendCourierAssignment(
-                    { ...order.toObject(), orderId: order._id.toString() },
-                    user.email
-                );
-            } else if (status === 'Teslim Edildi') {
-                await emailService.sendDeliveryCompleted(
-                    { ...order.toObject(), orderId: order._id.toString() },
-                    user.email
-                );
+            // SMS notifications
+            if (user.phone && process.env.SMS_ENABLED === 'true') {
+                const { default: smsService } = await import("../services/SmsService.js");
+                
+                // Send SMS based on status
+                if (status === 'Hazırlanıyor') {
+                    await smsService.sendCourierAssigned(user.phone, {
+                        ...order.toObject(),
+                        orderId: order._id.toString()
+                    });
+                } else if (status === 'Teslim Edildi') {
+                    await smsService.sendDeliveryCompleted(user.phone, order._id.toString());
+                } else {
+                    await smsService.sendOrderStatusUpdate(
+                        user.phone,
+                        status,
+                        order._id.toString()
+                    );
+                }
             }
         }
         
