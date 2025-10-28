@@ -226,44 +226,55 @@ const PlaceOrder = () => {
     }
 
     const [showNewsletter, setShowNewsletter] = useState(false);
+    const [currentStep, setCurrentStep] = useState('info'); // 'info' or 'payment'
 
     return (
-        <div className="min-h-screen bg-gray-50">
+        <div className="min-h-screen bg-[#FAF9F7]">
             {/* Breadcrumb */}
             <div className="bg-white border-b py-4">
                 <div className="max-w-6xl mx-auto px-4">
                     <div className="flex gap-2 text-sm text-gray-600">
-                        <span>Sepet</span>
+                        <button type="button" onClick={() => navigate('/cart')} className="hover:text-black">Sepet</button>
                         <span>/</span>
-                        <span className="text-black font-medium">Bilgiler</span>
+                        <button 
+                            type="button" 
+                            onClick={() => setCurrentStep('info')} 
+                            className={currentStep === 'info' ? 'text-black font-medium' : 'hover:text-black'}
+                        >
+                            Bilgiler & Teslimat
+                        </button>
                         <span>/</span>
-                        <span>Teslimat</span>
-                        <span>/</span>
-                        <span>Ödeme</span>
+                        <button 
+                            type="button" 
+                            onClick={() => setCurrentStep('payment')} 
+                            className={currentStep === 'payment' ? 'text-black font-medium' : 'hover:text-black'}
+                        >
+                            Ödeme
+                        </button>
                     </div>
                 </div>
             </div>
             
             <form onSubmit={onSubmitHandler} className="py-8">
                 <div className="max-w-6xl mx-auto px-4">
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 border-r border-gray-300 pr-8">
-                        {/* LEFT: FORMS */}
-                        <div className="space-y-6">
-
+                    <div className="grid grid-cols-1 lg:grid-cols-[1fr_400px] gap-0">
+                        {/* Left Side - Full Width Background */}
+                        <div className="bg-white pr-8 py-8 pl-8">
+                            <div className="max-w-3xl mx-auto">
                             {/* Contact */}
-                            <div className="bg-white p-4 rounded-lg border">
-                                <h3 className="font-medium mb-4">İletişim Bilgileri</h3>
+                            <div className="mb-8">
+                                <h3 className="font-medium mb-4 text-base">İletişim Bilgileri</h3>
                                 <input required onChange={onChangeHandler} name="email" value={formData.email} className="border border-gray-300 rounded-md py-2.5 px-3 w-full" type="email" placeholder="E-posta" />
                                 
-                                <label className="flex items-center gap-2 mt-3 text-sm">
+                                <label className="flex items-center gap-2 mt-3 text-sm text-gray-600">
                                     <input type="checkbox" checked={showNewsletter} onChange={(e) => setShowNewsletter(e.target.checked)} className="rounded" />
                                     <span>Haberler ve özel tekliflerden beni haberdar et</span>
                                 </label>
                             </div>
 
                             {/* Address */}
-                            <div className="bg-white p-4 rounded-lg border">
-                                <h3 className="font-medium mb-4">Teslimat Adresi</h3>
+                            <div>
+                                <h3 className="font-medium mb-4 text-base">Teslimat Adresi</h3>
                                 <div className="grid grid-cols-2 gap-3">
                                     <input required onChange={onChangeHandler} name="firstName" value={formData.firstName} className="border border-gray-300 rounded-md py-2.5 px-3" type="text" placeholder="Ad (isteğe bağlı)" />
                                     <input required onChange={onChangeHandler} name="lastName" value={formData.lastName} className="border border-gray-300 rounded-md py-2.5 px-3" type="text" placeholder="Soyad" />
@@ -285,8 +296,8 @@ const PlaceOrder = () => {
                             </div>
 
                             {/* Delivery */}
-                            <div className="bg-white p-4 rounded-lg border">
-                                <h3 className="font-medium mb-4">Teslimat</h3>
+                            <div className="mt-8">
+                                <h3 className="font-medium mb-4 text-base">Teslimat</h3>
                                 <select value={deliveryZone} onChange={(e) => { setDeliveryZone(e.target.value); const zone = zones.find(z => z._id === e.target.value); if (zone) setDeliveryFee(zone.fee); }} className="w-full border border-gray-300 rounded-md py-2.5 px-3">
                                     <option value="">Bölge seçiniz</option>
                                     {zones.map((zone) => (<option key={zone._id} value={zone._id}>{zone.district} - {zone.fee}₺</option>))}
@@ -302,10 +313,11 @@ const PlaceOrder = () => {
                             <button type="submit" className="w-full bg-black text-white px-6 py-4 rounded-md font-medium hover:bg-gray-800 transition">
                                 Siparişi Tamamla
                             </button>
+                            </div>
                         </div>
 
                         {/* RIGHT: SUMMARY */}
-                        <div className="lg:border-l lg:border-gray-300 lg:pl-8">
+                        <div className="bg-[#FAF9F7] pl-8 py-8">
                             <OrderSummary 
                                 deliveryFee={deliveryFee} 
                                 couponDiscount={couponDiscount} 
