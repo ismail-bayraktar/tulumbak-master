@@ -3,55 +3,13 @@ import { Link } from 'react-router-dom';
 import { assets } from '../assets/assets.js';
 import { ShopContext } from '../context/ShopContext.jsx';
 import { toast } from 'react-toastify';
+import HeroSlider from './HeroSlider.jsx';
 
 const ModernHome = () => {
   const { products, addToCart } = useContext(ShopContext);
-  const [currentSlide, setCurrentSlide] = useState(0);
   const [featuredProducts, setFeaturedProducts] = useState([]);
   const [bestSellers, setBestSellers] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
-
-  // Hero slides data
-  const heroSlides = [
-    {
-      id: 1,
-      title: "İzmir'in En Lezzetli Baklavası",
-      subtitle: "Geleneksel lezzet, modern sunum",
-      description: "Her gün taze üretilen baklavalarımızla İzmir'in tatlı dünyasını keşfedin.",
-      image: assets.hero_img,
-      cta: "ŞİMDİ SATIN AL",
-      ctaLink: "/collection",
-      badge: "%100 TAZE ÜRETİM"
-    },
-    {
-      id: 2,
-      title: "Özel Günleriniz İçin",
-      subtitle: "Unutulmaz tatlı anılar",
-      description: "Sevdiklerinizi özel günlerde mutlu etmek için tasarlanmış hediye paketleri.",
-      image: assets.slider_1,
-      cta: "HEDİYE PAKETLERİ",
-      ctaLink: "/collection?category=Özel Paket",
-      badge: "HEDİYE GÖNDER"
-    },
-    {
-      id: 3,
-      title: "Kapınıza Kadar Tazelik",
-      subtitle: "İzmir içi aynı gün teslimat",
-      description: "Siparişiniz ister kapınıza gelsin, ister mağazamızdan teslim alın.",
-      image: assets.slider_2,
-      cta: "SİPARİŞ VER",
-      ctaLink: "/collection",
-      badge: "HIZLI TESLİMAT"
-    }
-  ];
-
-  // Auto-play functionality
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setCurrentSlide((prev) => (prev + 1) % heroSlides.length);
-    }, 5000);
-    return () => clearInterval(timer);
-  }, [heroSlides.length]);
 
   // Set featured and best seller products
   useEffect(() => {
@@ -71,18 +29,6 @@ const ModernHome = () => {
     toast.success('Ürün sepete eklendi!');
   };
 
-  const handleSlideChange = (index) => {
-    setCurrentSlide(index);
-  };
-
-  const nextSlide = () => {
-    setCurrentSlide((prev) => (prev + 1) % heroSlides.length);
-  };
-
-  const prevSlide = () => {
-    setCurrentSlide((prev) => (prev - 1 + heroSlides.length) % heroSlides.length);
-  };
-
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -93,107 +39,8 @@ const ModernHome = () => {
 
   return (
     <div className="modern-home">
-      {/* Modern Hero Section */}
-      <section className="relative h-screen overflow-hidden">
-        {/* Background with gradient overlay */}
-        <div className="absolute inset-0">
-          <div
-            className="absolute inset-0 bg-cover bg-center transition-opacity duration-1000"
-            style={{
-              backgroundImage: `url(${heroSlides[currentSlide].image})`,
-              opacity: 0.9
-            }}
-          />
-          <div className="absolute inset-0 bg-gradient-to-r from-black/60 via-black/40 to-black/60" />
-        </div>
-
-        {/* Navigation dots */}
-        <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 z-20">
-          <div className="flex space-x-2">
-            {heroSlides.map((_, index) => (
-              <button
-                key={index}
-                onClick={() => handleSlideChange(index)}
-                className={`w-3 h-3 rounded-full transition-all duration-300 ${
-                  currentSlide === index ? 'bg-white w-8' : 'bg-white/50'
-                }`}
-                aria-label={`Go to slide ${index + 1}`}
-              />
-            ))}
-          </div>
-        </div>
-
-        {/* Hero content */}
-        <div className="relative z-10 h-full flex items-center">
-          <div className="container mx-auto px-6">
-            <div className="max-w-3xl">
-              {/* Badge */}
-              <div className="inline-block">
-                <span className="bg-red-600 text-white px-4 py-2 rounded-full text-sm font-semibold mb-6 inline-block">
-                  {heroSlides[currentSlide].badge}
-                </span>
-              </div>
-
-              {/* Main heading */}
-              <h1 className="text-5xl md:text-7xl font-bold text-white mb-4 leading-tight">
-                {heroSlides[currentSlide].title}
-              </h1>
-
-              {/* Subtitle */}
-              <h2 className="text-2xl md:text-3xl text-white/90 mb-6">
-                {heroSlides[currentSlide].subtitle}
-              </h2>
-
-              {/* Description */}
-              <p className="text-xl text-white/80 mb-8 max-w-2xl">
-                {heroSlides[currentSlide].description}
-              </p>
-
-              {/* CTA Buttons */}
-              <div className="flex flex-col sm:flex-row gap-4">
-                <Link
-                  to={heroSlides[currentSlide].ctaLink}
-                  className="inline-flex items-center justify-center px-8 py-4 bg-red-600 text-white font-semibold rounded-lg hover:bg-red-700 transform hover:scale-105 transition-all duration-300 shadow-lg"
-                >
-                  {heroSlides[currentSlide].cta}
-                  <svg className="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-                  </svg>
-                </Link>
-                <Link
-                  to="/about"
-                  className="inline-flex items-center justify-center px-8 py-4 bg-white/20 backdrop-blur-sm text-white font-semibold rounded-lg hover:bg-white/30 transform hover:scale-105 transition-all duration-300 border border-white/30"
-                >
-                  Hakkımızda
-                  <svg className="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                </Link>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Slide navigation arrows */}
-        <button
-          onClick={prevSlide}
-          className="absolute left-4 top-1/2 transform -translate-y-1/2 z-20 p-2 bg-white/20 backdrop-blur-sm rounded-full hover:bg-white/30 transition-colors"
-          aria-label="Previous slide"
-        >
-          <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-          </svg>
-        </button>
-        <button
-          onClick={nextSlide}
-          className="absolute right-4 top-1/2 transform -translate-y-1/2 z-20 p-2 bg-white/20 backdrop-blur-sm rounded-full hover:bg-white/30 transition-colors"
-          aria-label="Next slide"
-        >
-          <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-          </svg>
-        </button>
-      </section>
+      {/* Admin-friendly Hero Section */}
+      <HeroSlider />
 
       {/* Trust Badges Section */}
       <section className="py-12 bg-gray-50">
