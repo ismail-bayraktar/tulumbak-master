@@ -229,38 +229,34 @@ const PlaceOrder = () => {
     const [currentStep, setCurrentStep] = useState('info'); // 'info' or 'payment'
 
     return (
-        <div className="min-h-screen bg-[#FAF9F7]">
-            {/* Breadcrumb */}
-            <div className="bg-white border-b py-4">
-                <div className="max-w-6xl mx-auto px-4">
-                    <div className="flex gap-2 text-sm text-gray-600">
-                        <button type="button" onClick={() => navigate('/cart')} className="hover:text-black">Sepet</button>
-                        <span>/</span>
-                        <button 
-                            type="button" 
-                            onClick={() => setCurrentStep('info')} 
-                            className={currentStep === 'info' ? 'text-black font-medium' : 'hover:text-black'}
-                        >
-                            Bilgiler & Teslimat
-                        </button>
-                        <span>/</span>
-                        <button 
-                            type="button" 
-                            onClick={() => setCurrentStep('payment')} 
-                            className={currentStep === 'payment' ? 'text-black font-medium' : 'hover:text-black'}
-                        >
-                            Ödeme
-                        </button>
-                    </div>
-                </div>
-            </div>
-            
-            <form onSubmit={onSubmitHandler} className="py-8">
-                <div className="max-w-6xl mx-auto px-4">
-                    <div className="grid grid-cols-1 lg:grid-cols-[1fr_400px] gap-0">
-                        {/* Left Side - Full Width Background */}
-                        <div className="bg-white pr-8 py-8 pl-8">
-                            <div className="max-w-3xl mx-auto">
+        <div className="min-h-screen">
+            <form onSubmit={onSubmitHandler}>
+                <div className="grid grid-cols-1 lg:grid-cols-2 min-h-screen">
+                    {/* Left Side - Tan/Beige Background */}
+                    <div className="bg-[#F5F4F1] py-12 px-8">
+                        <div className="max-w-2xl">
+                            {/* Breadcrumb */}
+                            <div className="mb-8 pb-4 border-b border-gray-200">
+                                <div className="flex gap-2 text-sm text-gray-600">
+                                    <button type="button" onClick={() => navigate('/cart')} className="hover:text-black">Sepet</button>
+                                    <span>/</span>
+                                    <button 
+                                        type="button" 
+                                        onClick={() => setCurrentStep('info')} 
+                                        className={currentStep === 'info' ? 'text-black font-medium' : 'hover:text-black'}
+                                    >
+                                        Bilgiler & Teslimat
+                                    </button>
+                                    <span>/</span>
+                                    <button 
+                                        type="button" 
+                                        onClick={() => setCurrentStep('payment')} 
+                                        className={currentStep === 'payment' ? 'text-black font-medium' : 'hover:text-black'}
+                                    >
+                                        Ödeme
+                                    </button>
+                                </div>
+                            </div>
                             {/* Contact */}
                             <div className="mb-8">
                                 <h3 className="font-medium mb-4 text-base">İletişim Bilgileri</h3>
@@ -272,64 +268,40 @@ const PlaceOrder = () => {
                                 </label>
                             </div>
 
-                            {/* Address */}
-                            <div>
+                            {/* Address - Simplified for İzmir/Menemen */}
+                            <div className="mt-8">
                                 <h3 className="font-medium mb-4 text-base">Teslimat Adresi</h3>
                                 <div className="grid grid-cols-2 gap-3">
-                                    <input required onChange={onChangeHandler} name="firstName" value={formData.firstName} className="border border-gray-300 rounded-md py-2.5 px-3" type="text" placeholder="Ad (isteğe bağlı)" />
+                                    <input required onChange={onChangeHandler} name="firstName" value={formData.firstName} className="border border-gray-300 rounded-md py-2.5 px-3" type="text" placeholder="Ad" />
                                     <input required onChange={onChangeHandler} name="lastName" value={formData.lastName} className="border border-gray-300 rounded-md py-2.5 px-3" type="text" placeholder="Soyad" />
                                 </div>
-                                <input required onChange={onChangeHandler} name="street" value={formData.street} className="border border-gray-300 rounded-md py-2.5 px-3 w-full mt-3" type="text" placeholder="Adres" />
-                                <input onChange={onChangeHandler} name="apartment" value="" className="border border-gray-300 rounded-md py-2.5 px-3 w-full mt-3" type="text" placeholder="Daire, süit vb. (isteğe bağlı)" />
-                                <input required onChange={onChangeHandler} name="city" value={formData.city} className="border border-gray-300 rounded-md py-2.5 px-3 w-full mt-3" type="text" placeholder="Şehir" />
-                                <div className="grid grid-cols-3 gap-3 mt-3">
-                                    <select onChange={onChangeHandler} name="country" value={formData.country} className="border border-gray-300 rounded-md py-2.5 px-3" disabled>
-                                        <option value="Türkiye">Türkiye</option>
-                                    </select>
-                                    <input required onChange={onChangeHandler} name="state" value={formData.state} className="border border-gray-300 rounded-md py-2.5 px-3" type="text" placeholder="Bölge" />
+                                <input required onChange={onChangeHandler} name="street" value={formData.street} className="border border-gray-300 rounded-md py-2.5 px-3 w-full mt-3" type="text" placeholder="Mahalle, Sokak, Bina, Daire" />
+                                <div className="grid grid-cols-2 gap-3 mt-3">
+                                    <input required onChange={onChangeHandler} name="state" value={formData.state} className="border border-gray-300 rounded-md py-2.5 px-3" type="text" placeholder="Mahalle" />
                                     <input required onChange={onChangeHandler} name="zipcode" value={formData.zipcode} className="border border-gray-300 rounded-md py-2.5 px-3" type="number" placeholder="Posta Kodu" />
                                 </div>
                                 <div className="flex gap-2 mt-3">
-                                    <span className="py-2 px-3">+90</span>
+                                    <span className="text-gray-500 py-2">+90</span>
                                     <input required onChange={onChangeHandler} name="phone" value={formData.phone} className="border border-gray-300 rounded-md py-2.5 px-3 flex-1" type="tel" placeholder="Telefon" minLength={10} maxLength={10} />
                                 </div>
-                            </div>
-
-                            {/* Delivery */}
-                            <div className="mt-8">
-                                <h3 className="font-medium mb-4 text-base">Teslimat</h3>
-                                <select value={deliveryZone} onChange={(e) => { setDeliveryZone(e.target.value); const zone = zones.find(z => z._id === e.target.value); if (zone) setDeliveryFee(zone.fee); }} className="w-full border border-gray-300 rounded-md py-2.5 px-3">
-                                    <option value="">Bölge seçiniz</option>
-                                    {zones.map((zone) => (<option key={zone._id} value={zone._id}>{zone.district} - {zone.fee}₺</option>))}
-                                </select>
-                                {deliveryZone && timeSlots.length > 0 && (
-                                    <select value={selectedTimeSlot} onChange={(e) => setSelectedTimeSlot(e.target.value)} className="w-full border border-gray-300 rounded-md py-2.5 px-3 mt-3">
-                                        <option value="">Zaman aralığı seçiniz</option>
-                                        {timeSlots.map((slot) => (<option key={slot._id} value={slot._id}>{slot.label} ({slot.start} - {slot.end})</option>))}
-                                    </select>
-                                )}
-                            </div>
-
-                            <button type="submit" className="w-full bg-black text-white px-6 py-4 rounded-md font-medium hover:bg-gray-800 transition">
-                                Siparişi Tamamla
-                            </button>
+                                <input required onChange={onChangeHandler} name="city" value="İzmir" className="border border-gray-300 rounded-md py-2.5 px-3 w-full mt-3 bg-gray-100" type="text" disabled />
                             </div>
                         </div>
+                    </div>
 
-                        {/* RIGHT: SUMMARY */}
-                        <div className="bg-[#FAF9F7] pl-8 py-8">
-                            <OrderSummary 
-                                deliveryFee={deliveryFee} 
-                                couponDiscount={couponDiscount} 
-                                couponCode={couponCode} 
-                                setCouponCode={setCouponCode} 
-                                setCouponDiscount={setCouponDiscount} 
-                                handleCouponApply={handleCouponApply}
-                                method={method}
-                                setMethod={setMethod}
-                                bankInfo={bankInfo}
-                            />
-                        </div>
+                    {/* RIGHT: SUMMARY */}
+                    <div className="bg-white pl-8 py-8">
+                        <OrderSummary 
+                            deliveryFee={deliveryFee} 
+                            couponDiscount={couponDiscount} 
+                            couponCode={couponCode} 
+                            setCouponCode={setCouponCode} 
+                            setCouponDiscount={setCouponDiscount} 
+                            handleCouponApply={handleCouponApply}
+                            method={method}
+                            setMethod={setMethod}
+                            bankInfo={bankInfo}
+                        />
                     </div>
                 </div>
             </form>
