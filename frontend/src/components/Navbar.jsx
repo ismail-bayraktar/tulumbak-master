@@ -3,6 +3,7 @@ import {Link, NavLink} from "react-router-dom";
 import {useContext, useState} from "react";
 import {ShopContext} from "../context/ShopContext.jsx";
 import BaklavaLogo from "./BaklavaLogo.jsx";
+import MiniCart from "./MiniCart.jsx";
 
 const Navbar = () => {
     const [visible, setVisible] = useState(false);
@@ -65,16 +66,7 @@ const Navbar = () => {
                         </div>
                     }
                 </div>
-                <Link to={"/cart"} className={"relative"}>
-                    <img
-                        src={assets.cart_icon}
-                        className={"w-5 min-w-5"}
-                        alt={"cart-icon"}
-                    />
-                    <p className={'absolute right-[-5px] bottom-[-5px] w-4 text-center leading-4 bg-black text-white aspect-square rounded-full text-[8px]'}>
-                        {getCartCount()}
-                    </p>
-                </Link>
+                <MiniCart />
                 <img
                     onClick={() => setVisible(true)}
                     src={assets.menu_icon}
