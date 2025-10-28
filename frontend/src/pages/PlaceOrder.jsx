@@ -246,7 +246,7 @@ const PlaceOrder = () => {
             
             <form onSubmit={onSubmitHandler} className="py-8">
                 <div className="max-w-6xl mx-auto px-4">
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 border-r border-gray-300 pr-8">
                         {/* LEFT: FORMS */}
                         <div className="space-y-6">
 
@@ -299,21 +299,6 @@ const PlaceOrder = () => {
                                 )}
                             </div>
 
-                            {/* Coupon */}
-                            <div className="bg-white p-4 rounded-lg border">
-                                <h3 className="font-medium mb-4">İndirim Kodu</h3>
-                                <div className="flex gap-2">
-                                    <input type="text" value={couponCode} onChange={(e) => setCouponCode(e.target.value.toUpperCase())} placeholder="İndirim kodu" className="flex-1 border border-gray-300 rounded-md py-2.5 px-3" />
-                                    <button type="button" onClick={handleCouponApply} className="px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded-md">Uygula</button>
-                                </div>
-                                {couponDiscount > 0 && (
-                                    <div className="mt-2 flex items-center gap-2">
-                                        <span className="bg-gray-200 px-2 py-1 rounded-full text-xs">{couponCode}</span>
-                                        <button type="button" onClick={() => { setCouponCode(''); setCouponDiscount(0); }} className="text-gray-400 hover:text-gray-600">×</button>
-                                    </div>
-                                )}
-                            </div>
-
                             {/* Payment */}
                             <div className="bg-white p-4 rounded-lg border">
                                 <h3 className="font-medium mb-4">Ödeme Yöntemi</h3>
@@ -351,8 +336,15 @@ const PlaceOrder = () => {
                         </div>
 
                         {/* RIGHT: SUMMARY */}
-                        <div>
-                            <OrderSummary deliveryFee={deliveryFee} couponDiscount={couponDiscount} />
+                        <div className="lg:border-l lg:border-gray-300 lg:pl-8">
+                            <OrderSummary 
+                                deliveryFee={deliveryFee} 
+                                couponDiscount={couponDiscount} 
+                                couponCode={couponCode} 
+                                setCouponCode={setCouponCode} 
+                                setCouponDiscount={setCouponDiscount} 
+                                handleCouponApply={handleCouponApply}
+                            />
                         </div>
                     </div>
                 </div>
