@@ -234,7 +234,7 @@ const PlaceOrder = () => {
                 <div className="grid grid-cols-1 lg:grid-cols-2 min-h-screen">
                     {/* Left Side - Tan/Beige Background */}
                     <div className="bg-[#F5F4F1] py-12 px-8">
-                        <div className="max-w-2xl">
+                        <div className="max-w-2xl mt-16">
                             {/* Breadcrumb */}
                             <div className="mb-8 pb-4 border-b border-gray-200">
                                 <div className="flex gap-2 text-sm text-gray-600">
