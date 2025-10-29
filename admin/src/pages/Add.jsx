@@ -437,21 +437,160 @@ const Add = ({ token }) => {
                 </div>
             </div>
             
-            <div className={"flex gap-2 mt-2"}>
-                <input
-                    onChange={() => setBestseller((prev) => !prev)}
-                    checked={bestseller}
-                    type={"checkbox"}
-                    id={"bestseller"}
-                />
-                <label className={"cursor-pointer"} htmlFor={"bestseller"}>
-                    Ürünü Öne Çıkar
-                </label>
-            </div>
-            <button type={"submit"} className={"w-28 py-3 mt-4 bg-black text-white"}>
-                EKLE
-            </button>
-        </form>
+                {/* Product Details Section */}
+                <div className="space-y-4">
+                    <h3 className="text-lg font-semibold text-gray-800">Ürün Detayları</h3>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                                Alerjen Bilgileri
+                            </label>
+                            <input
+                                type="text"
+                                value={allergens}
+                                onChange={(e) => setAllergens(e.target.value)}
+                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                placeholder="Örn: Antep fıstığı, gluten, süt ürünleri"
+                            />
+                        </div>
+
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                                Taze/Kuru
+                            </label>
+                            <select
+                                value={freshType}
+                                onChange={(e) => setFreshType(e.target.value)}
+                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            >
+                                <option value="taze">Taze</option>
+                                <option value="kuru">Kuru</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Malzemeler
+                        </label>
+                        <textarea
+                            value={ingredients}
+                            onChange={(e) => setIngredients(e.target.value)}
+                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            rows={2}
+                            placeholder="Örn: Fıstık, şeker, yumurta, tereyağı, un"
+                        />
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                                Raf Ömrü / Tazeleme
+                            </label>
+                            <input
+                                type="text"
+                                value={shelfLife}
+                                onChange={(e) => setShelfLife(e.target.value)}
+                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                placeholder="Örn: 5 gün taze"
+                            />
+                        </div>
+
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                                Ambalaj
+                            </label>
+                            <select
+                                value={packaging}
+                                onChange={(e) => setPackaging(e.target.value)}
+                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            >
+                                <option value="standart">Standart</option>
+                                <option value="özel">Özel Ambalaj</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Saklama Koşulları
+                        </label>
+                        <input
+                            type="text"
+                            value={storageInfo}
+                            onChange={(e) => setStorageInfo(e.target.value)}
+                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            placeholder="Örn: Kuru ve serin yerde saklayın"
+                        />
+                    </div>
+
+                    <div className="flex items-center gap-3">
+                        <input
+                            type="checkbox"
+                            checked={giftWrap}
+                            onChange={(e) => setGiftWrap(e.target.checked)}
+                            id="giftWrap"
+                            className="w-5 h-5"
+                        />
+                        <label htmlFor="giftWrap" className="text-sm font-medium text-gray-700 cursor-pointer">
+                            Hediye Paketi Seçeneği 🎁
+                        </label>
+                    </div>
+
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Etiketler (örn: Hemen Yenir, Servis Gerektirir)
+                        </label>
+                        <div className="flex gap-2 mb-2">
+                            <input
+                                type="text"
+                                value={labelInput}
+                                onChange={(e) => setLabelInput(e.target.value)}
+                                onKeyPress={(e) => {
+                                    if (e.key === 'Enter') {
+                                        e.preventDefault();
+                                        if (labelInput.trim() && !labels.includes(labelInput.trim())) {
+                                            setLabels([...labels, labelInput.trim()]);
+                                            setLabelInput("");
+                                        }
+                                    }
+                                }}
+                                className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                placeholder="Etiket yazıp Enter'a basın"
+                            />
+                        </div>
+                        <div className="flex gap-2 flex-wrap">
+                            {labels.map((label, idx) => (
+                                <span 
+                                    key={idx} 
+                                    className="px-3 py-1 bg-blue-100 text-blue-800 rounded-lg text-sm"
+                                >
+                                    {label}
+                                    <button 
+                                        type="button" 
+                                        onClick={() => setLabels(labels.filter((_, i) => i !== idx))} 
+                                        className="ml-2 hover:font-bold"
+                                    >
+                                        ×
+                                    </button>
+                                </span>
+                            ))}
+                        </div>
+                    </div>
+                </div>
+
+                {/* Submit Button */}
+                <div className="border-t border-gray-200 pt-6">
+                    <button 
+                        type="submit" 
+                        className="w-full md:w-auto px-8 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors font-semibold"
+                    >
+                        ✅ Ürünü Ekle
+                    </button>
+                </div>
+            </form>
+        </div>
     );
 };
 
