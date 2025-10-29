@@ -4,16 +4,6 @@ import { useReactToPrint } from 'react-to-print';
 const PrintInvoice = ({ order, onClose, isOpen = false }) => {
     const componentRef = useRef();
 
-    const handlePrint = useReactToPrint({
-        content: () => componentRef.current,
-        documentTitle: `Fatura_${order.trackingId || order._id.slice(-8)}`,
-        onAfterPrint: () => {
-            onClose && onClose();
-        }
-    });
-
-    if (!isOpen) return null;
-
     const formatDate = (timestamp) => {
         return new Date(timestamp).toLocaleDateString('tr-TR', {
             day: '2-digit',
