@@ -17,6 +17,7 @@ import CourierManagement from "./pages/CourierManagement.jsx";
 import Dashboard from "./pages/Dashboard.jsx";
 import EmailLogs from "./pages/EmailLogs.jsx";
 import SmsLogs from "./pages/SmsLogs.jsx";
+import Branches from "./pages/Branches.jsx";
 import {useEffect, useState} from "react";
 import Login from "./components/Login.jsx";
 import { ToastContainer } from 'react-toastify';
@@ -59,6 +60,7 @@ const App = () => {
                                 <Route path={"/sms-logs"} element={<SmsLogs token={token} />}/>
                                 <Route path={"/reports"} element={<Reports token={token} />}/>
                                 <Route path={"/courier-management"} element={<CourierManagement token={token} />}/>
+                                <Route path={"/branches"} element={<Branches token={token} />}/>
                             </Routes>
                         </div>
                     </div>
