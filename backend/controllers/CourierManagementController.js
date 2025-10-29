@@ -170,6 +170,16 @@ const assignOrderToCourier = async (req, res) => {
             return res.json({ success: false, message: 'Courier is not available' });
         }
 
+        // Zone-based validation: Check if courier serves the order's delivery zone
+        if (order.delivery?.zoneId && courier.assignedZones && courier.assignedZones.length > 0) {
+            if (!courier.assignedZones.includes(order.delivery.zoneId)) {
+                return res.json({ 
+                    success: false, 
+                    message: `This courier does not serve the delivery zone for this order. Please assign a courier that serves the selected zone.` 
+                });
+            }
+        }
+
         // Update order
         order.courierTrackingId = `CR-${courierId.slice(-6)}`;
         order.courierStatus = 'yolda';
@@ -271,6 +281,36 @@ const updateCourierStatus = async (req, res) => {
     }
 };
 
+/**
+ * Get couriers available for a specific delivery zone
+ */
+const getCouriersForZone = async (req, res) => {
+    try {
+        const { zoneId } = req.params;
+
+        // Find couriers that either:
+        // 1. Are assigned to this zone
+        // 2. Have no assigned zones (universal)
+        const couriers = await courierModel.find({
+            status: 'active',
+            $or: [
+                { assignedZones: { $in: [zoneId] } },
+                { assignedZones: { $size: 0 } },
+                { assignedZones: { $exists: false } }
+            ]
+        });
+
+        res.json({ 
+            success: true, 
+            couriers,
+            count: couriers.length
+        });
+    } catch (error) {
+        console.error('Error fetching couriers for zone:', error);
+        res.json({ success: false, message: error.message });
+    }
+};
+
 export {
     createCourier,
     getAllCouriers,
@@ -279,6 +319,7 @@ export {
     deleteCourier,
     assignOrderToCourier,
     getCourierPerformance,
-    updateCourierStatus
+    updateCourierStatus,
+    getCouriersForZone
 };
 

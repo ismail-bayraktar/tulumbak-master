@@ -59,6 +59,9 @@ const courierSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId, 
         ref: 'order' 
     }],
+    assignedZones: [{
+        type: String // Delivery zone IDs that this courier services
+    }],
     notes: { type: String },
     createdAt: { type: Number, default: Date.now },
     updatedAt: { type: Number, default: Date.now }

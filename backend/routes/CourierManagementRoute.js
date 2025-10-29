@@ -8,7 +8,8 @@ import {
     deleteCourier,
     assignOrderToCourier,
     getCourierPerformance,
-    updateCourierStatus
+    updateCourierStatus,
+    getCouriersForZone
 } from '../controllers/CourierManagementController.js';
 
 const courierManagementRouter = express.Router();
@@ -25,6 +26,7 @@ courierManagementRouter.delete('/:id', deleteCourier);
 
 // Courier-specific operations
 courierManagementRouter.post('/assign', assignOrderToCourier);
+courierManagementRouter.get('/zone/:zoneId', getCouriersForZone);
 courierManagementRouter.get('/:id/performance', getCourierPerformance);
 courierManagementRouter.put('/:id/status', updateCourierStatus);
 
