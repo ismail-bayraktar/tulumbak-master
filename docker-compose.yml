@@ -12,6 +12,11 @@ services:
       MONGO_INITDB_ROOT_PASSWORD: example
     volumes:
       - mongo_data:/data/db
+    healthcheck:
+      test: ["CMD-SHELL", "echo 'db.runCommand({ ping: 1 })' | mongosh --username $$MONGO_INITDB_ROOT_USERNAME --password $$MONGO_INITDB_ROOT_PASSWORD --authenticationDatabase admin --quiet --host localhost:27017"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
 
   mongo-express:
     image: mongo-express:1.0.2-20
