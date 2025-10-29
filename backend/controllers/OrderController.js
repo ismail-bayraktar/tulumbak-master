@@ -2,6 +2,8 @@ import orderModel from "../models/OrderModel.js";
 import userModel from "../models/UserModel.js";
 import deliveryZoneModel from "../models/DeliveryZoneModel.js";
 import { reduceStock, checkLowStockAlert } from "../middleware/StockCheck.js";
+import AssignmentService from "../services/AssignmentService.js";
+import settingsModel from "../models/SettingsModel.js";
 
 // Generate unique tracking ID
 const generateTrackingId = () => {
@@ -75,6 +77,16 @@ const placeOrder = async (req, res) => {
         const trackingId = generateTrackingId();
         const trackingLink = `${process.env.FRONTEND_URL || 'http://localhost:5173'}/track/${trackingId}`;
         
+        // Determine assignment mode from settings (default auto)
+        let assignmentMode = 'auto';
+        try {
+            const modeSetting = await settingsModel.findOne({ key: 'assignment_mode' });
+            if (modeSetting?.value === 'hybrid') assignmentMode = 'hybrid';
+        } catch (_e) {}
+
+        // Find best branch (suggestion or direct assignment)
+        const bestBranch = await AssignmentService.findBestBranch({ delivery, address });
+
         const orderData = {
             userId,
             items,
@@ -88,11 +100,33 @@ const placeOrder = async (req, res) => {
             giftNote,
             trackingId,
             trackingLink,
+            ...(bestBranch && assignmentMode === 'auto' ? {
+                branchId: bestBranch._id.toString(),
+                branchCode: bestBranch.code,
+                assignment: {
+                    mode: 'auto',
+                    status: 'assigned',
+                    decidedBy: 'system',
+                    decidedAt: Date.now()
+                }
+            } : {}),
+            ...(bestBranch && assignmentMode === 'hybrid' ? {
+                assignment: {
+                    mode: 'hybrid',
+                    status: 'suggested',
+                    suggestedBranchId: bestBranch._id.toString(),
+                    decidedBy: 'system'
+                }
+            } : {}),
             statusHistory: [{
                 status: 'Siparişiniz Alındı',
                 timestamp: Date.now(),
                 location: address?.address || '',
-                note: 'Siparişiniz sisteme kaydedildi',
+                note: bestBranch
+                    ? (assignmentMode === 'auto'
+                        ? `Siparişiniz ${bestBranch.name} şubesine atandı`
+                        : `Önerilen şube: ${bestBranch.name}`)
+                    : 'Siparişiniz sisteme kaydedildi',
                 updatedBy: 'system'
             }]
         }

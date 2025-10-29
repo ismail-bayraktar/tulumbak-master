@@ -29,7 +29,17 @@ const orderSchema = new mongoose.Schema({
     orderId: {type: String},
     phone: {type: String}, // Customer phone for SMS notifications
     trackingId: { type: String, unique: true }, // Public tracking ID (ABC123)
-    trackingLink: { type: String }
+    trackingLink: { type: String },
+    // Branch assignment
+    branchId: { type: String },
+    branchCode: { type: String },
+    assignment: {
+        mode: { type: String, enum: ['auto', 'hybrid'], default: 'auto' },
+        status: { type: String, enum: ['assigned', 'suggested', 'pending'], default: 'assigned' },
+        suggestedBranchId: { type: String },
+        decidedBy: { type: String, enum: ['system', 'admin'], default: 'system' },
+        decidedAt: { type: Number }
+    }
 });
 
 // Performance indexes
@@ -40,6 +50,8 @@ orderSchema.index({ courierTrackingId: 1 });
 orderSchema.index({ date: -1 });
 orderSchema.index({ payment: 1 });
 orderSchema.index({ 'delivery.zoneId': 1 });
+orderSchema.index({ branchId: 1 });
+orderSchema.index({ branchCode: 1 });
 
 const orderModel = mongoose.models.order || mongoose.model("order", orderSchema);
 
