@@ -98,166 +98,234 @@ const Add = ({ token }) => {
     };
 
     return (
-        <form onSubmit={onSubmitHandler} className={"flex flex-col w-full items-start gap-3"}>
+        <div className="space-y-6">
+            {/* Header */}
             <div>
-                <p className={"mb-2"}>Görsel Yükle</p>
-                <div className={"flex gap-2"}>
-                    {[1, 2, 3, 4].map((num) => (
-                        <label htmlFor={`image${num}`} key={num}>
-                            <img
-                                className={"w-20"}
-                                src={
-                                    !eval(`image${num}`) ? assets.upload_area : URL.createObjectURL(eval(`image${num}`))
-                                }
-                                alt=""
-                            />
-                            <input
-                                onChange={(e) => eval(`setImage${num}(e.target.files[0])`)}
-                                type={"file"}
-                                id={`image${num}`}
-                                hidden
-                            />
+                <h1 className="text-3xl font-bold text-gray-800">Ürün Ekle</h1>
+                <p className="text-gray-600 mt-2">Yeni ürün ekleyin ve yönetin</p>
+            </div>
+
+            <form onSubmit={onSubmitHandler} className="bg-white p-6 rounded-lg shadow-sm border border-gray-200 space-y-6">
+                {/* Image Upload Section */}
+                <div className="space-y-4">
+                    <h3 className="text-lg font-semibold text-gray-800">Görsel Yükleme</h3>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        {[1, 2, 3, 4].map((num) => (
+                            <div key={num} className="relative">
+                                <label 
+                                    htmlFor={`image${num}`}
+                                    className="block cursor-pointer"
+                                >
+                                    <div className="aspect-square border-2 border-dashed border-gray-300 rounded-lg hover:border-blue-500 transition-colors overflow-hidden">
+                                        <img
+                                            className="w-full h-full object-cover"
+                                            src={
+                                                !eval(`image${num}`) 
+                                                    ? assets.upload_area 
+                                                    : URL.createObjectURL(eval(`image${num}`))
+                                            }
+                                            alt=""
+                                        />
+                                    </div>
+                                    {!eval(`image${num}`) && (
+                                        <div className="absolute inset-0 flex items-center justify-center">
+                                            <div className="text-center">
+                                                <span className="text-4xl">📷</span>
+                                                <p className="text-xs text-gray-500 mt-1">Görsel {num}</p>
+                                            </div>
+                                        </div>
+                                    )}
+                                </label>
+                                <input
+                                    onChange={(e) => {
+                                        const file = e.target.files[0];
+                                        eval(`setImage${num}(file)`);
+                                    }}
+                                    type="file"
+                                    id={`image${num}`}
+                                    accept="image/*"
+                                    hidden
+                                />
+                                {eval(`image${num}`) && (
+                                    <button
+                                        type="button"
+                                        onClick={() => eval(`setImage${num}(false)`)}
+                                        className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs hover:bg-red-600"
+                                    >
+                                        ×
+                                    </button>
+                                )}
+                            </div>
+                        ))}
+                    </div>
+                    <p className="text-sm text-gray-500">
+                        Ana görsel ve ürün detayları için en az 1 görsel yükleyin
+                    </p>
+                </div>
+
+                <div className="border-t border-gray-200 pt-6"></div>
+                {/* Basic Information */}
+                <div className="space-y-4">
+                    <h3 className="text-lg font-semibold text-gray-800">Temel Bilgiler</h3>
+                    
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Ürün Adı *
                         </label>
-                    ))}
-                </div>
-            </div>
-            <div className={"w-full"}>
-                <p className={"mb-2"}>Ürün Adı</p>
-                <input
-                    onChange={(e) => setName(e.target.value)}
-                    value={name}
-                    className={"w-full max-w-[500px] px-3 py-2"}
-                    type={"text"}
-                    placeholder={"Type here"}
-                    required
-                />
-            </div>
-            <div className={"w-full"}>
-                <p className={"mb-2"}>Ürün Açıklaması</p>
-                <textarea
-                    onChange={(e) => setDescription(e.target.value)}
-                    value={description}
-                    className={"w-full max-w-[500px] px-3 py-2"}
-                    type={"text"}
-                    placeholder={"Write content here"}
-                    required
-                />
-            </div>
-            <div className={"flex flex-col sm:flex-row gap-2 w-full sm:gap-8"}>
-                <div>
-                    <p className={"mb-2"}>Ürün Kategorisi</p>
-                    <select
-                        onChange={(e) => setCategory(e.target.value)}
-                        className={"w-full px-3 py-2"}
-                    >
-                        <option value=""></option>
-                        <option value="Baklava">Baklava</option>
-                        <option value="Kadayıf">Kadayıf</option>
-                        <option value="Sütlü Tatlı">Sütlü Tatlı</option>
-                        <option value="Kuru Tatlı">Kuru Tatlı</option>
-                        <option value="Möğürlü Tatlı">Möğürlü Tatlı</option>
-                        <option value="Şerbetli Tatlı">Şerbetli Tatlı</option>
-                        <option value="Özel Paket">Özel Paket</option>
-                    </select>
-                </div>
-
-                {/*
-                 <div>
-                    <p className={"mb-2"}>Sub category</p>
-                    <select
-                        onChange={(e) => setSubCategory(e.target.value)}
-                        className={"w-full px-3 py-2"}
-                    >
-                        <option value=""></option>
-                        <option value="Ceviz">Ceviz</option>
-                        <option value="İncir">İncir</option>
-                        <option value="Fındık">Fındık</option>
-                        <option value="Badem">Badem</option>
-                        <option value="Fasulye">Fasulye</option>
-                        <option value="Mürdüm Eriği">Mürdüm Eriği</option>
-                        <option value="Cennet Hurması">Cennet Hurması</option>
-                    </select>
-                </div>
-               */}
-
-                <div>
-                    <p className={"mb-2"}>Ürün Fiyatı</p>
-                    <input
-                        onChange={(e) => setPrice(e.target.value)}
-                        value={price}
-                        className={"w-full px-3 py-2 sm:w-[120px]"}
-                        type={"Number"}
-                        placeholder={"35"}
-                        required
-                    />
-                </div>
-                <div>
-                    <p className={"mb-2"}>Stok Miktarı</p>
-                    <input
-                        onChange={(e) => setStock(e.target.value)}
-                        value={stock}
-                        className={"w-full px-3 py-2 sm:w-[120px]"}
-                        type={"number"}
-                        min={0}
-                        placeholder={"10"}
-                        required
-                    />
-                </div>
-            </div>
-            
-            {/* Kişi Sayısı Seçimi */}
-            <div>
-                <p className={"mb-2"}>Kişi Sayısı</p>
-                <div className={"flex gap-3 flex-wrap"}>
-                    {["2-3 Kişilik", "5-6 Kişilik", "8-10 Kişilik", "12+ Kişilik"].map((count) => (
-                        <div
-                            key={count}
-                            onClick={() =>
-                                setPersonCounts((prev) =>
-                                    prev.includes(count)
-                                        ? prev.filter((item) => item !== count)
-                                        : [...prev, count]
-                                )
-                            }
-                        >
-                            <p
-                                className={`${
-                                    personCounts.includes(count) ? "bg-pink-100" : "bg-slate-200"
-                                } px-3 py-1 cursor-pointer`}
+                        <input
+                            onChange={(e) => setName(e.target.value)}
+                            value={name}
+                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            type="text"
+                            placeholder="Örn: Antep Fıstıklı Baklava"
+                            required
+                        />
+                    </div>
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Ürün Açıklaması *
+                        </label>
+                        <textarea
+                            onChange={(e) => setDescription(e.target.value)}
+                            value={description}
+                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            rows={4}
+                            placeholder="Ürünün özelliklerini, lezzetini ve kullanımını açıklayın..."
+                            required
+                        />
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                                Kategori *
+                            </label>
+                            <select
+                                onChange={(e) => setCategory(e.target.value)}
+                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                required
                             >
-                                {count}
-                            </p>
+                                <option value="">Seçiniz</option>
+                                <option value="Baklava">Baklava</option>
+                                <option value="Kadayıf">Kadayıf</option>
+                                <option value="Sütlü Tatlı">Sütlü Tatlı</option>
+                                <option value="Kuru Tatlı">Kuru Tatlı</option>
+                                <option value="Möğürlü Tatlı">Möğürlü Tatlı</option>
+                                <option value="Şerbetli Tatlı">Şerbetli Tatlı</option>
+                                <option value="Özel Paket">Özel Paket</option>
+                            </select>
                         </div>
-                    ))}
-                </div>
-            </div>
 
-            {/* Gramaj Seçimi */}
-            <div>
-                <p className={"mb-2"}>Gramaj (Gram)</p>
-                <div className={"flex gap-3 flex-wrap"}>
-                    {availableSizes.map((size) => (
-                        <div
-                            key={size}
-                            onClick={() =>
-                                setSizes((prev) =>
-                                    prev.includes(size)
-                                        ? prev.filter((item) => item !== size)
-                                        : [...prev, size]
-                                )
-                            }
-                        >
-                            <p
-                                className={`${
-                                    sizes.includes(size) ? "bg-pink-100" : "bg-slate-200"
-                                } px-3 py-1 cursor-pointer`}
-                            >
-                                {size}gr
-                            </p>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                                Fiyat (₺) *
+                            </label>
+                            <input
+                                onChange={(e) => setPrice(e.target.value)}
+                                value={price}
+                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                type="number"
+                                step="0.01"
+                                placeholder="99.99"
+                                required
+                            />
                         </div>
-                    ))}
+
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                                Stok *
+                            </label>
+                            <input
+                                onChange={(e) => setStock(e.target.value)}
+                                value={stock}
+                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                type="number"
+                                min={0}
+                                placeholder="10"
+                                required
+                            />
+                        </div>
+
+                        <div className="flex items-end">
+                            <div className="w-full">
+                                <label className="flex items-center gap-2 cursor-pointer">
+                                    <input
+                                        type="checkbox"
+                                        checked={bestseller}
+                                        onChange={() => setBestseller((prev) => !prev)}
+                                        className="w-5 h-5"
+                                    />
+                                    <span className="text-sm font-medium text-gray-700">
+                                        Öne Çıkan Ürün ⭐
+                                    </span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-            </div>
+
+                <div className="border-t border-gray-200 pt-6"></div>
+                {/* Size & Person Count Selection */}
+                <div className="space-y-4">
+                    <h3 className="text-lg font-semibold text-gray-800">Boyut ve Miktar</h3>
+                    
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Gramaj (Gram)
+                        </label>
+                        <div className="flex gap-3 flex-wrap">
+                            {availableSizes.map((size) => (
+                                <button
+                                    key={size}
+                                    type="button"
+                                    onClick={() =>
+                                        setSizes((prev) =>
+                                            prev.includes(size)
+                                                ? prev.filter((item) => item !== size)
+                                                : [...prev, size]
+                                        )
+                                    }
+                                    className={`px-4 py-2 rounded-lg border-2 transition-all ${
+                                        sizes.includes(size)
+                                            ? "bg-pink-100 border-pink-500 text-pink-700"
+                                            : "bg-gray-50 border-gray-300 text-gray-700 hover:border-pink-300"
+                                    }`}
+                                >
+                                    {size}gr
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Kişi Sayısı
+                        </label>
+                        <div className="flex gap-3 flex-wrap">
+                            {["2-3 Kişilik", "5-6 Kişilik", "8-10 Kişilik", "12+ Kişilik"].map((count) => (
+                                <button
+                                    key={count}
+                                    type="button"
+                                    onClick={() =>
+                                        setPersonCounts((prev) =>
+                                            prev.includes(count)
+                                                ? prev.filter((item) => item !== count)
+                                                : [...prev, count]
+                                        )
+                                    }
+                                    className={`px-4 py-2 rounded-lg border-2 transition-all ${
+                                        personCounts.includes(count)
+                                            ? "bg-blue-100 border-blue-500 text-blue-700"
+                                            : "bg-gray-50 border-gray-300 text-gray-700 hover:border-blue-300"
+                                    }`}
+                                >
+                                    {count}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+                </div>
+
+                <div className="border-t border-gray-200 pt-6"></div>
 
             {/* Baklava Özel Alanlar */}
             <div className="w-full">
