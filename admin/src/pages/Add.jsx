@@ -106,64 +106,6 @@ const Add = ({ token }) => {
             </div>
 
             <form onSubmit={onSubmitHandler} className="bg-white p-6 rounded-lg shadow-sm border border-gray-200 space-y-6">
-                {/* Image Upload Section */}
-                <div className="space-y-4">
-                    <h3 className="text-lg font-semibold text-gray-800">Görsel Yükleme</h3>
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                        {[1, 2, 3, 4].map((num) => (
-                            <div key={num} className="relative">
-                                <label 
-                                    htmlFor={`image${num}`}
-                                    className="block cursor-pointer"
-                                >
-                                    <div className="aspect-square border-2 border-dashed border-gray-300 rounded-lg hover:border-blue-500 transition-colors overflow-hidden">
-                                        <img
-                                            className="w-full h-full object-cover"
-                                            src={
-                                                !eval(`image${num}`) 
-                                                    ? assets.upload_area 
-                                                    : URL.createObjectURL(eval(`image${num}`))
-                                            }
-                                            alt=""
-                                        />
-                                    </div>
-                                    {!eval(`image${num}`) && (
-                                        <div className="absolute inset-0 flex items-center justify-center">
-                                            <div className="text-center">
-                                                <span className="text-4xl">📷</span>
-                                                <p className="text-xs text-gray-500 mt-1">Görsel {num}</p>
-                                            </div>
-                                        </div>
-                                    )}
-                                </label>
-                                <input
-                                    onChange={(e) => {
-                                        const file = e.target.files[0];
-                                        eval(`setImage${num}(file)`);
-                                    }}
-                                    type="file"
-                                    id={`image${num}`}
-                                    accept="image/*"
-                                    hidden
-                                />
-                                {eval(`image${num}`) && (
-                                    <button
-                                        type="button"
-                                        onClick={() => eval(`setImage${num}(false)`)}
-                                        className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs hover:bg-red-600"
-                                    >
-                                        ×
-                                    </button>
-                                )}
-                            </div>
-                        ))}
-                    </div>
-                    <p className="text-sm text-gray-500">
-                        Ana görsel ve ürün detayları için en az 1 görsel yükleyin
-                    </p>
-                </div>
-
-                <div className="border-t border-gray-200 pt-6"></div>
                 {/* Basic Information */}
                 <div className="space-y-4">
                     <h3 className="text-lg font-semibold text-gray-800">Temel Bilgiler</h3>
@@ -325,118 +267,7 @@ const Add = ({ token }) => {
                     </div>
                 </div>
 
-                <div className="border-t border-gray-200 pt-6"></div>
 
-            {/* Baklava Özel Alanlar */}
-            <div className="w-full">
-                <p className="mb-2">Alerjen Bilgileri</p>
-                <input
-                    type="text"
-                    value={allergens}
-                    onChange={(e) => setAllergens(e.target.value)}
-                    className="w-full px-3 py-2"
-                    placeholder="Örn: Antep fıstığı, gluten, süt ürünleri"
-                />
-            </div>
-
-            <div className="w-full">
-                <p className="mb-2">Malzemeler</p>
-                <textarea
-                    value={ingredients}
-                    onChange={(e) => setIngredients(e.target.value)}
-                    className="w-full px-3 py-2"
-                    rows={2}
-                    placeholder="Örn: Fıstık, şeker, yumurta, tereyağı, un"
-                />
-            </div>
-
-            <div className="w-full">
-                <p className="mb-2">Raf Ömrü / Tazeleme</p>
-                <input
-                    type="text"
-                    value={shelfLife}
-                    onChange={(e) => setShelfLife(e.target.value)}
-                    className="w-full px-3 py-2"
-                    placeholder="Örn: 5 gün taze, oda sıcaklığında 10 gün"
-                />
-            </div>
-
-            <div className="w-full">
-                <p className="mb-2">Saklama Koşulları</p>
-                <input
-                    type="text"
-                    value={storageInfo}
-                    onChange={(e) => setStorageInfo(e.target.value)}
-                    className="w-full px-3 py-2"
-                    placeholder="Örn: Kuru ve serin yerde saklayın, buzdolabılır"
-                />
-            </div>
-
-            {/* YENİ ALANLAR */}
-            <div className="w-full">
-                <p className="mb-2">Taze/Kuru</p>
-                <select
-                    value={freshType}
-                    onChange={(e) => setFreshType(e.target.value)}
-                    className="w-full px-3 py-2"
-                >
-                    <option value="taze">Taze</option>
-                    <option value="kuru">Kuru</option>
-                </select>
-            </div>
-
-            <div className="w-full">
-                <p className="mb-2">Ambalaj</p>
-                <select
-                    value={packaging}
-                    onChange={(e) => setPackaging(e.target.value)}
-                    className="w-full px-3 py-2"
-                >
-                    <option value="standart">Standart</option>
-                    <option value="özel">Özel Ambalaj</option>
-                </select>
-            </div>
-
-            <div className="flex gap-2">
-                <input
-                    type="checkbox"
-                    checked={giftWrap}
-                    onChange={(e) => setGiftWrap(e.target.checked)}
-                    id="giftWrap"
-                />
-                <label htmlFor="giftWrap" className="cursor-pointer">Hediye Paketi Seçeneği</label>
-            </div>
-
-            <div className="w-full">
-                <p className="mb-2">Etiketler (örn: Hemen Yenir, Servis Gerektirir)</p>
-                <div className="flex gap-2 mb-2">
-                    <input
-                        type="text"
-                        value={labelInput}
-                        onChange={(e) => setLabelInput(e.target.value)}
-                        onKeyPress={(e) => {
-                            if (e.key === 'Enter') {
-                                e.preventDefault();
-                                if (labelInput.trim() && !labels.includes(labelInput.trim())) {
-                                    setLabels([...labels, labelInput.trim()]);
-                                    setLabelInput("");
-                                }
-                            }
-                        }}
-                        className="flex-1 px-3 py-2"
-                        placeholder="Etiket yazıp Enter'a basın"
-                    />
-                </div>
-                <div className="flex gap-2 flex-wrap">
-                    {labels.map((label, idx) => (
-                        <span key={idx} className="px-3 py-1 bg-gray-200 rounded">
-                            {label}
-                            <button type="button" onClick={() => setLabels(labels.filter((_, i) => i !== idx))} className="ml-2">×</button>
-                        </span>
-                    ))}
-                </div>
-            </div>
-            
                 {/* Product Details Section */}
                 <div className="space-y-4">
                     <h3 className="text-lg font-semibold text-gray-800">Ürün Detayları</h3>
@@ -578,6 +409,60 @@ const Add = ({ token }) => {
                             ))}
                         </div>
                     </div>
+                </div>
+
+                {/* Image Upload Section - Moved to Bottom */}
+                <div className="border-t border-gray-200 pt-6">
+                    <h3 className="text-lg font-semibold text-gray-800 mb-3">Görseller (Opsiyonel)</h3>
+                    <div className="grid grid-cols-4 gap-3">
+                        {[1, 2, 3, 4].map((num) => (
+                            <div key={num} className="relative">
+                                <label 
+                                    htmlFor={`image${num}`}
+                                    className="block cursor-pointer"
+                                >
+                                    <div className="aspect-square border-2 border-dashed border-gray-300 rounded-lg hover:border-blue-500 transition-colors overflow-hidden">
+                                        <img
+                                            className="w-full h-full object-cover"
+                                            src={
+                                                !eval(`image${num}`) 
+                                                    ? assets.upload_area 
+                                                    : URL.createObjectURL(eval(`image${num}`))
+                                            }
+                                            alt=""
+                                        />
+                                    </div>
+                                    {!eval(`image${num}`) && (
+                                        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                                            <span className="text-2xl">📷</span>
+                                        </div>
+                                    )}
+                                </label>
+                                <input
+                                    onChange={(e) => {
+                                        const file = e.target.files[0];
+                                        eval(`setImage${num}(file)`);
+                                    }}
+                                    type="file"
+                                    id={`image${num}`}
+                                    accept="image/*"
+                                    hidden
+                                />
+                                {eval(`image${num}`) && (
+                                    <button
+                                        type="button"
+                                        onClick={() => eval(`setImage${num}(false)`)}
+                                        className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs hover:bg-red-600"
+                                    >
+                                        ×
+                                    </button>
+                                )}
+                            </div>
+                        ))}
+                    </div>
+                    <p className="text-xs text-gray-500 mt-2">
+                        💡 İpucu: Ana görsel yüklemek yeterlidir, ekstra görseller ürün detaylarında kullanılır.
+                    </p>
                 </div>
 
                 {/* Submit Button */}
