@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&family=Prata&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@100..900&family=Nunito+Sans:wght@200..1000&family=Poppins:wght@100..900&family=Prata&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -9,12 +9,37 @@ a.active hr{
 }
 
 * {
-    font-family: Outfit, serif;
+    font-family: 'Inter', 'Nunito Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 }
+/* Font Classes */
 .prata-regular {
     font-family: "Prata", serif;
     font-weight: 400;
     font-style: normal;
+}
+
+.inter-font {
+    font-family: 'Inter', sans-serif;
+}
+
+.nunito-font {
+    font-family: 'Nunito Sans', sans-serif;
+}
+
+.poppins-font {
+    font-family: 'Poppins', sans-serif;
+}
+
+/* Price typography with Turkish Lira support */
+.price-display {
+    font-family: 'Poppins', 'Inter', sans-serif;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+}
+
+.turkish-lira {
+    font-family: 'Poppins', 'Inter', sans-serif;
+    font-weight: 500;
 }
 
 ::-webkit-scrollbar {

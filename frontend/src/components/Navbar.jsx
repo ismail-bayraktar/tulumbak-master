@@ -4,6 +4,7 @@ import {useContext, useState} from "react";
 import {ShopContext} from "../context/ShopContext.jsx";
 import BaklavaLogo from "./BaklavaLogo.jsx";
 import MiniCart from "./MiniCart.jsx";
+import { Search, User, Menu, ChevronLeft } from "lucide-react";
 
 const Navbar = () => {
     const [visible, setVisible] = useState(false);
@@ -41,19 +42,16 @@ const Navbar = () => {
             </ul>
 
             <div className={"flex items-center gap-6"}>
-                <img
-                    src={assets.search_icon}
-                    className={"w-5 cursor-pointer"}
-                    alt={"search-icon"}
+                <Search
+                    className={"w-5 h-5 cursor-pointer text-gray-700 hover:text-orange-500 transition-colors"}
                     onClick={() => setShowSearch(true)}
                 />
                 <div className={"group relative"}>
 
-                    <img
+                    <User
                         onClick={() => token ? null : navigate("/login")}
-                        src={assets.profile_icon}
-                        className={"w-5 cursor-pointer"}
-                        alt={"profile-icon"}/>
+                        className={"w-5 h-5 cursor-pointer text-gray-700 hover:text-orange-500 transition-colors"}
+                    />
 
                     {/* Dropdown Menu */}
                     {token &&
@@ -67,11 +65,9 @@ const Navbar = () => {
                     }
                 </div>
                 <MiniCart />
-                <img
+                <Menu
                     onClick={() => setVisible(true)}
-                    src={assets.menu_icon}
-                    className={"w-5 cursor-pointer sm:hidden"}
-                    alt={"menu-icon"}
+                    className={"w-5 h-5 cursor-pointer sm:hidden text-gray-700 hover:text-orange-500 transition-colors"}
                 />
             </div>
 
@@ -80,10 +76,8 @@ const Navbar = () => {
                 className={`absolute top-0 right-0 bottom-0 overflow-hidden bg-white transition-all ${visible ? 'w-full' : 'w-0'}`}>
                 <div className={"flex flex-col text-gray-600"}>
                     <div onClick={() => setVisible(false)} className={"flex items-center gap-4 p-3 cursor-pointer"}>
-                        <img
-                            src={assets.dropdown_icon}
-                            className={"h-4 rotate-180"}
-                            alt={"dropdown-icon"}
+                        <ChevronLeft
+                            className={"h-4 w-4 text-gray-700"}
                         />
                         <p>Geri</p>
                     </div>

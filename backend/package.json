@@ -16,7 +16,7 @@
   "dependencies": {
     "@sentry/node": "^8.55.0",
     "bcrypt": "^5.1.1",
-    "cloudinary": "^2.5.1",
+    "cloudinary": "^2.8.0",
     "cors": "^2.8.5",
     "crypto": "^1.0.1",
     "dotenv": "^16.4.7",
@@ -38,6 +38,7 @@
     "razorpay": "^2.9.5",
     "redis": "^4.7.0",
     "request": "^2.88.2",
+    "sharp": "^0.34.4",
     "stripe": "^17.5.0",
     "swagger-jsdoc": "^6.2.8",
     "swagger-ui-express": "^5.0.1",

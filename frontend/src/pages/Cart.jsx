@@ -3,6 +3,7 @@ import { ShopContext } from "../context/ShopContext.jsx";
 import Title from "../components/Title.jsx";
 import { assets } from "../assets/assets.js";
 import CartTotal from "../components/CartTotal.jsx";
+import { Trash2 } from "lucide-react";
 
 const Cart = () => {
     const { products, currency, cartItems, updateQuantity, navigate, getCartAmount } = useContext(ShopContext);
@@ -78,10 +79,8 @@ const Cart = () => {
                                         : updateQuantity(item._id, item.size, Number(e.target.value))
                                 }
                             />
-                            <img
-                                src={assets.bin_icon}
-                                alt={"bin-icon"}
-                                className={"w-4 mr-4 sm:w-5 cursor-pointer"}
+                            <Trash2
+                                className={"w-4 mr-4 sm:w-5 cursor-pointer text-red-500 hover:text-red-600 transition-colors"}
                                 onClick={() => updateQuantity(item._id, item.size, 0)}
                             />
                         </div>

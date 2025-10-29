@@ -2,6 +2,7 @@ import {useContext, useEffect, useState} from "react";
 import {ShopContext} from "../context/ShopContext.jsx";
 import {assets} from "../assets/assets.js";
 import {useLocation} from "react-router-dom";
+import { Search, X } from "lucide-react";
 
 const SearchBar = () => {
     const {search,setSearch, showSearch, setShowSearch} = useContext(ShopContext);
@@ -26,16 +27,12 @@ const SearchBar = () => {
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
                 />
-                <img
-                    src={assets.search_icon}
-                    alt=""
-                    className={"w-4"}
+                <Search
+                    className={"w-4 h-4 text-gray-500"}
                 />
             </div>
-            <img
-                src={assets.cross_icon}
-                alt={"cross-icon"}
-                className={"inline w-3 cursor-pointer"}
+            <X
+                className={"inline w-3 h-3 cursor-pointer text-gray-500 hover:text-gray-700"}
                 onClick={() => setShowSearch(false)}
             />
 
