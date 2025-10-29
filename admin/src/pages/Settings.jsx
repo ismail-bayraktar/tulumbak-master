@@ -30,7 +30,8 @@ const Settings = ({ token }) => {
     courier_api_url: '',
     courier_api_key: '',
     courier_webhook_url: '',
-    courier_auto_assign: false
+    courier_auto_assign: false,
+    assignment_mode: 'auto'
   });
 
   const [stockSettings, setStockSettings] = useState({
@@ -78,6 +79,16 @@ const Settings = ({ token }) => {
           rate_limit_max_requests: response.data.settings.rate_limit_max_requests || 100,
           rate_limit_window_ms: response.data.settings.rate_limit_window_ms || 900000
         });
+
+        setCourierSettings(prev => ({
+          ...prev,
+          courier_api_enabled: response.data.settings.courier_api_enabled ?? prev.courier_api_enabled,
+          courier_api_url: response.data.settings.courier_api_url || prev.courier_api_url,
+          courier_api_key: response.data.settings.courier_api_key || prev.courier_api_key,
+          courier_webhook_url: response.data.settings.courier_webhook_url || prev.courier_webhook_url,
+          courier_auto_assign: response.data.settings.courier_auto_assign ?? prev.courier_auto_assign,
+          assignment_mode: response.data.settings.assignment_mode || 'auto'
+        }));
       }
     } catch (error) {
       toast.error(error.message);
@@ -118,6 +129,7 @@ const Settings = ({ token }) => {
     if (key.startsWith('email_')) return 'email';
     if (key.startsWith('stock_')) return 'stock';
     if (key.startsWith('rate_limit_')) return 'security';
+    if (key === 'assignment_mode' || key.startsWith('courier_')) return 'delivery';
     return 'general';
   };
 
@@ -490,6 +502,21 @@ const Settings = ({ token }) => {
               </label>
             </div>
 
+          <div>
+            <label className="block text-sm font-medium mb-2">Atama Modu</label>
+            <select
+              value={courierSettings.assignment_mode}
+              onChange={(e) => setCourierSettings({ ...courierSettings, assignment_mode: e.target.value })}
+              className="w-full px-3 py-2 border rounded-md"
+            >
+              <option value="auto">Otomatik</option>
+              <option value="hybrid">Hibrit (Öner + Onay)</option>
+            </select>
+            <p className="text-xs text-gray-500 mt-1">
+              Otomatik: Sipariş direkt en uygun şubeye atanır. Hibrit: Sadece önerilir, admin onayı bekler.
+            </p>
+          </div>
+
             <div className="bg-blue-50 border border-blue-200 rounded-md p-4">
               <p className="text-sm text-blue-800">
                 💡 <strong>Bilgi:</strong> EsnafExpress entegrasyonu hakkında detaylı bilgi için
@@ -501,7 +528,7 @@ const Settings = ({ token }) => {
             </div>
 
             <button
-              onClick={() => saveSettings(courierSettings)}
+            onClick={() => saveSettings(courierSettings)}
               disabled={saving}
               className="w-full px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 disabled:bg-gray-400"
             >

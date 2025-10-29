@@ -111,8 +111,39 @@ const OrderCard = ({ order, token, onStatusUpdate }) => {
                 </div>
             </div>
 
-            {/* Address */}
+            {/* Branch & Address */}
             <div className="mb-3 text-sm text-gray-600">
+                {order.branchId || order.assignment?.suggestedBranchId ? (
+                    <div className="mb-2 flex items-center gap-2">
+                        <span className="text-xs bg-indigo-50 text-indigo-700 border border-indigo-200 px-2 py-0.5 rounded">
+                            Şube: {order.branchCode || (order.assignment?.mode === 'hybrid' ? 'Önerildi' : 'Atandı')}
+                        </span>
+                        {order.assignment?.mode === 'hybrid' && order.assignment?.status === 'suggested' && (
+                            <button
+                                onClick={async () => {
+                                    try {
+                                        const res = await axios.post(
+                                            backendUrl + '/api/order/approve-branch',
+                                            { orderId: order._id },
+                                            { headers: { token } }
+                                        );
+                                        if (res.data.success) {
+                                            toast.success('Şube önerisi onaylandı');
+                                            onStatusUpdate && onStatusUpdate();
+                                        } else {
+                                            toast.error(res.data.message);
+                                        }
+                                    } catch (err) {
+                                        toast.error(err.message);
+                                    }
+                                }}
+                                className="text-xs px-2 py-1 bg-indigo-600 text-white rounded hover:bg-indigo-700"
+                            >
+                                Öneriyi Onayla
+                            </button>
+                        )}
+                    </div>
+                ) : null}
                 <p className="font-medium text-gray-700 mb-1">Teslimat Adresi:</p>
                 <p>{order.address?.street}</p>
                 <p>{order.address?.city}, {order.address?.state}</p>

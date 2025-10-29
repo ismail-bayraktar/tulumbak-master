@@ -403,4 +403,34 @@ const getNextSteps = (status) => {
     return steps[status] || [];
 };
 
-export {placeOrder, placeOrderStripe, placeOrderRazorpay, allOrders, userOrders, updateStatus, bankInfo, getOrderStatus, getOrderHistory, getOrderTimeline};
+// Approve suggested branch assignment (hybrid mode)
+const approveBranchAssignment = async (req, res) => {
+    try {
+        const { orderId } = req.body;
+        const order = await orderModel.findById(orderId);
+        if (!order) return res.json({ success: false, message: 'Order not found' });
+
+        if (order.assignment?.mode !== 'hybrid' || order.assignment?.status !== 'suggested') {
+            return res.json({ success: false, message: 'This order has no pending suggestion' });
+        }
+
+        const branchId = order.assignment.suggestedBranchId;
+        if (!branchId) return res.json({ success: false, message: 'Suggested branch not found' });
+
+        order.branchId = branchId;
+        order.branchCode = order.branchCode || undefined; // keep if set later
+        order.assignment.status = 'assigned';
+        order.assignment.decidedBy = 'admin';
+        order.assignment.decidedAt = Date.now();
+
+        await order.save();
+        await addStatusHistory(orderId, order.status || 'Siparişiniz Alındı', order.address?.address || '', 'Önerilen şube onaylandı', 'admin');
+
+        res.json({ success: true, message: 'Branch assignment approved', order });
+    } catch (error) {
+        console.log(error);
+        res.json({ success: false, message: error.message });
+    }
+};
+
+export {placeOrder, placeOrderStripe, placeOrderRazorpay, allOrders, userOrders, updateStatus, bankInfo, getOrderStatus, getOrderHistory, getOrderTimeline, approveBranchAssignment};
