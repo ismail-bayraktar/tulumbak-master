@@ -18,6 +18,21 @@ const Settings = ({ token }) => {
     email_smtp_password: ''
   });
 
+  const [smsSettings, setSmsSettings] = useState({
+    sms_enabled: false,
+    sms_provider: 'netgsm', // netgsm or mesajpanel
+    sms_api_key: '',
+    sms_from: ''
+  });
+
+  const [courierSettings, setCourierSettings] = useState({
+    courier_api_enabled: false,
+    courier_api_url: '',
+    courier_api_key: '',
+    courier_webhook_url: '',
+    courier_auto_assign: false
+  });
+
   const [stockSettings, setStockSettings] = useState({
     stock_min_threshold: 10,
     stock_enable_alerts: true
@@ -171,6 +186,26 @@ const Settings = ({ token }) => {
             📧 Email Ayarları
           </button>
           <button
+            onClick={() => setActiveTab('sms')}
+            className={`px-4 py-2 font-medium ${
+              activeTab === 'sms'
+                ? 'border-b-2 border-blue-500 text-blue-600'
+                : 'text-gray-500 hover:text-gray-700'
+            }`}
+          >
+            📱 SMS Ayarları
+          </button>
+          <button
+            onClick={() => setActiveTab('courier')}
+            className={`px-4 py-2 font-medium ${
+              activeTab === 'courier'
+                ? 'border-b-2 border-blue-500 text-blue-600'
+                : 'text-gray-500 hover:text-gray-700'
+            }`}
+          >
+            🚚 Kurye Ayarları
+          </button>
+          <button
             onClick={() => setActiveTab('stock')}
             className={`px-4 py-2 font-medium ${
               activeTab === 'stock'
@@ -300,6 +335,177 @@ const Settings = ({ token }) => {
               className="w-full px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 disabled:bg-gray-400"
             >
               {saving ? 'Kaydediliyor...' : 'Email Ayarlarını Kaydet'}
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* SMS Settings Tab */}
+      {activeTab === 'sms' && (
+        <div className="bg-white p-6 rounded-lg shadow">
+          <h3 className="text-xl font-semibold mb-4">SMS Konfigürasyonu</h3>
+
+          <div className="space-y-4">
+            <div className="flex items-center gap-3">
+              <input
+                type="checkbox"
+                id="sms_enabled"
+                checked={smsSettings.sms_enabled}
+                onChange={(e) =>
+                  setSmsSettings({ ...smsSettings, sms_enabled: e.target.checked })
+                }
+                className="w-5 h-5"
+              />
+              <label htmlFor="sms_enabled" className="font-medium">
+                SMS bildirimlerini etkinleştir
+              </label>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium mb-2">SMS Provider</label>
+              <select
+                value={smsSettings.sms_provider}
+                onChange={(e) =>
+                  setSmsSettings({ ...smsSettings, sms_provider: e.target.value })
+                }
+                className="w-full px-3 py-2 border rounded-md"
+              >
+                <option value="netgsm">NetGSM</option>
+                <option value="mesajpanel">MesajPanel</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium mb-2">API Key</label>
+              <input
+                type="text"
+                value={smsSettings.sms_api_key}
+                onChange={(e) =>
+                  setSmsSettings({ ...smsSettings, sms_api_key: e.target.value })
+                }
+                placeholder="API Key"
+                className="w-full px-3 py-2 border rounded-md"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium mb-2">Gönderen Numarası</label>
+              <input
+                type="text"
+                value={smsSettings.sms_from}
+                onChange={(e) =>
+                  setSmsSettings({ ...smsSettings, sms_from: e.target.value })
+                }
+                placeholder="0532 123 4567"
+                className="w-full px-3 py-2 border rounded-md"
+              />
+            </div>
+
+            <button
+              onClick={() => saveSettings(smsSettings)}
+              disabled={saving}
+              className="w-full px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 disabled:bg-gray-400"
+            >
+              {saving ? 'Kaydediliyor...' : 'SMS Ayarlarını Kaydet'}
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Courier Settings Tab */}
+      {activeTab === 'courier' && (
+        <div className="bg-white p-6 rounded-lg shadow">
+          <h3 className="text-xl font-semibold mb-4">EsnafExpress Entegrasyonu</h3>
+
+          <div className="space-y-4">
+            <div className="flex items-center gap-3">
+              <input
+                type="checkbox"
+                id="courier_api_enabled"
+                checked={courierSettings.courier_api_enabled}
+                onChange={(e) =>
+                  setCourierSettings({ ...courierSettings, courier_api_enabled: e.target.checked })
+                }
+                className="w-5 h-5"
+              />
+              <label htmlFor="courier_api_enabled" className="font-medium">
+                Kurye API entegrasyonunu etkinleştir
+              </label>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium mb-2">EsnafExpress API URL</label>
+              <input
+                type="text"
+                value={courierSettings.courier_api_url}
+                onChange={(e) =>
+                  setCourierSettings({ ...courierSettings, courier_api_url: e.target.value })
+                }
+                placeholder="https://api.esnafexpress.com"
+                className="w-full px-3 py-2 border rounded-md"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium mb-2">API Key</label>
+              <input
+                type="text"
+                value={courierSettings.courier_api_key}
+                onChange={(e) =>
+                  setCourierSettings({ ...courierSettings, courier_api_key: e.target.value })
+                }
+                placeholder="API Key"
+                className="w-full px-3 py-2 border rounded-md"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium mb-2">Webhook URL</label>
+              <input
+                type="text"
+                value={courierSettings.courier_webhook_url}
+                onChange={(e) =>
+                  setCourierSettings({ ...courierSettings, courier_webhook_url: e.target.value })
+                }
+                placeholder="https://your-domain.com/api/courier/esnafexpress-webhook"
+                className="w-full px-3 py-2 border rounded-md"
+              />
+              <p className="text-xs text-gray-500 mt-1">
+                EsnafExpress bu URL'ye durum güncellemelerini gönderecek
+              </p>
+            </div>
+
+            <div className="flex items-center gap-3">
+              <input
+                type="checkbox"
+                id="courier_auto_assign"
+                checked={courierSettings.courier_auto_assign}
+                onChange={(e) =>
+                  setCourierSettings({ ...courierSettings, courier_auto_assign: e.target.checked })
+                }
+                className="w-5 h-5"
+              />
+              <label htmlFor="courier_auto_assign" className="font-medium">
+                Otomatik kurye ataması
+              </label>
+            </div>
+
+            <div className="bg-blue-50 border border-blue-200 rounded-md p-4">
+              <p className="text-sm text-blue-800">
+                💡 <strong>Bilgi:</strong> EsnafExpress entegrasyonu hakkında detaylı bilgi için
+                <a href="#" className="underline ml-1">
+                  dokümantasyonu
+                </a>
+                inceleyin.
+              </p>
+            </div>
+
+            <button
+              onClick={() => saveSettings(courierSettings)}
+              disabled={saving}
+              className="w-full px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 disabled:bg-gray-400"
+            >
+              {saving ? 'Kaydediliyor...' : 'Kurye Ayarlarını Kaydet'}
             </button>
           </div>
         </div>
