@@ -78,7 +78,22 @@ app.use(ejsLayouts);
 
 // MIDDLEWARES
 app.use(helmet({
-    crossOriginResourcePolicy: { policy: "cross-origin" }
+    crossOriginResourcePolicy: { policy: "cross-origin" },
+    contentSecurityPolicy: {
+        directives: {
+            defaultSrc: ["'self'"],
+            baseUri: ["'self'"],
+            fontSrc: ["'self'", "https:", "data:"],
+            formAction: ["'self'"],
+            frameAncestors: ["'self'"],
+            imgSrc: ["'self'", "data:", "http://localhost:4001", "http://localhost:5176"],
+            objectSrc: ["'none'"],
+            scriptSrc: ["'self'"],
+            scriptSrcAttr: ["'none'"],
+            styleSrc: ["'self'", "https:", "'unsafe-inline'"],
+            upgradeInsecureRequests: []
+        }
+    }
 })); // Security headers
 app.use(express.json({ limit: '10mb' })); // Limit payload size
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
@@ -97,6 +112,7 @@ app.use('/uploads', (req, res, next) => {
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Access-Control-Allow-Methods', 'GET');
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+    res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
     next();
 }, express.static(path.join(__dirname, 'uploads')));
 
