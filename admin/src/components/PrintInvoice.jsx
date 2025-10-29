@@ -4,7 +4,18 @@ import { useReactToPrint } from 'react-to-print';
 const PrintInvoice = ({ order, onClose, isOpen = false }) => {
     const componentRef = useRef();
 
+    const handlePrint = useReactToPrint({
+        content: () => componentRef.current,
+        documentTitle: `Fatura_${order?.trackingId || order?._id?.slice(-8) || 'Unknown'}`,
+        onAfterPrint: () => {
+            onClose && onClose();
+        }
+    });
+
+    if (!isOpen || !order) return null;
+
     const formatDate = (timestamp) => {
+        if (!timestamp) return 'N/A';
         return new Date(timestamp).toLocaleDateString('tr-TR', {
             day: '2-digit',
             month: '2-digit',
@@ -22,16 +33,6 @@ const PrintInvoice = ({ order, onClose, isOpen = false }) => {
     };
 
     const totals = calculateTax(order.amount || 0);
-
-    const handlePrint = useReactToPrint({
-        content: () => componentRef.current,
-        documentTitle: `Fatura_${order.trackingId || order._id.slice(-8)}`,
-        onAfterPrint: () => {
-            onClose && onClose();
-        }
-    });
-
-    if (!isOpen) return null;
 
     return (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
