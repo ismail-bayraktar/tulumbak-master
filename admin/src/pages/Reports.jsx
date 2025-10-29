@@ -57,7 +57,8 @@ const Reports = ({ token }) => {
   };
 
   const renderDashboard = () => {
-    if (!reports.dashboard) return <div>Yükleniyor...</div>;
+    if (loading) return <div className="text-center py-8">Yükleniyor...</div>;
+    if (!reports.dashboard) return <div className="text-center py-8 text-gray-500">Veri bulunamadı</div>;
     const { dashboard } = reports;
 
     return (
@@ -110,8 +111,9 @@ const Reports = ({ token }) => {
   };
 
   const renderDailySales = () => {
-    if (!reports.dailySales) return <div>Rapor yükleniyor...</div>;
-    const { report } = reports;
+    if (loading) return <div className="text-center py-8">Yükleniyor...</div>;
+    if (!reports.dailySales) return <div className="text-center py-8 text-gray-500">Veri bulunamadı</div>;
+    const report = reports.dailySales;
 
     return (
       <div className="bg-white p-6 rounded-lg shadow">
@@ -170,10 +172,11 @@ const Reports = ({ token }) => {
   };
 
   const renderProductAnalytics = () => {
-    if (!reports.productAnalytics) return <div>Rapor yükleniyor...</div>;
+    if (loading) return <div className="text-center py-8">Yükleniyor...</div>;
+    if (!reports.productAnalytics) return <div className="text-center py-8 text-gray-500">Veri bulunamadı</div>;
 
-    const { analytics } = reports;
-    const topProducts = analytics.topProducts || [];
+    const analytics = reports.productAnalytics;
+    const topProducts = analytics?.topProducts || [];
 
     return (
       <div className="bg-white p-6 rounded-lg shadow">
@@ -255,11 +258,6 @@ const Reports = ({ token }) => {
         {activeTab === 'products' && renderProductAnalytics()}
       </div>
 
-      {loading && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
-          <div className="bg-white p-6 rounded-lg">Yükleniyor...</div>
-        </div>
-      )}
     </div>
   );
 };
