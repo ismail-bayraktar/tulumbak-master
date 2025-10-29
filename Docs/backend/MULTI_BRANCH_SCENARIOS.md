@@ -262,50 +262,190 @@ distanceKm: { type: Number }, // Distance to branch
 
 ---
 
-## Sorular
+---
 
-1. **Zone-shop ilişkisi nasıl olmalı?**
-   - Her shop birden fazla zone'a hizmet edebilir mi?
-   - Zone çakışması olabilir mi? (2 shop aynı zone'da)
+## Tulumbak Şube Bilgileri
 
-2. **Kapasite yönetimi gerekli mi?**
-   - Günlük max sipariş limiti var mı?
-   - Aynı anda çalışan kurye sayısı?
+### Şube 1: Menemen (Lise Yolu)
+- **Adres**: Kasımpaşa Mahallesi, Cengiz Topel Caddesi 31C (Menemen metro durağı civarı), Menemen, İzmir
+- **Koordinatlar**: (Eklenecek - Google API ile)
+- **Durum**: Aktif
 
-3. **Şube paneli ayrı mı?**
-   - Şube manager'lar ayrı giriş yapacak mı?
-   - Sadece kendi branch'ini görecekler mi?
+### Şube 2: Menemen (6. Cadde)
+- **Adres**: 29 Ekim Mahallesi, 6. Cadde No:24A (Kasaplar Caddesi Kokoreççi Akın Usta yanı), Ulukent, İzmir
+- **Koordinatlar**: (Eklenecek - Google API ile)
+- **Durum**: Aktif
 
-4. **Transfer sistemi gerekli mi?**
-   - Bir sipariş birden fazla şubede mi işlenir?
-   - A şubesi -> B şubesi transfer yapılabilir mi?
+### Şube 3: (Daha belirtilmedi)
+- **Adres**: TBD
+- **Koordinatlar**: (Eklenecek - Google API ile)
+- **Durum**: TBD
+
+---
+
+## Seçilen Yaklaşım: Zone + Hibrit Sistem
+
+### Kararlar
+1. **Başlangıç**: Tam otomatik mesafe bazlı atama
+2. **Gelişim**: Hibrit (Öner + Onay) sistemi ayarlardan açılabilir
+3. **Google API**: Opsiyonel (ücretli olabileceği belirtildi)
+4. **UI**: Şubeler admin panelde yönetilebilir
+5. **Koordinatlar**: Google API entegrasyonu ile (opsiyonel)
+
+### UI Gereksinimleri
+
+#### Admin Panel - Branches Sayfası
+- Modern card layout
+- Her şube için:
+  - Adres bilgisi
+  - Koordinat girişi (manual veya Google API picker)
+  - Zone assignment (çoklu seçim)
+  - Çalışma saatleri
+  - Kapasite bilgisi
+  - Durum (active/inactive)
+- Google Maps preview (opsiyonel)
+- Açıklamalı tooltip'ler
+
+### Sistem Ayarları
+- `BRANCH_AUTO_ASSIGNMENT`: true/false
+  - `true`: Otomatik atama (default)
+  - `false`: Bildirim + admin onay
+  
+- `GOOGLE_MAPS_ENABLED`: true/false
+  - `true`: Koordinat Google API ile hesaplanır
+  - `false`: Manuel koordinat girişi
+
+- `GOOGLE_MAPS_API_KEY`: string (optional)
+
+---
+
+## Teknik Yaklaşım
+
+### Phase 1: Temel Multi-Branch (Otomatik)
+```javascript
+// placeOrder() içinde
+const { address } = req.body;
+
+// Get all active branches
+const branches = await BranchModel.find({ status: 'active' });
+
+// Calculate distance to each branch
+const distances = await Promise.all(
+  branches.map(branch => 
+    calculateDistance(address, branch.address)
+  )
+);
+
+// Auto-assign to nearest
+const nearestBranch = branches[distances.indexOf(Math.min(...distances))];
+order.branchId = nearestBranch._id;
+```
+
+### Phase 2: Hibrit (Bildirim + Onay)
+```javascript
+// Settings check
+const autoAssign = await getSetting('BRANCH_AUTO_ASSIGNMENT');
+
+if (autoAssign === 'true') {
+  // Auto assign
+  const nearestBranch = findNearestBranch(order);
+  order.branchId = nearestBranch._id;
+} else {
+  // Hybrid: Suggest + Notify
+  const suggestedBranch = findNearestBranch(order);
+  
+  // Send notification to admin
+  await notifyAdmin({
+    orderId: order._id,
+    suggestedBranch: suggestedBranch._id,
+    alternativeBranches: branches.filter(b => b._id !== suggestedBranch._id)
+  });
+  
+  // Wait for admin approval
+  order.status = 'pending_branch_assignment';
+}
+```
+
+### Phase 3: Google API Entegrasyonu (Opsiyonel)
+```javascript
+// Settings check
+const googleEnabled = await getSetting('GOOGLE_MAPS_ENABLED');
+const apiKey = await getSetting('GOOGLE_MAPS_API_KEY');
+
+if (googleEnabled === 'true' && apiKey) {
+  // Use Google Distance Matrix API
+  const distances = await calculateDistanceGoogle(userAddress, branchAddresses, apiKey);
+  return selectOptimalBranch(distances);
+} else {
+  // Use Haversine formula (free)
+  const distances = await calculateDistanceHaversine(userAddress, branchAddresses);
+  return selectOptimalBranch(distances);
+}
+```
+
+---
+
+## Geliştirme Aşamaları
+
+### Aşama 1: Branch Model & Admin UI (Şimdi)
+- [ ] BranchModel oluştur
+- [ ] Admin panel - Branches sayfası
+- [ ] Zone assignment UI
+- [ ] Koordinat girişi (manual)
+
+### Aşama 2: Otomatik Atama (Backend)
+- [ ] placeOrder() - Auto-assignment logic
+- [ ] Haversine mesafe hesaplama
+- [ ] Settings entegrasyonu
+
+### Aşama 3: Hibrit Sistem
+- [ ] Admin bildirim sistemi
+- [ ] Branch değiştirme API
+- [ ] Orders page - Branch filter
+
+### Aşama 4: Google Maps (İleri Seviye)
+- [ ] Google Distance Matrix API
+- [ ] Harita picker
+- [ ] Gerçek mesafe/süre hesaplama
+- [ ] API key management
 
 ---
 
 ## Örnek Senaryolar
 
-### Örnek 1: Zone Bazlı Basit Sistem
+### Senaryo 1: Otomatik Atama (Default)
 ```
-Zone: Kadıköy
-Shops: Tulumbak Kadıköy
-→ Tüm Kadıköy siparişleri Kadıköy şubesine
-```
-
-### Örnek 2: Çakışan Zone'lar
-```
-Zone: Ataşehir (Hem Kadıköy hem Maltepe yakın)
-Shops: Tulumbak Kadıköy, Tulumbak Maltepe
-→ Mesafeye göre en yakın şube seç
+Müşteri sipariş verir → Address: Menemen
+→ Sistem 3 şubeye mesafe hesaplar
+→ En yakın şube: Menemen (Lise Yolu)
+→ Otomatik olarak atama yapılır
 ```
 
-### Örnek 3: Transfer
+### Senaryo 2: Hibrit - Bildirim + Onay
 ```
-Sipariş Ataşehir'de
-→ İlk olarak Kadıköy şubesine atandı
-→ Kadıköy yoğun, Maltepe'ye transfer edildi
+Müşteri sipariş verir → Address: Ulukent
+→ Sistem öneri: Menemen (6. Cadde)
+→ Admin'e bildirim gider
+→ Admin onaylar/reddeder
+→ Alternatif: Menemen (Lise Yolu)
+```
+
+### Senaryo 3: Google API ile
+```
+Sipariş: Menemen center
+→ Google API ile sürüş mesafesi hesaplanır
+→ Şube 1: 2.5 km (8 dakika)
+→ Şube 2: 1.8 km (5 dakika) ✅ Seçilir
 ```
 
 ---
 
-**Not:** Hangi senaryoda devam etmek istiyorsunuz? Zone bazlı mı, mesafe bazlı mı, yoksa hibrit mi?
+## Notlar
+
+- **Google API**: Ücretli olabilir (distance matrix API calls per request)
+- **İlk geliştirme**: Ücretsiz Haversine formülü ile başla
+- **İleri seviye**: Google API opsiyonel eklenecek
+- **Ayarlar**: Sistem ayarlarından hibrit/otomatik seçilebilir
+- **Koordinatlar**: Şubeler admin panelden yönetilir
+- **Zone Assignment**: Her şube birden fazla zone'a hizmet edebilir
 
