@@ -1,5 +1,6 @@
 import orderModel from "../models/OrderModel.js";
 import userModel from "../models/UserModel.js";
+import deliveryZoneModel from "../models/DeliveryZoneModel.js";
 import { reduceStock, checkLowStockAlert } from "../middleware/StockCheck.js";
 
 // Generate unique tracking ID
@@ -42,6 +43,33 @@ const addStatusHistory = async (orderId, status, location = '', note = '', updat
 const placeOrder = async (req, res) => {
     try {
         const { userId, items, amount, address, paymentMethod, delivery, codFee, giftNote } = req.body;
+        
+        // Validate delivery zone if provided
+        if (delivery?.zoneId) {
+            const zone = await deliveryZoneModel.findById(delivery.zoneId);
+            if (!zone) {
+                return res.status(400).json({ 
+                    success: false, 
+                    message: 'Seçilen teslimat bölgesi geçersiz' 
+                });
+            }
+            
+            // Validate minimum order amount
+            if (Number(amount) < zone.minOrder) {
+                return res.status(400).json({ 
+                    success: false, 
+                    message: `Bu bölgeye teslimat için minimum ${zone.minOrder}₺ tutarında sipariş gerekiyor. Sepetiniz toplamı: ${amount}₺` 
+                });
+            }
+            
+            // Validate same day delivery availability
+            if (delivery.sameDay && !zone.sameDayAvailable) {
+                return res.status(400).json({ 
+                    success: false, 
+                    message: 'Bu bölge için aynı gün teslimat mevcut değil' 
+                });
+            }
+        }
         
         // Generate tracking ID
         const trackingId = generateTrackingId();
