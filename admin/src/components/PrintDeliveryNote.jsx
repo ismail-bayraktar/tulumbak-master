@@ -2,10 +2,10 @@ import React, { useRef } from 'react';
 import { useReactToPrint } from 'react-to-print';
 
 const PrintDeliveryNote = ({ order, onClose, isOpen = false }) => {
-    const componentRef = useRef();
+    const contentRef = useRef();
 
     const handlePrint = useReactToPrint({
-        content: () => componentRef.current,
+        contentRef: contentRef,
         documentTitle: `Irsaliye_${order?.trackingId || order?._id?.slice(-8) || 'Unknown'}`,
         onAfterPrint: () => {
             onClose && onClose();
@@ -48,7 +48,7 @@ const PrintDeliveryNote = ({ order, onClose, isOpen = false }) => {
                 </div>
 
                 {/* Print Content */}
-                <div ref={componentRef} className="p-8 bg-white">
+                <div ref={contentRef} className="p-8 bg-white">
                     {/* Company Header */}
                     <div className="text-center mb-8 border-b-2 border-gray-300 pb-6">
                         <h1 className="text-3xl font-bold text-gray-800 mb-2">TULUMBAK GIDA</h1>
