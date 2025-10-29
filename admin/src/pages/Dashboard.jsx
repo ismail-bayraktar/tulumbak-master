@@ -24,30 +24,39 @@ const Dashboard = ({ token }) => {
 
     const fetchDashboardData = async () => {
         try {
-            // Fetch dashboard stats
-            const statsResponse = await axios.get(
-                backendUrl + '/api/report/dashboard',
-                { headers: { token } }
-            );
+            setLoading(true);
             
-            if (statsResponse.data.success) {
-                setStats(statsResponse.data.data || {});
+            // Try to fetch dashboard stats with error handling
+            try {
+                const statsResponse = await axios.get(
+                    backendUrl + '/api/report/dashboard',
+                    { headers: { token } }
+                );
+                
+                if (statsResponse.data.success) {
+                    setStats(statsResponse.data.data || {});
+                }
+            } catch (err) {
+                console.warn('Dashboard stats not available:', err);
             }
 
             // Fetch recent orders
-            const ordersResponse = await axios.post(
-                backendUrl + '/api/order/list',
-                {},
-                { headers: { token } }
-            );
-            
-            if (ordersResponse.data.success) {
-                // Get last 5 orders
-                setRecentOrders(ordersResponse.data.orders?.slice(0, 5) || []);
+            try {
+                const ordersResponse = await axios.post(
+                    backendUrl + '/api/order/list',
+                    {},
+                    { headers: { token } }
+                );
+                
+                if (ordersResponse.data.success) {
+                    // Get last 5 orders
+                    setRecentOrders(ordersResponse.data.orders?.slice(0, 5) || []);
+                }
+            } catch (err) {
+                console.warn('Recent orders not available:', err);
             }
         } catch (error) {
             console.error('Dashboard fetch error:', error);
-            toast.error('Dashboard verileri yüklenirken hata oluştu');
         } finally {
             setLoading(false);
         }
