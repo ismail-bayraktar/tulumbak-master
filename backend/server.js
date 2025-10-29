@@ -133,6 +133,7 @@ app.use('/api/corporate', corporateRouter);
 app.use('/api/settings', settingsRouter);
 app.use('/api/report', reportRouter);
 app.use('/api/admin', adminRouter);
+app.use('/api/courier-management', courierManagementRouter);
 
 // Swagger Documentation
 swaggerDocs(app);
