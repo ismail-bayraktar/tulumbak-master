@@ -32,7 +32,7 @@ const ModernHome = () => {
 if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-600"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500"></div>
       </div>
     );
   }
@@ -108,13 +108,13 @@ if (isLoading) {
                       className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                     />
                     {product.labels && product.labels.includes('ÇOK SATAN') && (
-                      <span className="absolute top-4 left-4 bg-red-600 text-white px-3 py-1 rounded-full text-sm font-semibold">
+                      <span className="absolute top-4 left-4 bg-orange-500 text-white px-3 py-1 rounded-full text-sm font-semibold">
                         ÇOK SATAN
                       </span>
                     )}
                   </div>
                   <div className="p-6">
-                    <h3 className="text-lg font-semibold text-gray-900 mb-2 group-hover:text-red-600 transition-colors">
+                    <h3 className="text-lg font-semibold text-gray-900 mb-2 group-hover:text-orange-500 transition-colors">
                       {product.name}
                     </h3>
                     <div className="flex items-center justify-between mb-4">
@@ -137,7 +137,7 @@ if (isLoading) {
                       </Link>
                       <button
                         onClick={() => handleAddToCart(product._id)}
-                        className="flex-1 bg-red-600 text-white py-2 px-4 rounded-lg hover:bg-red-700 transition-colors"
+                        className="flex-1 bg-orange-500 text-white py-2 px-4 rounded-lg hover:bg-orange-600 transition-colors"
                       >
                         Sepete Ekle
                       </button>
@@ -151,7 +151,7 @@ if (isLoading) {
           <div className="text-center mt-12">
             <Link
               to="/collection"
-              className="inline-flex items-center px-8 py-3 bg-red-600 text-white font-semibold rounded-lg hover:bg-red-700 transform hover:scale-105 transition-all duration-300"
+              className="inline-flex items-center px-8 py-3 bg-orange-500 text-white font-semibold rounded-lg hover:bg-orange-600 transform hover:scale-105 transition-all duration-300"
             >
               Tüm Ürünleri Görüntüle
               <svg className="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -163,7 +163,7 @@ if (isLoading) {
       </section>
 
       {/* Special Offers Banner */}
-      <section className="py-16 bg-gradient-to-r from-red-600 to-red-700">
+      <section className="py-16 bg-gradient-to-r from-orange-500 to-orange-600">
         <div className="container mx-auto px-6">
           <div className="text-center text-white">
             <h2 className="text-3xl md:text-4xl font-bold mb-4">
@@ -174,7 +174,7 @@ if (isLoading) {
             </p>
             <Link
               to="/collection?category=Özel Paket"
-              className="inline-flex items-center px-8 py-4 bg-white text-red-600 font-semibold rounded-lg hover:bg-gray-100 transform hover:scale-105 transition-all duration-300"
+              className="inline-flex items-center px-8 py-4 bg-white text-orange-500 font-semibold rounded-lg hover:bg-gray-100 transform hover:scale-105 transition-all duration-300"
             >
               Hediye Paketlerini İncele
               <svg className="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -212,7 +212,7 @@ if (isLoading) {
                     </span>
                   </div>
                   <div className="p-6">
-                    <h3 className="text-lg font-semibold text-gray-900 mb-2 group-hover:text-red-600 transition-colors">
+                    <h3 className="text-lg font-semibold text-gray-900 mb-2 group-hover:text-orange-500 transition-colors">
                       {product.name}
                     </h3>
                     <div className="flex items-center justify-between mb-4">
@@ -228,7 +228,7 @@ if (isLoading) {
                     </div>
                     <button
                       onClick={() => handleAddToCart(product._id)}
-                      className="w-full bg-red-600 text-white py-2 px-4 rounded-lg hover:bg-red-700 transition-colors"
+                      className="w-full bg-orange-500 text-white py-2 px-4 rounded-lg hover:bg-orange-600 transition-colors"
                     >
                       Sepete Ekle
                     </button>
@@ -236,6 +236,150 @@ if (isLoading) {
                 </div>
               </div>
             ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Baklava-İzmir SEO Section */}
+      <section className="py-20 bg-gradient-to-br from-orange-50 to-white">
+        <div className="container mx-auto px-6">
+          <div className="max-w-6xl mx-auto">
+            <div className="text-center mb-16">
+              <div className="inline-flex items-center px-4 py-2 bg-orange-100 rounded-full mb-6">
+                <span className="text-orange-600 font-semibold text-sm">İZMİR'İN LEZZET DANIŞIKI</span>
+              </div>
+              <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6">
+                <span className="text-orange-500">Baklava-İzmir</span> Mutfağının
+                <br />
+                En Tatlı Hediyesi
+              </h2>
+              <p className="text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
+                Ege'nin incisi İzmir'den, geleneksel usullerle hazırlanan baklava çeşitlerimizle
+                damaklarınızda unutulmaz tatlar bırakıyoruz.
+                <span className="font-semibold text-orange-600"> Taze baklava</span> deneyimi için sizi bekliyoruz.
+              </p>
+            </div>
+
+            <div className="grid md:grid-cols-2 gap-12 mb-16">
+              <div className="space-y-8">
+                <div className="flex items-start gap-4">
+                  <div className="w-12 h-12 bg-orange-500 rounded-lg flex items-center justify-center flex-shrink-0">
+                    <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-semibold text-gray-900 mb-2">İzmir Merkezli Hizmet</h3>
+                    <p className="text-gray-600">
+                      <strong>Baklava-İzmir</strong> konseptimizle İzmir ve çevresine
+                      aynı gün taze teslimat imkanı sunuyoruz.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-start gap-4">
+                  <div className="w-12 h-12 bg-orange-500 rounded-lg flex items-center justify-center flex-shrink-0">
+                    <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-semibold text-gray-900 mb-2">Günlük Taze Üretim</h3>
+                    <p className="text-gray-600">
+                      Her gün sabahın erken saatlerinde hazırlanan taze baklavalarımız,
+                      gün içinde sizlere ulaşır.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-start gap-4">
+                  <div className="w-12 h-12 bg-orange-500 rounded-lg flex items-center justify-center flex-shrink-0">
+                    <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                    </svg>
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-semibold text-gray-900 mb-2">Sevgi ve Özen</h3>
+                    <p className="text-gray-600">
+                      Ustalarımızın elinden çıkan her bir baklava, size sevgi ve
+                      özenle paketlenir.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-white rounded-2xl shadow-xl p-8">
+                <div className="grid grid-cols-2 gap-6 mb-8">
+                  <div className="text-center">
+                    <div className="text-3xl font-bold text-orange-500 mb-1">500+</div>
+                    <div className="text-sm text-gray-600">Günlük Müşteri</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-3xl font-bold text-orange-500 mb-1">4.9</div>
+                    <div className="text-sm text-gray-600">Müşteri Puanı</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-3xl font-bold text-orange-500 mb-1">15+</div>
+                    <div className="text-sm text-gray-600">Çeşit Seçeneği</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-3xl font-bold text-orange-500 mb-1">100%</div>
+                    <div className="text-sm text-gray-600">Güvenli Ödeme</div>
+                  </div>
+                </div>
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2">
+                    <svg className="w-5 h-5 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                    </svg>
+                    <span className="text-gray-700">Menemen ve çevresine hızlı teslimat</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <svg className="w-5 h-5 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                    </svg>
+                    <span className="text-gray-700">İzmir'in taze baklava lezzeti</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <svg className="w-5 h-5 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                    </svg>
+                    <span className="text-gray-700">Geleneksel tarif, modern sunum</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="text-center">
+              <h3 className="text-2xl font-bold text-gray-900 mb-4">
+                İzmir Baklavasının Tadını Çıkarın!
+              </h3>
+              <p className="text-lg text-gray-600 mb-8 max-w-2xl mx-auto">
+                <strong>Baklava-İzmir</strong> lezzetini keşfetmek için ilk adımı atın.
+                Kaliteli ve taze baklava deneyimi sizi bekliyor.
+              </p>
+              <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                <Link
+                  to="/collection"
+                  className="inline-flex items-center px-8 py-4 bg-orange-500 text-white font-semibold rounded-lg hover:bg-orange-600 transform hover:scale-105 transition-all duration-300 shadow-lg hover:shadow-xl"
+                >
+                  <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+                  </svg>
+                  ŞİMDİ SİPARİŞ VER
+                </Link>
+                <Link
+                  to="/contact"
+                  className="inline-flex items-center px-8 py-4 bg-white text-orange-500 font-semibold rounded-lg hover:bg-orange-50 transform hover:scale-105 transition-all duration-300 border-2 border-orange-200"
+                >
+                  <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                  </svg>
+                  BİZİ ARAYIN
+                </Link>
+              </div>
+            </div>
           </div>
         </div>
       </section>
@@ -252,7 +396,7 @@ if (isLoading) {
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link
               to="/collection"
-              className="inline-flex items-center px-8 py-4 bg-red-600 text-white font-semibold rounded-lg hover:bg-red-700 transform hover:scale-105 transition-all duration-300"
+              className="inline-flex items-center px-8 py-4 bg-orange-500 text-white font-semibold rounded-lg hover:bg-orange-600 transform hover:scale-105 transition-all duration-300"
             >
               İndirimli Alışveriş Yap
               <svg className="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">

@@ -17,7 +17,6 @@ const settingsSchema = new mongoose.Schema({
 });
 
 // Performance indexes
-settingsSchema.index({ key: 1 });
 settingsSchema.index({ category: 1 });
 
 const settingsModel = mongoose.models.settings || mongoose.model("settings", settingsSchema);

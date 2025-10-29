@@ -148,7 +148,7 @@ const HeroSlider = () => {
       case 'outline':
         return 'border-2 border-white text-white hover:bg-white hover:text-gray-900 px-8 py-3 font-semibold rounded-lg transition-all duration-300';
       default:
-        return 'bg-red-600 hover:bg-red-700 text-white px-8 py-3 font-semibold rounded-lg transition-all duration-300';
+        return 'bg-orange-500 hover:bg-orange-600 text-white px-8 py-3 font-semibold rounded-lg transition-all duration-300';
     }
   };
 
@@ -183,15 +183,15 @@ const HeroSlider = () => {
             <div className="w-full sm:w-1/2 flex items-center justify-center py-10 sm:py-0 px-6 order-1 sm:order-2">
               <div className={`${textColorClass} text-center sm:text-left`}>
                 <div className="flex items-center gap-2 justify-center sm:justify-start">
-                  <div className="w-8 md:w-11 h-[2px] bg-red-600"></div>
+                  <div className="w-8 md:w-11 h-[2px] bg-orange-500"></div>
                   <p className="font-medium text-sm md:text-base">{slide.subtitle}</p>
                 </div>
-                <h1 className="text-3xl sm:py-3 lg:text-5xl leading-relaxed text-red-600 font-bold">
+                <h1 className="text-3xl sm:py-3 lg:text-5xl leading-relaxed text-orange-500 font-bold">
                   {slide.title}
                 </h1>
                 <div className="flex items-center gap-2 justify-center sm:justify-start">
                   <p className="font-semibold text-sm md:text-base">{slide.description}</p>
-                  <div className="w-8 md:w-11 h-[2px] bg-red-600"></div>
+                  <div className="w-8 md:w-11 h-[2px] bg-orange-500"></div>
                 </div>
                 <div className="py-6">
                   <Link
@@ -229,11 +229,11 @@ const HeroSlider = () => {
             <div className="relative h-full flex items-center justify-center px-6">
               <div className={`${textColorClass} text-center max-w-4xl`}>
                 <div className="flex items-center gap-2 justify-center">
-                  <div className="w-8 md:w-11 h-[2px] bg-red-600"></div>
+                  <div className="w-8 md:w-11 h-[2px] bg-orange-500"></div>
                   <p className="font-medium text-sm md:text-base">{slide.subtitle}</p>
-                  <div className="w-8 md:w-11 h-[2px] bg-red-600"></div>
+                  <div className="w-8 md:w-11 h-[2px] bg-orange-500"></div>
                 </div>
-                <h1 className="text-3xl sm:py-3 lg:text-6xl leading-relaxed text-red-600 font-bold">
+                <h1 className="text-3xl sm:py-3 lg:text-6xl leading-relaxed text-orange-500 font-bold">
                   {slide.title}
                 </h1>
                 <p className="font-semibold text-lg md:text-xl py-4">{slide.description}</p>
@@ -269,7 +269,7 @@ const HeroSlider = () => {
             <div className="absolute inset-0 flex items-center justify-start px-6 sm:px-12">
               <div className={`${textColorClass} max-w-2xl`}>
                 <div className="flex items-center gap-2">
-                  <div className="w-8 md:w-11 h-[2px] bg-red-600"></div>
+                  <div className="w-8 md:w-11 h-[2px] bg-orange-500"></div>
                   <p className="font-medium text-sm md:text-base">{slide.subtitle}</p>
                 </div>
                 <h1 className="text-3xl sm:py-3 lg:text-5xl leading-relaxed font-bold">
@@ -277,7 +277,7 @@ const HeroSlider = () => {
                 </h1>
                 <div className="flex items-center gap-2">
                   <p className="font-semibold text-sm md:text-base">{slide.description}</p>
-                  <div className="w-8 md:w-11 h-[2px] bg-red-600"></div>
+                  <div className="w-8 md:w-11 h-[2px] bg-orange-500"></div>
                 </div>
                 <div className="py-6">
                   <Link
@@ -311,9 +311,9 @@ const HeroSlider = () => {
             <div className="absolute inset-0 flex items-center justify-center px-6">
               <div className={`${textColorClass} text-center max-w-4xl`}>
                 <div className="flex items-center gap-2 justify-center">
-                  <div className="w-8 md:w-11 h-[2px] bg-red-600"></div>
+                  <div className="w-8 md:w-11 h-[2px] bg-orange-500"></div>
                   <p className="font-medium text-sm md:text-base">{slide.subtitle}</p>
-                  <div className="w-8 md:w-11 h-[2px] bg-red-600"></div>
+                  <div className="w-8 md:w-11 h-[2px] bg-orange-500"></div>
                 </div>
                 <h1 className="text-3xl sm:py-3 lg:text-6xl leading-relaxed font-bold">
                   {slide.title}
@@ -341,15 +341,15 @@ const HeroSlider = () => {
             <div className="w-full sm:w-1/2 flex items-center justify-center py-10 sm:py-0 px-6">
               <div className={`${textColorClass} text-center sm:text-left`}>
                 <div className="flex items-center gap-2 justify-center sm:justify-start">
-                  <div className="w-8 md:w-11 h-[2px] bg-red-600"></div>
+                  <div className="w-8 md:w-11 h-[2px] bg-orange-500"></div>
                   <p className="font-medium text-sm md:text-base">{slide.subtitle}</p>
                 </div>
-                <h1 className="text-3xl sm:py-3 lg:text-5xl leading-relaxed text-red-600 font-bold">
+                <h1 className="text-3xl sm:py-3 lg:text-5xl leading-relaxed text-orange-500 font-bold">
                   {slide.title}
                 </h1>
                 <div className="flex items-center gap-2 justify-center sm:justify-start">
                   <p className="font-semibold text-sm md:text-base">{slide.description}</p>
-                  <div className="w-8 md:w-11 h-[2px] bg-red-600"></div>
+                  <div className="w-8 md:w-11 h-[2px] bg-orange-500"></div>
                 </div>
                 <div className="py-6">
                   <Link
@@ -379,7 +379,7 @@ const HeroSlider = () => {
     return (
       <div className="relative w-full h-[500px] sm:h-[600px] overflow-hidden mt-5 bg-gray-100">
         <div className="flex items-center justify-center h-full">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-600"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500"></div>
         </div>
       </div>
     );
@@ -442,7 +442,7 @@ const HeroSlider = () => {
             onClick={() => goToSlide(index)}
             className={`w-3 h-3 rounded-full transition-all duration-300 ${
               index === currentSlide
-                ? 'bg-red-600 w-8'
+                ? 'bg-orange-500 w-8'
                 : 'bg-white/60 hover:bg-white/80'
             }`}
           />

@@ -3,7 +3,7 @@ import cors from 'cors';
 import helmet from 'helmet';
 import "dotenv/config"
 import connectDB from "./config/mongodb.js";
-import connectCloudinary from "./config/cloudinary.js";
+// import connectCloudinary from "./config/cloudinary.js"; // Temporarily disabled
 import { connectRedis } from "./config/redis.js";
 import path, {dirname} from "path";
 import userRouter from "./routes/UserRoute.js";
@@ -22,7 +22,7 @@ import settingsRouter from "./routes/SettingsRoute.js";
 import reportRouter from "./routes/ReportRoute.js";
 import adminRouter from "./routes/AdminRoute.js";
 import mediaRouter from "./routes/MediaRoute.js";
-import enhancedMediaRouter from "./routes/EnhancedMediaRoute.js";
+// import enhancedMediaRouter from "./routes/EnhancedMediaRoute.js"; // Temporarily disabled
 import courierManagementRouter from "./routes/CourierManagementRoute.js";
 import branchRouter from "./routes/BranchRoute.js";
 import RateLimiterService from "./services/RateLimiter.js";
@@ -50,7 +50,7 @@ logInfo('Starting Tulumbak Backend Server', {
 });
 
 connectDB();
-connectCloudinary();
+// connectCloudinary(); // Temporarily disabled
 connectRedis();
 
 // Initialize default settings on startup (dynamic import to avoid circular dependency)
@@ -142,7 +142,7 @@ app.use('/api/order', orderRouter)
 app.use('/api/paytr', paytrRouter);
 app.use('/api/slider', sliderRouter);
 app.use('/api/media', mediaRouter);
-app.use('/api/media-enhanced', enhancedMediaRouter);
+// app.use('/api/media-enhanced', enhancedMediaRouter); // Temporarily disabled
 app.use('/api/courier', courierRouter);
 app.use('/api/delivery', deliveryRouter);
 app.use('/api/coupon', couponRouter);

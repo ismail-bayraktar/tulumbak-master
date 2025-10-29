@@ -11,13 +11,14 @@ a.active hr{
 * {
     font-family: 'Inter', 'Nunito Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 }
-/* Font Classes */
+/* Modern Typography System */
 .prata-regular {
     font-family: "Prata", serif;
     font-weight: 400;
     font-style: normal;
 }
 
+/* Primary Typography - Modern & Clean */
 .inter-font {
     font-family: 'Inter', sans-serif;
 }
@@ -30,6 +31,34 @@ a.active hr{
     font-family: 'Poppins', sans-serif;
 }
 
+/* Typography Classes */
+.heading-primary {
+    font-family: 'Inter', sans-serif;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    line-height: 1.2;
+}
+
+.heading-secondary {
+    font-family: 'Inter', sans-serif;
+    font-weight: 500;
+    letter-spacing: -0.01em;
+    line-height: 1.3;
+}
+
+.text-body {
+    font-family: 'Inter', sans-serif;
+    font-weight: 400;
+    line-height: 1.6;
+}
+
+.text-small {
+    font-family: 'Inter', sans-serif;
+    font-weight: 400;
+    font-size: 0.875rem;
+    line-height: 1.5;
+}
+
 /* Price typography with Turkish Lira support */
 .price-display {
     font-family: 'Poppins', 'Inter', sans-serif;
@@ -40,6 +69,29 @@ a.active hr{
 .turkish-lira {
     font-family: 'Poppins', 'Inter', sans-serif;
     font-weight: 500;
+}
+
+/* CTA Typography */
+.text-cta {
+    font-family: 'Poppins', sans-serif;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+}
+
+/* Modern Color Variables */
+:root {
+    --color-primary: #FF6B35;
+    --color-primary-light: #FF8C64;
+    --color-primary-dark: #E55A2B;
+    --color-text-primary: #1F2937;
+    --color-text-secondary: #6B7280;
+    --color-background: #FAFAFA;
+    --color-success: #10B981;
+    --color-info: #3B82F6;
+    --color-warning: #F59E0B;
+    --color-error: #EF4444;
+    --color-border: #E5E7EB;
+    --color-shadow: rgba(0, 0, 0, 0.1);
 }
 
 ::-webkit-scrollbar {

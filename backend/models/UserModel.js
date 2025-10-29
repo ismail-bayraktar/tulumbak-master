@@ -9,7 +9,6 @@ const userSchema = new mongoose.Schema({
 }, {minimize: false})
 
 // Performance indexes
-userSchema.index({ email: 1 });
 userSchema.index({ phone: 1 });
 
 const userModel = mongoose.models.user || mongoose.model('user', userSchema);

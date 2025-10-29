@@ -36,7 +36,6 @@ const orderSchema = new mongoose.Schema({
 orderSchema.index({ userId: 1, date: -1 });
 orderSchema.index({ status: 1 });
 orderSchema.index({ courierStatus: 1 });
-orderSchema.index({ trackingId: 1 }, { unique: true, sparse: true });
 orderSchema.index({ courierTrackingId: 1 });
 orderSchema.index({ date: -1 });
 orderSchema.index({ payment: 1 });

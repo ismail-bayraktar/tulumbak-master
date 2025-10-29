@@ -13,7 +13,6 @@ const couponSchema = new mongoose.Schema({
 });
 
 // Performance indexes
-couponSchema.index({ code: 1 });
 couponSchema.index({ active: 1, validFrom: 1, validUntil: 1 });
 couponSchema.index({ usageLimit: 1, usageCount: 1 });
 
