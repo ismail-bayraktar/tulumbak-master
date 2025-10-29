@@ -24,6 +24,7 @@ import adminRouter from "./routes/AdminRoute.js";
 import mediaRouter from "./routes/MediaRoute.js";
 import enhancedMediaRouter from "./routes/EnhancedMediaRoute.js";
 import courierManagementRouter from "./routes/CourierManagementRoute.js";
+import branchRouter from "./routes/BranchRoute.js";
 import RateLimiterService from "./services/RateLimiter.js";
 import logger, { logInfo } from "./utils/logger.js";
 import { initSentry } from "./utils/sentry.js";
@@ -134,6 +135,7 @@ app.use('/api/settings', settingsRouter);
 app.use('/api/report', reportRouter);
 app.use('/api/admin', adminRouter);
 app.use('/api/courier-management', courierManagementRouter);
+app.use('/api/branches', branchRouter);
 
 // Swagger Documentation
 swaggerDocs(app);
