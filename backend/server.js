@@ -21,6 +21,9 @@ import corporateRouter from "./routes/CorporateRoute.js";
 import settingsRouter from "./routes/SettingsRoute.js";
 import reportRouter from "./routes/ReportRoute.js";
 import adminRouter from "./routes/AdminRoute.js";
+import mediaRouter from "./routes/MediaRoute.js";
+import enhancedMediaRouter from "./routes/EnhancedMediaRoute.js";
+import courierManagementRouter from "./routes/CourierManagementRoute.js";
 import RateLimiterService from "./services/RateLimiter.js";
 import logger, { logInfo } from "./utils/logger.js";
 import { initSentry } from "./utils/sentry.js";
@@ -88,8 +91,13 @@ app.use(cors({
 // Rate limiting
 app.use('/api', RateLimiterService.createGeneralLimiter(100, 15 * 60 * 1000)); // 100 requests per 15 minutes
 
-// Static files for uploads with CORS - Alternative 1: Direct serve
-app.use('/uploads', cors(), express.static(path.join(__dirname, 'uploads')));
+// Static files for uploads with enhanced CORS
+app.use('/uploads', (req, res, next) => {
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Methods', 'GET');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+    next();
+}, express.static(path.join(__dirname, 'uploads')));
 
 // Alternative 2: Image proxy endpoint (ACTIVE SOLUTION)
 app.get('/api/image-proxy/:filename', (req, res) => {
@@ -116,6 +124,8 @@ app.use('/api/cart', cartRouter)
 app.use('/api/order', orderRouter)
 app.use('/api/paytr', paytrRouter);
 app.use('/api/slider', sliderRouter);
+app.use('/api/media', mediaRouter);
+app.use('/api/media-enhanced', enhancedMediaRouter);
 app.use('/api/courier', courierRouter);
 app.use('/api/delivery', deliveryRouter);
 app.use('/api/coupon', couponRouter);
