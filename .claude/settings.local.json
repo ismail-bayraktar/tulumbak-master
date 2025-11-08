@@ -10,7 +10,10 @@
       "Bash(npm test)",
       "Bash(node:*)",
       "Bash(curl:*)",
-      "Bash(npm install:*)"
+      "Bash(npm install:*)",
+      "WebFetch(domain:baymard.com)",
+      "Bash(npm run dev:*)",
+      "Bash(npm start)"
     ],
     "deny": [],
     "ask": []

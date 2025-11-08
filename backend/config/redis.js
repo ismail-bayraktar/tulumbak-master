@@ -14,7 +14,14 @@ let isConnected = false;
  */
 export const connectRedis = async () => {
   try {
-    if (!process.env.REDIS_URL && process.env.REDIS_ENABLED !== 'true') {
+    // If REDIS_ENABLED is explicitly false, don't connect (even if REDIS_URL is set)
+    if (process.env.REDIS_ENABLED === 'false') {
+      logger.info('Redis disabled (REDIS_ENABLED=false), skipping connection');
+      return;
+    }
+
+    // Check if Redis is explicitly disabled or not enabled
+    if (process.env.REDIS_ENABLED !== 'true' && !process.env.REDIS_URL) {
       logger.info('Redis disabled, skipping connection');
       return;
     }

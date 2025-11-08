@@ -1,4 +1,5 @@
 import Slider from '../models/SliderModel.js';
+import logger from '../utils/logger.js';
 
 // Get all sliders for frontend
 const listSliders = async (req, res) => {
@@ -26,10 +27,12 @@ const listSliders = async (req, res) => {
 // Get all sliders for admin (including inactive)
 const listSlidersAdmin = async (req, res) => {
     try {
+        logger.info('Admin slider list requested', { adminEmail: req.admin?.email });
         const sliders = await Slider.find({}).sort({ order: 1 });
+        logger.info(`Found ${sliders.length} sliders`);
         res.json({ success: true, sliders });
     } catch (error) {
-        console.log(error);
+        logger.error('Error in listSlidersAdmin', { error: error.message, stack: error.stack });
         res.status(500).json({ success: false, message: "Sliderler listelenemedi" });
     }
 };

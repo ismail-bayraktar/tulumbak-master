@@ -1,304 +1,68 @@
-<!-- 966a48ae-f8de-4a22-8ced-01d3e04bb9c1 3df531b9-d88e-4ea3-a7a7-624c8b812a7a -->
-# Backend Geliştirme Yol Haritası
+<!-- 966a48ae-f8de-4a22-8ced-01d3e04bb9c1 2cef3e8c-1acc-47ea-84c7-3ca7d80c2595 -->
+# Teslimat Bölgesi Sistemi İyileştirme
 
-## Mevcut Durum Analizi
+## Problem Analizi
 
-**Tamamlanma Oranı:** %90
+- Mevcut UI eski ve kullanıcı dostu değil
+- Backend API çalışıyor ama görselleştirme eksik
+- Frontend zone seçiyor ama adres doğrulama yok
+- Kurye sistemi zone bazlı kontrol yapmıyor
 
-**Çalışan Sistemler:**
+## Çözüm Planı
 
-- ✅ MongoDB bağlantısı ve veritabanı modelleri
-- ✅ JWT authentication ve authorization
-- ✅ Product, Order, Delivery, Coupon, Corporate Order CRUD
-- ✅ PayTR payment gateway entegrasyonu
-- ✅ Courier mock sistemi
-- ✅ Multer file upload
-- ✅ Cloudinary entegrasyonu
+### Faz 1: Admin Panel UI Modernizasyonu (Hızlı Kazanım)
 
-**Eksik Özellikler:**
+1. **Teslimat Bölgeleri Sayfası** (`admin/src/pages/DeliveryZones.jsx`)
 
-- Email bildirimleri
-- SMS entegrasyonu
-- Gerçek kurye API entegrasyonu
-- Otomatik stok yönetimi
-- Raporlama sistemi
-- Logging ve error tracking
-- Test coverage
+- Modern kart layout ile bölge listesi
+- Interaktif harita placeholder
+- Bölge edit/delete modal
+- İstatistikler (toplam bölge, aktif teslimat alanları)
 
----
+2. **Zaman Aralıkları Sayfası** (`admin/src/pages/TimeSlots.jsx`)
 
-## Faz 1: Kritik Öncelik (1-2 Hafta)
+- Takvim görünümü ile slot yerleşimi
+- Kapasite ve yoğunluk göstergeleri
+- Haftalık/aylık görünüm
 
-### 1.1 Email Bildirim Sistemi
+3. **Kurumsal Siparişler Sayfası** (`admin/src/pages/CorporateOrders.jsx`)
 
-**Dosyalar:**
+- Modern card layout (zaten var gibi)
+- Status kanban board
+- Detay modal iyileştirme
 
-- `backend/services/EmailService.js` (yeni)
-- `backend/controllers/OrderController.js` (güncelleme)
-- `backend/controllers/CourierController.js` (güncelleme)
+### Faz 2: Backend Zone Validation
 
-**Özellikler:**
+1. **Sipariş Doğrulama** (`backend/controllers/OrderController.js`)
 
-- Sipariş onayı email'i
-- Sipariş durumu değişiklik bildirimi
-- Kurye atandığında bildirim
-- Teslim edildiğinde teşekkür email'i
-- Kupon kullanım bildirimi
+- `placeOrder` içinde `delivery.zoneId` kontrol
+- Zone bulunmazsa hata döndür
+- Adres-bölge uyum kontrolü
 
-**Teknoloji:** Nodemailer + SMTP service (Gmail/Outlook veya SendGrid)
+2. **Kurye Atama API** (`backend/controllers/CourierController.js`)
 
-### 1.2 Stok Yönetimi Otomasyonu
+- Zone bazlı kurye filtresi
+- Bölge haritasında kurye gösterimi
 
-**Dosyalar:**
+### Faz 3: Frontend Zone Kontrolü
 
-- `backend/controllers/ProductController.js` (güncelleme)
-- `backend/controllers/OrderController.js` (güncelleme)
-- `backend/middleware/StockCheck.js` (yeni)
+1. **Address Validation**
 
-**Özellikler:**
+- Seçilen zone ile adres match kontrolü
+- Zone dışı adres uyarısı
 
-- Sipariş verildiğinde stok otomatik azaltma
-- Stokta olmayan ürün filtresi
-- Minimum stok uyarısı (admin panel)
-- Tedarik otomasyonu hook'ları
+2. **Checkout Flow**
 
-### 1.3 Güvenlik İyileştirmeleri
+- Zone yoksa sipariş butonu disabled
+- Zone seçilmezse uyarı mesajı
 
-**Dosyalar:**
+### Etkilenen Dosyalar
 
-- `backend/middleware/AdminAuth.js` (güncelleme)
-- `backend/middleware/Auth.js` (güncelleme)
-- `backend/services/RateLimiter.js` (yeni)
-
-**Özellikler:**
-
-- Rate limiting (brute force koruması)
-- Input validation (Express-validator)
-- XSS ve SQL injection koruması
-- Secure header middleware
-
----
-
-## Faz 2: Önemli Öncelik (2-3 Hafta)
-
-### 2.1 SMS Entegrasyonu
-
-**Dosyalar:**
-
-- `backend/services/SmsService.js` (yeni)
-- `backend/controllers/OrderController.js` (güncelleme)
-
-**Özellikler:**
-
-- Sipariş onayı SMS
-- Kurye atandığında SMS
-- Teslimat bilgisi SMS
-- Kupon hatırlatma SMS
-
-**Teknoloji:** Netgsm, Twilio veya Türkiye SMS sağlayıcı
-
-### 2.2 Raporlama Sistemi
-
-**Dosyalar:**
-
-- `backend/controllers/ReportController.js` (yeni)
-- `backend/routes/ReportRoute.js` (yeni)
-- `backend/models/ReportModel.js` (yeni - isteğe bağlı)
-
-**API Endpoints:**
-
-```
-GET /api/report/daily-sales
-GET /api/report/product-analytics
-GET /api/report/user-behavior
-GET /api/report/delivery-status
-```
-
-**Özellikler:**
-
-- Günlük/haftalık/aylık satış raporları
-- Ürün bazlı analizler
-- Müşteri davranış analizi
-- Teslimat istatistikleri
-
-### 2.3 Gerçek Kurye Entegrasyonu
-
-**Dosyalar:**
-
-- `backend/services/CourierService.js` (yeni)
-- `backend/controllers/CourierController.js` (güncelleme)
-
-**Özellikler:**
-
-- Türkiye Lojistik API entegrasyonu (Aras, Yurtiçi Kargo)
-- Takip numarası oluşturma
-- Webhook entegrasyonu (durum güncellemeleri)
-- Canlı takip endpoint'i
-
----
-
-## Faz 3: Orta Öncelik (2-3 Hafta)
-
-### 3.1 Multi-Admin Sistemi
-
-**Dosyalar:**
-
-- `backend/models/AdminModel.js` (yeni)
-- `backend/controllers/AdminController.js` (yeni)
-- `backend/routes/AdminRoute.js` (yeni)
-- `backend/middleware/RoleAuth.js` (yeni)
-
-**Özellikler:**
-
-- Role-based access control (RBAC)
-- Admin CRUD işlemleri
-- Permission yönetimi
-- Admin logları (audit trail)
-
-**Rol Yapısı:**
-
-- Super Admin
-- Admin
-- Editor (ü。
-
-rün düzenleme)
-
-- Viewer (sadece görüntüleme)
-
-### 3.2 Logging ve Error Tracking
-
-**Dosyalar:**
-
-- `backend/utils/logger.js` (yeni)
-- `backend/middleware/ErrorHandler.js` (yeni)
-- `backend/config/winston.js` (yeni - opsiyonel)
-
-**Teknoloji:** Winston logger + Sentry (opsiyonel)
-
-**Özellikler:**
-
-- Dosya tabanlı logging
-- Error tracking ve reporting
-- Performance monitoring
-- API request logging
-
-### 3.3 Önbellek Sistemi
-
-**Dosyalar:**
-
-- `backend/services/CacheService.js` (yeni)
-- `backend/controllers/ProductController.js` (güncelleme)
-- `backend/controllers/DeliveryController.js` (güncelleme)
-
-**Teknoloji:** Redis (Docker ile)
-
-**Özellikler:**
-
-- Popüler ürün cache
-- Delivery zone cache
-- Kupon listesi cache
-- Response cache middleware
-
----
-
-## Faz 4: Düşük Öncelik ve Optimizasyon (2-3 Hafta)
-
-### 4.1 Test Coverage
-
-**Dosyalar:**
-
-- `backend/tests/` (yeni klasör)
-- `backend/package.json` (güncelleme - test script'leri)
-
-**Framework:** Jest veya Mocha + Chai
-
-**Test Türleri:**
-
-- Unit tests (controllers, services)
-- Integration tests (API endpoints)
-- Database tests (model operations)
-
-### 4.2 Performance Optimization
-
-**Dosyalar:**
-
-- Veritabanı index'leri
-- Query optimization
-- `backend/config/database.js` (güncelleme)
-
-**İyileştirmeler:**
-
-- MongoDB index'leri ekle
-- N+1 query sorunlarını düzelt
-- Response time optimization
-- Pagination iyileştirmeleri
-
-### 4.3 API Documentation
-
-**Dosyalar:**
-
-- `backend/docs/api-doc.js` (Swagger)
-- `backend/package.json` (güncelleme - swagger dependency)
-
-**Tool:** Swagger/OpenAPI
-
-**Özellikler:**
-
-- Auto-generated API documentation
-- Request/response örnekleri
-- Authentication rehberi
-- Error code listesi
-
----
-
-## Environment Variables
-
-Yeni eklenmesi gereken `.env` değişkenleri:
-
-```env
-# Email
-SMTP_HOST=smtp.gmail.com
-SMTP_PORT=587
-SMTP_USER=your-email@gmail.com
-SMTP_PASSWORD=your-password
-
-# SMS
-SMS_API_KEY=your-sms-api-key
-SMS_SENDER=COMPANY_NAME
-
-# Redis
-REDIS_HOST=localhost
-REDIS_PORT=6379
-
-# Courier
-COURIER_API_KEY=your-courier-api-key
-COURIER_API_URL=https://api.courier.com
-
-# Sentry (optional)
-SENTRY_DSN=your-sentry-dsn
-```
-
----
-
-## Kod Standartları
-
-- **Dosya İsimlendirme:** PascalCase (Controller), camelCase (dosya)
-- **Export:** Named exports (`export { functionName }`)
-- **Error Handling:** Try-catch blokları + özel error sınıfları
-- **Validation:** Express-validator kullan
-- **Async/Await:** Promise tabanlı yapılar
-- **ESLint:** Strict mode enabled
-- **Comments:** JSDoc formatında function comments
-
----
-
-## Notlar
-
-- Tüm yeni özellikler Dokümantasyon: `Docs/backend/README.md` dosyasındaki yapıya uygun olmalı
-- Environment variables `.env.example` dosyasına eklenecek
-- Her yeni özellik için migration veya script eklenecek
-- Production deployment için Vercel veya benzeri platform kullanılacak
-- Database migration'ları dikkatli yapılacak (backup al)
+- `admin/src/pages/DeliveryZones.jsx` - Modern UI
+- `admin/src/pages/TimeSlots.jsx` - Modern UI
+- `backend/controllers/OrderController.js` - Validation
+- `backend/controllers/CourierController.js` - Zone filter
+- Frontend checkout components - Zone kontrolü
 
 ### To-dos
 

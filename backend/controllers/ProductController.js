@@ -1,5 +1,7 @@
 //import { v2 as cloudinary } from 'cloudinary';
 import productModel from "../models/ProductModel.js";
+import Media from "../models/MediaModel.js";
+import logger from "../utils/logger.js";
 
 
 const parseSizes = (sizes) => {
@@ -25,20 +27,51 @@ const addProduct = async (req, res) => {
 
         const images = [image1, image2, image3, image4].filter((item) => item !== undefined);
 
-        //upload images with multer
-        const imagesUrl = images.map(item => `/assets/${item.filename}`)
+        // Upload images with multer (backward compatibility)
+        const imagesUrl = images.map(item => `/assets/${item.filename}`);
 
-        /* upload images to cloudinary
-        let imagesUrl = await Promise.all(
-            images.map(async (item) => {
-                let result = await cloudinary.uploader.upload(item.path, {resource_type: 'image'});
-                return result.secure_url;
-            })
-        )
-        */
+        // Save images to Media model for better management
+        const baseUrl = `${req.protocol}://${req.get('host')}`;
+        const mediaIds = [];
+        
+        if (images.length > 0) {
+            try {
+                const mediaDocs = await Promise.all(
+                    images.map(async (file, index) => {
+                        const media = new Media({
+                            filename: file.filename,
+                            originalName: file.originalname,
+                            mimetype: file.mimetype,
+                            size: file.size,
+                            path: file.path,
+                            url: `/assets/${file.filename}`,
+                            secureUrl: `${baseUrl}/assets/${file.filename}`,
+                            category: 'product',
+                            folder: 'products',
+                            alt: `${name} - Ürün görseli ${index + 1}`,
+                            title: `${name} - Görsel ${index + 1}`,
+                            description: `${name} ürünü için görsel`,
+                            uploadedBy: 'admin',
+                            usedIn: [{
+                                type: 'product',
+                                id: null, // Will be updated after product is saved
+                                url: `/product/${null}`,
+                                addedAt: new Date()
+                            }]
+                        });
+                        await media.save();
+                        return media._id.toString();
+                    })
+                );
+                mediaIds.push(...mediaDocs);
+                logger.info('Product images saved to Media model', { mediaCount: mediaDocs.length });
+            } catch (mediaError) {
+                logger.error('Error saving images to Media model', { error: mediaError.message });
+                // Continue even if Media save fails (backward compatibility)
+            }
+        }
 
-        console.log(name, description, basePrice, category, subCategory, sizes, bestseller);
-        console.log(imagesUrl);
+        logger.info('Adding product', { name, category, basePrice, imageCount: imagesUrl.length });
 
         const parsedSizes = parseSizes(sizes);
         const parseNumberArray = (val) => {
@@ -78,15 +111,34 @@ const addProduct = async (req, res) => {
             shelfLife: shelfLife || "",
             storageInfo: storageInfo || ""
         }
-        console.log(productData);
-
         const product = new productModel(productData);
         await product.save();
 
+        // Update Media records with product ID
+        if (mediaIds.length > 0) {
+            try {
+                await Promise.all(
+                    mediaIds.map(async (mediaId) => {
+                        await Media.findByIdAndUpdate(mediaId, {
+                            $set: {
+                                'usedIn.0.id': product._id.toString(),
+                                'usedIn.0.url': `/product/${product._id}`
+                            }
+                        });
+                    })
+                );
+                logger.info('Media records updated with product ID', { productId: product._id });
+            } catch (mediaUpdateError) {
+                logger.error('Error updating Media records', { error: mediaUpdateError.message });
+                // Continue even if update fails
+            }
+        }
+
+        logger.info('Product added successfully', { productId: product._id, name });
         res.json({success: true, message: "Product added successfully"});
 
     } catch (error) {
-        console.log(error);
+        logger.error('Error adding product', { error: error.message, stack: error.stack });
         res.json({success: false, message: error.message});
     }
 }
@@ -154,12 +206,52 @@ const addProduct = async (req, res) => {
         if (images.length) {
             const imagesUrl = images.map(item => `/assets/${item.filename}`);
             updatePayload.image = imagesUrl;
+
+            // Save new images to Media model
+            const baseUrl = `${req.protocol}://${req.get('host')}`;
+            const mediaIds = [];
+            
+            try {
+                const mediaDocs = await Promise.all(
+                    images.map(async (file, index) => {
+                        const media = new Media({
+                            filename: file.filename,
+                            originalName: file.originalname,
+                            mimetype: file.mimetype,
+                            size: file.size,
+                            path: file.path,
+                            url: `/assets/${file.filename}`,
+                            secureUrl: `${baseUrl}/assets/${file.filename}`,
+                            category: 'product',
+                            folder: 'products',
+                            alt: `${name || 'Ürün'} - Ürün görseli ${index + 1}`,
+                            title: `${name || 'Ürün'} - Görsel ${index + 1}`,
+                            description: `${name || 'Ürün'} ürünü için görsel`,
+                            uploadedBy: 'admin',
+                            usedIn: [{
+                                type: 'product',
+                                id: id,
+                                url: `/product/${id}`,
+                                addedAt: new Date()
+                            }]
+                        });
+                        await media.save();
+                        return media._id.toString();
+                    })
+                );
+                mediaIds.push(...mediaDocs);
+                logger.info('Product update: Images saved to Media model', { productId: id, mediaCount: mediaDocs.length });
+            } catch (mediaError) {
+                logger.error('Error saving images to Media model during update', { error: mediaError.message, productId: id });
+                // Continue even if Media save fails (backward compatibility)
+            }
         }
 
         await productModel.findByIdAndUpdate(id, updatePayload);
+        logger.info('Product updated successfully', { productId: id });
         res.json({ success: true, message: "Product updated successfully" });
     } catch (error) {
-        console.log(error);
+        logger.error('Error updating product', { error: error.message, stack: error.stack, productId: id });
         res.json({ success: false, message: error.message });
     }
 }
@@ -179,7 +271,7 @@ const listProducts = async (req, res) => {
         
         res.json({success: true, products});
     } catch (error) {
-        console.log(error);
+        logger.error('Error listing products', { error: error.message, stack: error.stack });
         res.json({success: false, message: error.message});
     }
 }
@@ -187,10 +279,12 @@ const listProducts = async (req, res) => {
 // Remove product
 const removeProduct = async (req, res) => {
     try {
-        await productModel.findByIdAndDelete(req.body.id);
+        const { id } = req.body;
+        await productModel.findByIdAndDelete(id);
+        logger.info('Product removed successfully', { productId: id });
         res.json({success: true, message: "Product removed successfully"});
     } catch (error) {
-        console.log(error);
+        logger.error('Error removing product', { error: error.message, stack: error.stack, productId: req.body.id });
         res.json({success: false, message: error.message});
     }
 }
@@ -200,9 +294,12 @@ const singleProduct = async (req, res) => {
     try {
         const { productId } = req.body;
         const product = await productModel.findById(productId);
+        if (!product) {
+            return res.json({success: false, message: "Product not found"});
+        }
         res.json({success: true, product});
     } catch (error) {
-        console.log(error);
+        logger.error('Error fetching single product', { error: error.message, stack: error.stack, productId: req.body.productId });
         res.json({success: false, message: error.message});
     }
 }

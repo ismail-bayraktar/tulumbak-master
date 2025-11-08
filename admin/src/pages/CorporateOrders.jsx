@@ -2,8 +2,10 @@ import { useState, useEffect } from "react";
 import axios from "axios";
 import { backendUrl } from "../App.jsx";
 import { toast } from "react-toastify";
+import { useTheme } from '../context/ThemeContext.jsx';
 
 const CorporateOrders = ({ token }) => {
+    const { isDarkMode } = useTheme();
     const [orders, setOrders] = useState([]);
     const [loading, setLoading] = useState(true);
     const [selectedOrder, setSelectedOrder] = useState(null);
@@ -22,8 +24,7 @@ const CorporateOrders = ({ token }) => {
                 setOrders(response.data.orders);
             }
         } catch (error) {
-            console.error(error);
-            toast.error("Siparişler yüklenemedi");
+            toast.error(error.response?.data?.message || error.message || 'Kurumsal siparişler yüklenirken hata oluştu');
         } finally {
             setLoading(false);
         }
@@ -42,17 +43,17 @@ const CorporateOrders = ({ token }) => {
                 setSelectedOrder(null);
             }
         } catch (error) {
-            toast.error("Güncelleme başarısız");
+            toast.error(error.response?.data?.message || error.message || 'Durum güncellenirken hata oluştu');
         }
     };
 
     const getStatusColor = (status) => {
         switch (status) {
-            case 'pending': return 'bg-yellow-100 text-yellow-800';
-            case 'approved': return 'bg-blue-100 text-blue-800';
-            case 'rejected': return 'bg-red-100 text-red-800';
-            case 'completed': return 'bg-green-100 text-green-800';
-            default: return 'bg-gray-100 text-gray-800';
+            case 'pending': return 'bg-warning-100 text-warning-800 dark:bg-warning-900/30 dark:text-warning-400';
+            case 'approved': return 'bg-primary-100 text-primary-800 dark:bg-primary-900/30 dark:text-primary-400';
+            case 'rejected': return 'bg-danger-100 text-danger-800 dark:bg-danger-900/30 dark:text-danger-400';
+            case 'completed': return 'bg-success-100 text-success-800 dark:bg-success-900/30 dark:text-success-400';
+            default: return 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300';
         }
     };
 
@@ -67,59 +68,59 @@ const CorporateOrders = ({ token }) => {
     };
 
     if (loading) {
-        return <div className="text-center py-10">Yükleniyor...</div>;
+        return <div className="text-center py-10 text-gray-600 dark:text-gray-400">Yükleniyor...</div>;
     }
 
     return (
         <div className="w-full p-6">
-            <h2 className="text-2xl font-bold mb-6">Kurumsal Siparişler</h2>
+            <h2 className="text-2xl font-bold mb-6 text-gray-900 dark:text-white">Kurumsal Siparişler</h2>
             
             {orders.length === 0 ? (
-                <div className="text-center text-gray-500 py-10">Henüz sipariş bulunmuyor</div>
+                <div className="text-center text-gray-500 dark:text-gray-400 py-10">Henüz sipariş bulunmuyor</div>
             ) : (
                 <div className="overflow-x-auto">
-                    <table className="w-full border-collapse bg-white">
+                    <table className="w-full border-collapse bg-white dark:bg-gray-800">
                         <thead>
-                            <tr className="bg-gray-50">
-                                <th className="border p-3 text-left">Şirket Adı</th>
-                                <th className="border p-3 text-left">İletişim</th>
-                                <th className="border p-3 text-left">Sipariş Detayları</th>
-                                <th className="border p-3 text-left">Talep Tarihi</th>
-                                <th className="border p-3 text-left">Durum</th>
-                                <th className="border p-3 text-left">İşlemler</th>
+                            <tr className="bg-gray-50 dark:bg-gray-900">
+                                <th className="border border-gray-200 dark:border-gray-700 p-3 text-left text-gray-900 dark:text-white">Şirket Adı</th>
+                                <th className="border border-gray-200 dark:border-gray-700 p-3 text-left text-gray-900 dark:text-white">İletişim</th>
+                                <th className="border border-gray-200 dark:border-gray-700 p-3 text-left text-gray-900 dark:text-white">Sipariş Detayları</th>
+                                <th className="border border-gray-200 dark:border-gray-700 p-3 text-left text-gray-900 dark:text-white">Talep Tarihi</th>
+                                <th className="border border-gray-200 dark:border-gray-700 p-3 text-left text-gray-900 dark:text-white">Durum</th>
+                                <th className="border border-gray-200 dark:border-gray-700 p-3 text-left text-gray-900 dark:text-white">İşlemler</th>
                             </tr>
                         </thead>
                         <tbody>
                             {orders.map((order) => (
-                                <tr key={order._id} className="hover:bg-gray-50">
-                                    <td className="border p-3">{order.companyName}</td>
-                                    <td className="border p-3">
+                                <tr key={order._id} className="hover:bg-gray-50 dark:hover:bg-gray-900">
+                                    <td className="border border-gray-200 dark:border-gray-700 p-3 text-gray-900 dark:text-white">{order.companyName}</td>
+                                    <td className="border border-gray-200 dark:border-gray-700 p-3">
                                         <div className="text-sm">
-                                            <div>{order.contactName}</div>
-                                            <div className="text-gray-500">{order.email}</div>
-                                            <div className="text-gray-500">{order.phone}</div>
+                                            <div className="text-gray-900 dark:text-white">{order.contactName}</div>
+                                            <div className="text-gray-500 dark:text-gray-400">{order.email}</div>
+                                            <div className="text-gray-500 dark:text-gray-400">{order.phone}</div>
                                         </div>
                                     </td>
-                                    <td className="border p-3">
-                                        <div className="text-sm max-w-xs truncate" title={order.orderDetails}>
+                                    <td className="border border-gray-200 dark:border-gray-700 p-3">
+                                        <div className="text-sm max-w-xs truncate text-gray-900 dark:text-white" title={order.orderDetails}>
                                             {order.orderDetails}
                                         </div>
                                         {order.estimatedAmount > 0 && (
-                                            <div className="text-gray-600 mt-1">
+                                            <div className="text-gray-600 dark:text-gray-400 mt-1">
                                                 ~{order.estimatedAmount}₺
                                             </div>
                                         )}
                                     </td>
-                                    <td className="border p-3">{order.requestedDate}</td>
-                                    <td className="border p-3">
+                                    <td className="border border-gray-200 dark:border-gray-700 p-3 text-gray-900 dark:text-white">{order.requestedDate}</td>
+                                    <td className="border border-gray-200 dark:border-gray-700 p-3">
                                         <span className={`px-2 py-1 rounded text-xs ${getStatusColor(order.status)}`}>
                                             {getStatusLabel(order.status)}
                                         </span>
                                     </td>
-                                    <td className="border p-3">
+                                    <td className="border border-gray-200 dark:border-gray-700 p-3">
                                         <button
                                             onClick={() => setSelectedOrder(order)}
-                                            className="text-blue-600 hover:text-blue-800 mr-2"
+                                            className="text-primary-600 hover:text-primary-800 dark:text-primary-400 dark:hover:text-primary-300 mr-2 font-medium"
                                         >
                                             Detay
                                         </button>
@@ -133,59 +134,59 @@ const CorporateOrders = ({ token }) => {
 
             {/* Modal */}
             {selectedOrder && (
-                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-                    <div className="bg-white p-6 rounded-lg max-w-2xl w-full m-4 max-h-[90vh] overflow-y-auto">
-                        <h3 className="text-xl font-bold mb-4">Sipariş Detayları</h3>
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+                    <div className="bg-white dark:bg-gray-800 p-6 rounded-lg max-w-2xl w-full m-4 max-h-[90vh] overflow-y-auto border border-gray-200 dark:border-gray-700">
+                        <h3 className="text-xl font-bold mb-4 text-gray-900 dark:text-white">Sipariş Detayları</h3>
                         
                         <div className="space-y-3">
                             <div>
-                                <label className="font-semibold">Şirket Adı:</label>
-                                <p>{selectedOrder.companyName}</p>
+                                <label className="font-semibold text-gray-700 dark:text-gray-300">Şirket Adı:</label>
+                                <p className="text-gray-900 dark:text-white">{selectedOrder.companyName}</p>
                             </div>
                             <div>
-                                <label className="font-semibold">İletişim Kişisi:</label>
-                                <p>{selectedOrder.contactName}</p>
+                                <label className="font-semibold text-gray-700 dark:text-gray-300">İletişim Kişisi:</label>
+                                <p className="text-gray-900 dark:text-white">{selectedOrder.contactName}</p>
                             </div>
                             <div>
-                                <label className="font-semibold">E-posta:</label>
-                                <p>{selectedOrder.email}</p>
+                                <label className="font-semibold text-gray-700 dark:text-gray-300">E-posta:</label>
+                                <p className="text-gray-900 dark:text-white">{selectedOrder.email}</p>
                             </div>
                             <div>
-                                <label className="font-semibold">Telefon:</label>
-                                <p>{selectedOrder.phone}</p>
+                                <label className="font-semibold text-gray-700 dark:text-gray-300">Telefon:</label>
+                                <p className="text-gray-900 dark:text-white">{selectedOrder.phone}</p>
                             </div>
                             <div>
-                                <label className="font-semibold">Adres:</label>
-                                <p>{selectedOrder.address}</p>
+                                <label className="font-semibold text-gray-700 dark:text-gray-300">Adres:</label>
+                                <p className="text-gray-900 dark:text-white">{selectedOrder.address}</p>
                             </div>
                             <div>
-                                <label className="font-semibold">Sipariş Detayları:</label>
-                                <p className="whitespace-pre-wrap">{selectedOrder.orderDetails}</p>
+                                <label className="font-semibold text-gray-700 dark:text-gray-300">Sipariş Detayları:</label>
+                                <p className="whitespace-pre-wrap text-gray-900 dark:text-white">{selectedOrder.orderDetails}</p>
                             </div>
                             <div>
-                                <label className="font-semibold">Talep Tarihi:</label>
-                                <p>{selectedOrder.requestedDate}</p>
+                                <label className="font-semibold text-gray-700 dark:text-gray-300">Talep Tarihi:</label>
+                                <p className="text-gray-900 dark:text-white">{selectedOrder.requestedDate}</p>
                             </div>
                             {selectedOrder.estimatedAmount > 0 && (
                                 <div>
-                                    <label className="font-semibold">Tahmini Tutar:</label>
-                                    <p>{selectedOrder.estimatedAmount}₺</p>
+                                    <label className="font-semibold text-gray-700 dark:text-gray-300">Tahmini Tutar:</label>
+                                    <p className="text-gray-900 dark:text-white">{selectedOrder.estimatedAmount}₺</p>
                                 </div>
                             )}
                             {selectedOrder.notes && (
                                 <div>
-                                    <label className="font-semibold">Notlar:</label>
-                                    <p>{selectedOrder.notes}</p>
+                                    <label className="font-semibold text-gray-700 dark:text-gray-300">Notlar:</label>
+                                    <p className="text-gray-900 dark:text-white">{selectedOrder.notes}</p>
                                 </div>
                             )}
                         </div>
 
                         <div className="mt-6">
-                            <label className="font-semibold block mb-2">Durum:</label>
+                            <label className="font-semibold block mb-2 text-gray-700 dark:text-gray-300">Durum:</label>
                             <select
                                 value={selectedOrder.status}
                                 onChange={(e) => setSelectedOrder({...selectedOrder, status: e.target.value})}
-                                className="w-full border p-2 rounded"
+                                className="w-full border border-gray-300 dark:border-gray-600 p-2 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-400"
                             >
                                 <option value="pending">Beklemede</option>
                                 <option value="approved">Onaylandı</option>
@@ -195,11 +196,11 @@ const CorporateOrders = ({ token }) => {
                         </div>
 
                         <div className="mt-4">
-                            <label className="font-semibold block mb-2">Notlar:</label>
+                            <label className="font-semibold block mb-2 text-gray-700 dark:text-gray-300">Notlar:</label>
                             <textarea
                                 value={statusNotes}
                                 onChange={(e) => setStatusNotes(e.target.value)}
-                                className="w-full border p-2 rounded"
+                                className="w-full border border-gray-300 dark:border-gray-600 p-2 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-400"
                                 rows="3"
                                 placeholder="İsteğe bağlı notlar ekleyin..."
                             />
@@ -211,7 +212,7 @@ const CorporateOrders = ({ token }) => {
                                     updateStatus(selectedOrder._id, selectedOrder.status, statusNotes);
                                     setStatusNotes("");
                                 }}
-                                className="flex-1 bg-black text-white py-2 px-4 rounded hover:bg-gray-800"
+                                className="flex-1 bg-primary-600 hover:bg-primary-700 dark:bg-primary-500 dark:hover:bg-primary-600 text-white py-2 px-4 rounded transition-colors font-medium"
                             >
                                 Güncelle
                             </button>
@@ -220,7 +221,7 @@ const CorporateOrders = ({ token }) => {
                                     setSelectedOrder(null);
                                     setStatusNotes("");
                                 }}
-                                className="flex-1 bg-gray-300 text-gray-800 py-2 px-4 rounded hover:bg-gray-400"
+                                className="flex-1 bg-gray-200 hover:bg-gray-300 dark:bg-gray-600 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-200 py-2 px-4 rounded transition-colors font-medium"
                             >
                                 İptal
                             </button>

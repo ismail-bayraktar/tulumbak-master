@@ -14,7 +14,22 @@
 
 ## 🎯 Proje Hakkında
 
-**Tulumbak İzmir Baklava**, İzmir ve çevresinde baklava ve tatlı ürünleri satan bir e-ticaret platformudur. Modern teknolojilerle geliştirilmiş, ölçeklenebilir ve kullanıcı dostu bir yapıya sahiptir.
+**Tulumbak İzmir Baklava**, İzmir ve çevresinde baklava ve tatlı ürünleri satan modern bir e-ticaret platformudur. React + Node.js tabanlı ölçeklenebilir ve kullanıcı dostu bir yapıya sahiptir.
+
+### 🚀 Son Güncellemeler (v2.0.0 - 29.10.2024)
+
+#### Frontend Geliştirmeleri:
+- ✅ **Orange Tema Uygulandı**: Tüm site turuncu renk paletine güncellendi
+- ✅ **Baklava-İzmir SEO Section**: Modern tanıtım bölümü eklendi
+- ✅ **İkon Sistemi**: Lucide React professional ikonlara geçildi
+- ✅ **Typography**: Türkçe karakter dostu modern fontlar
+- ✅ **Minimalist Design**: Product detail sayfası sadeleştirildi
+- ✅ **Slider Sorunları**: CORS ve CSP düzenlemeleri yapıldı
+
+#### Backend Geliştirmeleri:
+- ✅ **CORS Düzeltmeleri**: Cross-origin görsel erişimi sağlandı
+- ✅ **Schema Index'ler**: Duplicate mongoose index'ler kaldırıldı
+- ✅ **Security**: Helmet CSP ayarları güncellendi
 
 ## 🏗️ Mimari Yapı
 

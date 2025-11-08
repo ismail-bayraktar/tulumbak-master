@@ -14,17 +14,28 @@ const Orders = () => {
             const response = await axios.post(backendUrl + '/api/order/userorders', {}, {headers:{token}});
             if (response.data.success) {
                 let allOrdersItem = [];
-                response.data.orders.map((order) => {
-                    order.items.map((item) => {
-                        item['status'] = order.status;
-                        item['payment'] = order.payment;
-                        item['paymentMethod'] = order.paymentMethod;
-                        item['date'] = order.date;
-                        item['orderAmount'] = order.amount;
-                        item['courierStatus'] = order.courierStatus || '';
-                        allOrdersItem.push(item);
+                // orders array kontrolü
+                if (Array.isArray(response.data.orders)) {
+                    response.data.orders.map((order) => {
+                        // order.items array kontrolü
+                        if (Array.isArray(order.items)) {
+                            order.items.map((item) => {
+                                // item.image kontrolü ve fallback
+                                if (!item.image || !Array.isArray(item.image) || item.image.length === 0) {
+                                    // Eğer image yoksa, product'tan çek veya placeholder kullan
+                                    item.image = item.image || ['/placeholder-image.png'];
+                                }
+                                item['status'] = order.status;
+                                item['payment'] = order.payment;
+                                item['paymentMethod'] = order.paymentMethod;
+                                item['date'] = order.date;
+                                item['orderAmount'] = order.amount;
+                                item['courierStatus'] = order.courierStatus || '';
+                                allOrdersItem.push(item);
+                            })
+                        }
                     })
-                })
+                }
                 setOrderData(allOrdersItem.reverse());
             }
         } catch (error) {
@@ -49,8 +60,8 @@ const Orders = () => {
                             <div className={"flex items-start gap-6 text-sm"}>
                                 <img
                                     className={"w-16 sm:w-20"}
-                                    src={item.image[0]}
-                                    alt={""}/>
+                                    src={item.image && Array.isArray(item.image) && item.image.length > 0 ? item.image[0] : '/placeholder-image.png'}
+                                    alt={item.name || 'Ürün görseli'}/>
                                 <div>
                                     <p className={"sm:text-base font-medium"}> {item.name} </p>
                                     <div className={"flex items-center gap-3 mt-1 text-base text-gray-700"}>

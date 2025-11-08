@@ -10,6 +10,7 @@ import {
     deleteMedia,
     getMediaBase64
 } from '../controllers/MediaController.js';
+import adminAuth from '../middleware/AdminAuth.js';
 
 const router = express.Router();
 
@@ -49,11 +50,14 @@ const upload = multer({
 });
 
 // Routes
-router.post('/upload', upload.single('file'), uploadMedia);
+// Public routes (for frontend)
 router.get('/list', listMedia);
 router.get('/:id', getMediaById);
 router.get('/:id/base64', getMediaBase64);
-router.put('/:id', updateMedia);
-router.delete('/:id', deleteMedia);
+
+// Admin routes (require authentication)
+router.post('/upload', adminAuth, upload.single('file'), uploadMedia);
+router.put('/:id', adminAuth, updateMedia);
+router.delete('/:id', adminAuth, deleteMedia);
 
 export default router;

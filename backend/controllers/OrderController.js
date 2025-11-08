@@ -2,7 +2,7 @@ import orderModel from "../models/OrderModel.js";
 import userModel from "../models/UserModel.js";
 import deliveryZoneModel from "../models/DeliveryZoneModel.js";
 import { reduceStock, checkLowStockAlert } from "../middleware/StockCheck.js";
-import AssignmentService from "../services/AssignmentService.js";
+import AssignmentService, { assignBranch, suggestBranch } from "../services/AssignmentService.js";
 import settingsModel from "../models/SettingsModel.js";
 
 // Generate unique tracking ID
@@ -77,15 +77,58 @@ const placeOrder = async (req, res) => {
         const trackingId = generateTrackingId();
         const trackingLink = `${process.env.FRONTEND_URL || 'http://localhost:5173'}/track/${trackingId}`;
         
-        // Determine assignment mode from settings (default auto)
+        // Get branch assignment settings
         let assignmentMode = 'auto';
+        let assignmentEnabled = true;
         try {
-            const modeSetting = await settingsModel.findOne({ key: 'assignment_mode' });
-            if (modeSetting?.value === 'hybrid') assignmentMode = 'hybrid';
-        } catch (_e) {}
-
+            const assignmentEnabledSetting = await settingsModel.findOne({ key: 'branch_assignment_enabled' });
+            const assignmentModeSetting = await settingsModel.findOne({ key: 'branch_assignment_mode' });
+            
+            if (assignmentEnabledSetting) {
+                assignmentEnabled = assignmentEnabledSetting.value !== false;
+            }
+            if (assignmentModeSetting && ['auto', 'hybrid', 'manual'].includes(assignmentModeSetting.value)) {
+                assignmentMode = assignmentModeSetting.value;
+            }
+        } catch (error) {
+            console.error('Error reading branch assignment settings:', error);
+        }
+        
         // Find best branch (suggestion or direct assignment)
-        const bestBranch = await AssignmentService.findBestBranch({ delivery, address });
+        const bestBranch = assignmentEnabled ? await AssignmentService.findBestBranch({ delivery, address }) : null;
+
+        // Build assignment object based on mode
+        let assignmentObj = {};
+        let branchAssignment = {};
+        
+        if (bestBranch && assignmentEnabled) {
+            if (assignmentMode === 'auto') {
+                branchAssignment = {
+                    branchId: bestBranch._id.toString(),
+                    branchCode: bestBranch.code
+                };
+                assignmentObj = {
+                    mode: 'auto',
+                    status: 'assigned',
+                    decidedBy: 'system',
+                    decidedAt: Date.now()
+                };
+            } else if (assignmentMode === 'hybrid') {
+                assignmentObj = {
+                    mode: 'hybrid',
+                    status: 'suggested',
+                    suggestedBranchId: bestBranch._id.toString(),
+                    decidedBy: 'system'
+                };
+            } else if (assignmentMode === 'manual') {
+                assignmentObj = {
+                    mode: 'manual',
+                    status: 'pending',
+                    suggestedBranchId: bestBranch._id.toString(),
+                    decidedBy: 'system'
+                };
+            }
+        }
 
         const orderData = {
             userId,
@@ -100,24 +143,8 @@ const placeOrder = async (req, res) => {
             giftNote,
             trackingId,
             trackingLink,
-            ...(bestBranch && assignmentMode === 'auto' ? {
-                branchId: bestBranch._id.toString(),
-                branchCode: bestBranch.code,
-                assignment: {
-                    mode: 'auto',
-                    status: 'assigned',
-                    decidedBy: 'system',
-                    decidedAt: Date.now()
-                }
-            } : {}),
-            ...(bestBranch && assignmentMode === 'hybrid' ? {
-                assignment: {
-                    mode: 'hybrid',
-                    status: 'suggested',
-                    suggestedBranchId: bestBranch._id.toString(),
-                    decidedBy: 'system'
-                }
-            } : {}),
+            ...branchAssignment,
+            ...(Object.keys(assignmentObj).length > 0 ? { assignment: assignmentObj } : {}),
             statusHistory: [{
                 status: 'Siparişiniz Alındı',
                 timestamp: Date.now(),
@@ -403,6 +430,139 @@ const getNextSteps = (status) => {
     return steps[status] || [];
 };
 
+// Assign branch to order
+const assignBranchToOrder = async (req, res) => {
+    try {
+        const { orderId, branchId } = req.body;
+        
+        if (!orderId || !branchId) {
+            return res.json({ success: false, message: 'Order ID and Branch ID are required' });
+        }
+        
+        const result = await assignBranch(orderId, branchId);
+        
+        if (result.success) {
+            // Add status history
+            await addStatusHistory(orderId, 'Şube Atandı', '', result.message, 'admin');
+            res.json({ success: true, message: result.message, branch: result.branch });
+        } else {
+            res.json({ success: false, message: result.message });
+        }
+    } catch (error) {
+        console.log(error);
+        res.json({ success: false, message: error.message });
+    }
+};
+
+// Get branch suggestion for order
+const getBranchSuggestion = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const result = await suggestBranch(id);
+        
+        if (result.success) {
+            res.json({ success: true, branch: result.branch });
+        } else {
+            res.json({ success: false, message: result.message });
+        }
+    } catch (error) {
+        console.log(error);
+        res.json({ success: false, message: error.message });
+    }
+};
+
+// Prepare order (mark as preparing)
+const prepareOrder = async (req, res) => {
+    try {
+        const { orderId } = req.body;
+        
+        if (!orderId) {
+            return res.json({ success: false, message: 'Order ID is required' });
+        }
+        
+        const order = await orderModel.findById(orderId);
+        if (!order) {
+            return res.json({ success: false, message: 'Order not found' });
+        }
+        
+        // Validate: must have branch assigned
+        if (!order.branchId) {
+            return res.json({ success: false, message: 'Order must have a branch assigned before preparation' });
+        }
+        
+        // Validate: status must be 'Siparişiniz Alındı' or 'Hazırlanıyor'
+        if (order.status !== 'Siparişiniz Alındı' && order.status !== 'Hazırlanıyor') {
+            return res.json({ success: false, message: `Cannot prepare order with status: ${order.status}` });
+        }
+        
+        order.status = 'Hazırlanıyor';
+        order.preparationStartedAt = order.preparationStartedAt || Date.now();
+        
+        await addStatusHistory(orderId, 'Hazırlanıyor', '', 'Sipariş hazırlanmaya başlandı', 'admin');
+        await order.save();
+        
+        res.json({ success: true, message: 'Order marked as preparing', order });
+    } catch (error) {
+        console.log(error);
+        res.json({ success: false, message: error.message });
+    }
+};
+
+// Send order to courier
+const sendToCourier = async (req, res) => {
+    try {
+        const { orderId } = req.body;
+        
+        if (!orderId) {
+            return res.json({ success: false, message: 'Order ID is required' });
+        }
+        
+        const order = await orderModel.findById(orderId);
+        if (!order) {
+            return res.json({ success: false, message: 'Order not found' });
+        }
+        
+        // Validate: must have branch assigned
+        if (!order.branchId) {
+            return res.json({ success: false, message: 'Order must have a branch assigned before sending to courier' });
+        }
+        
+        // Validate: status must be 'Hazırlanıyor'
+        if (order.status !== 'Hazırlanıyor') {
+            return res.json({ success: false, message: `Order must be in 'Hazırlanıyor' status. Current status: ${order.status}` });
+        }
+        
+        // Update order status
+        order.status = 'Kuryeye Verildi';
+        order.courierStatus = 'yolda';
+        order.sentToCourierAt = Date.now();
+        
+        // Generate courier tracking ID if not exists
+        if (!order.courierTrackingId) {
+            order.courierTrackingId = `CR-${Math.random().toString(36).slice(2,10).toUpperCase()}`;
+        }
+        
+        // TODO: Send to EsnafExpress (placeholder)
+        // const esnafExpressResult = await EsnafExpressService.sendOrder(order);
+        // if (esnafExpressResult.success) {
+        //     order.esnafExpressOrderId = esnafExpressResult.orderId;
+        // }
+        
+        await addStatusHistory(orderId, 'Kuryeye Verildi', '', 'Sipariş kuryeye teslim edildi', 'admin');
+        await order.save();
+        
+        res.json({ 
+            success: true, 
+            message: 'Order sent to courier', 
+            order,
+            courierTrackingId: order.courierTrackingId
+        });
+    } catch (error) {
+        console.log(error);
+        res.json({ success: false, message: error.message });
+    }
+};
+
 // Approve suggested branch assignment (hybrid mode)
 const approveBranchAssignment = async (req, res) => {
     try {
@@ -433,4 +593,20 @@ const approveBranchAssignment = async (req, res) => {
     }
 };
 
-export {placeOrder, placeOrderStripe, placeOrderRazorpay, allOrders, userOrders, updateStatus, bankInfo, getOrderStatus, getOrderHistory, getOrderTimeline, approveBranchAssignment};
+export {
+    placeOrder, 
+    placeOrderStripe, 
+    placeOrderRazorpay, 
+    allOrders, 
+    userOrders, 
+    updateStatus, 
+    bankInfo, 
+    getOrderStatus, 
+    getOrderHistory, 
+    getOrderTimeline, 
+    approveBranchAssignment,
+    assignBranchToOrder,
+    getBranchSuggestion,
+    prepareOrder,
+    sendToCourier
+};

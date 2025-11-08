@@ -1,5 +1,21 @@
 import express from 'express';
-import {placeOrder, placeOrderStripe, placeOrderRazorpay, allOrders, userOrders, updateStatus, bankInfo, getOrderStatus, getOrderHistory, getOrderTimeline, approveBranchAssignment} from '../controllers/OrderController.js';
+import {
+    placeOrder, 
+    placeOrderStripe, 
+    placeOrderRazorpay, 
+    allOrders, 
+    userOrders, 
+    updateStatus, 
+    bankInfo, 
+    getOrderStatus, 
+    getOrderHistory, 
+    getOrderTimeline, 
+    approveBranchAssignment,
+    assignBranchToOrder,
+    getBranchSuggestion,
+    prepareOrder,
+    sendToCourier
+} from '../controllers/OrderController.js';
 import adminAuth from "../middleware/AdminAuth.js";
 import authUser from "../middleware/Auth.js";
 import {updatePayTrOrderItemsAndAddress} from "../controllers/PayTrController.js";
@@ -12,6 +28,10 @@ const orderRouter = express.Router();
 orderRouter.post("/list", adminAuth, allOrders);
 orderRouter.post("/status", adminAuth, updateStatus);
 orderRouter.post("/approve-branch", adminAuth, approveBranchAssignment);
+orderRouter.post("/assign-branch", adminAuth, assignBranchToOrder);
+orderRouter.post("/prepare", adminAuth, prepareOrder);
+orderRouter.post("/send-to-courier", adminAuth, sendToCourier);
+orderRouter.get("/:id/branch-suggestion", adminAuth, getBranchSuggestion);
 
 // payment features with stock check and rate limiting
 orderRouter.post("/place", authUser, checkStockAvailability, RateLimiterService.createOrderLimiter(), placeOrder);

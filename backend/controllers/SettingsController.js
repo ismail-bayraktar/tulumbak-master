@@ -1,4 +1,5 @@
 import settingsModel from "../models/SettingsModel.js";
+import { validateWhatsAppSettings, sanitizeSvg, defaultWhatsAppSettings } from "../schemas/WhatsAppSettingsSchema.js";
 
 /**
  * Get all settings or by category
@@ -232,5 +233,163 @@ const initDefaultSettings = async () => {
   }
 };
 
-export { getSettings, getSetting, updateSetting, updateSettings, deleteSetting, testEmail, initDefaultSettings };
+/**
+ * Get WhatsApp support settings
+ */
+const getWhatsAppSettings = async (req, res) => {
+  try {
+    const setting = await settingsModel.findOne({ key: 'whatsapp_support' });
+    
+    if (!setting) {
+      // Return default settings if not exists
+      return res.json({ 
+        success: true, 
+        settings: defaultWhatsAppSettings 
+      });
+    }
+    
+    res.json({ success: true, settings: setting.value });
+  } catch (error) {
+    console.log(error);
+    res.json({ success: false, message: error.message });
+  }
+};
+
+/**
+ * Update WhatsApp support settings
+ */
+const updateWhatsAppSettings = async (req, res) => {
+  try {
+    const { settings } = req.body;
+    
+    if (!settings) {
+      return res.json({ success: false, message: "Settings are required" });
+    }
+    
+    // Sanitize custom SVG if provided
+    if (settings.iconType === 'customSvg' && settings.iconSvg) {
+      settings.iconSvg = sanitizeSvg(settings.iconSvg);
+    }
+    
+    // Validate settings
+    const validation = validateWhatsAppSettings(settings);
+    if (!validation.success) {
+      return res.json({ 
+        success: false, 
+        message: `Validation error: ${validation.error}` 
+      });
+    }
+    
+    // Save to database
+    const setting = await settingsModel.findOneAndUpdate(
+      { key: 'whatsapp_support' },
+      { 
+        value: validation.data,
+        category: 'whatsapp',
+        description: 'WhatsApp müşteri desteği ayarları',
+        updatedAt: Date.now()
+      },
+      { upsert: true, new: true }
+    );
+    
+    res.json({ 
+      success: true, 
+      settings: setting.value,
+      message: "WhatsApp ayarları başarıyla güncellendi" 
+    });
+  } catch (error) {
+    console.log(error);
+    res.json({ success: false, message: error.message });
+  }
+};
+
+/**
+ * Get branch assignment settings
+ */
+const getBranchAssignmentSettings = async (req, res) => {
+  try {
+    const enabledSetting = await settingsModel.findOne({ key: 'branch_assignment_enabled' });
+    const modeSetting = await settingsModel.findOne({ key: 'branch_assignment_mode' });
+    
+    res.json({
+      success: true,
+      settings: {
+        enabled: enabledSetting?.value !== false, // Default true
+        mode: modeSetting?.value || 'auto' // Default auto
+      }
+    });
+  } catch (error) {
+    console.log(error);
+    res.json({ success: false, message: error.message });
+  }
+};
+
+/**
+ * Update branch assignment settings
+ */
+const updateBranchAssignmentSettings = async (req, res) => {
+  try {
+    const { enabled, mode } = req.body;
+    
+    if (mode && !['auto', 'hybrid', 'manual'].includes(mode)) {
+      return res.json({ 
+        success: false, 
+        message: 'Invalid assignment mode. Must be: auto, hybrid, or manual' 
+      });
+    }
+    
+    const updatePromises = [];
+    
+    if (enabled !== undefined) {
+      updatePromises.push(
+        settingsModel.findOneAndUpdate(
+          { key: 'branch_assignment_enabled' },
+          { 
+            value: enabled,
+            category: 'delivery',
+            description: 'Enable/disable automatic branch assignment',
+            updatedAt: Date.now()
+          },
+          { upsert: true, new: true }
+        )
+      );
+    }
+    
+    if (mode) {
+      updatePromises.push(
+        settingsModel.findOneAndUpdate(
+          { key: 'branch_assignment_mode' },
+          { 
+            value: mode,
+            category: 'delivery',
+            description: 'Branch assignment mode: auto (automatic), hybrid (suggest + approve), manual (admin assigns)',
+            updatedAt: Date.now()
+          },
+          { upsert: true, new: true }
+        )
+      );
+    }
+    
+    await Promise.all(updatePromises);
+    
+    res.json({ success: true, message: 'Branch assignment settings updated successfully' });
+  } catch (error) {
+    console.log(error);
+    res.json({ success: false, message: error.message });
+  }
+};
+
+export { 
+  getSettings, 
+  getSetting, 
+  updateSetting, 
+  updateSettings, 
+  deleteSetting, 
+  testEmail, 
+  initDefaultSettings,
+  getWhatsAppSettings,
+  updateWhatsAppSettings,
+  getBranchAssignmentSettings,
+  updateBranchAssignmentSettings
+};
 

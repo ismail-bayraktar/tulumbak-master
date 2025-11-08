@@ -229,11 +229,11 @@ const updateCourierZones = async (courierId, zoneIds) => {
 };
 ```
 
-## EsnafExpress Entegrasyonu
+## Kurye Uygulaması Entegrasyonu
 
 ### Kurye Uygulaması ile Bağlantı
 
-EsnafExpress uygulaması kuryelerin kendi telefonlarında çalışır:
+Kurye uygulaması kuryelerin kendi telefonlarında çalışır:
 
 1. **Kurye Girişi**
    - Kurye giriş yapar
@@ -248,8 +248,8 @@ EsnafExpress uygulaması kuryelerin kendi telefonlarında çalışır:
 
 3. **Webhook Integration**
 ```javascript
-// EsnafExpress app sends status updates
-POST /api/courier/webhook
+// Kurye uygulaması durum güncellemeleri gönderir
+POST /api/webhook/courier
 {
   courierTrackingId: "CR-ABC123",
   status: "yolda",
@@ -304,7 +304,7 @@ Bu sistem admin panelden yönetilen teslimat bölgelerine göre kurye atamaları
 - ✅ Kuryeler zone'lara atanır (CourierModel.assignedZones)
 - ✅ Siparişler zone validasyonu ile kontrol edilir
 - ✅ Kurye ataması zone bazlı filtre ile yapılır
-- ✅ EsnafExpress uygulaması sadece kendi zone'larını görür
+- ✅ Kurye uygulaması sadece kendi zone'larını görür
 
 **Avantajlar:**
 - Kurye kendi bölgesini bilir

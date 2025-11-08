@@ -10,6 +10,7 @@ import {
     updateSlider,
     deleteSlider
 } from '../controllers/SliderController.js';
+import adminAuth from '../middleware/AdminAuth.js';
 
 const router = express.Router();
 
@@ -29,19 +30,19 @@ const upload = multer({ storage });
 router.get('/list', listSliders);
 
 // Get all sliders (for admin - includes inactive)
-router.get('/admin/list', listSlidersAdmin);
+router.get('/admin/list', adminAuth, listSlidersAdmin);
 
-// Track analytics
+// Track analytics (public)
 router.post('/track/view/:id', trackSliderView);
 router.post('/track/click/:id', trackSliderClick);
 
 // Add slider (admin)
-router.post('/add', upload.single('image'), addSlider);
+router.post('/add', adminAuth, upload.single('image'), addSlider);
 
 // Update slider (admin)
-router.put('/update/:id', upload.single('image'), updateSlider);
+router.put('/update/:id', adminAuth, upload.single('image'), updateSlider);
 
 // Delete slider (admin)
-router.delete('/delete/:id', deleteSlider);
+router.delete('/delete/:id', adminAuth, deleteSlider);
 
 export default router;

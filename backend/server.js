@@ -25,6 +25,8 @@ import mediaRouter from "./routes/MediaRoute.js";
 // import enhancedMediaRouter from "./routes/EnhancedMediaRoute.js"; // Temporarily disabled
 import courierManagementRouter from "./routes/CourierManagementRoute.js";
 import branchRouter from "./routes/BranchRoute.js";
+import webhookConfigRouter from "./routes/WebhookConfigRoute.js";
+import webhookRouter from "./routes/WebhookRoute.js";
 import RateLimiterService from "./services/RateLimiter.js";
 import logger, { logInfo } from "./utils/logger.js";
 import { initSentry } from "./utils/sentry.js";
@@ -97,11 +99,26 @@ app.use(helmet({
 })); // Security headers
 app.use(express.json({ limit: '10mb' })); // Limit payload size
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+// CORS Configuration
+const allowedOrigins = process.env.CORS_ORIGINS 
+    ? process.env.CORS_ORIGINS.split(',').map(origin => origin.trim())
+    : ['http://localhost:5173', 'http://localhost:5174', 'http://localhost:3000', 'http://localhost:4001'];
+
 app.use(cors({
-    origin: ['http://localhost:5173', 'http://localhost:5174', 'http://localhost:3000', 'http://localhost:4001'], // Admin and frontend dev servers
+    origin: (origin, callback) => {
+        // Allow requests with no origin (mobile apps, Postman, etc.)
+        if (!origin) return callback(null, true);
+        
+        if (allowedOrigins.indexOf(origin) !== -1 || process.env.NODE_ENV === 'development') {
+            callback(null, true);
+        } else {
+            logger.warn('CORS blocked origin', { origin });
+            callback(new Error('Not allowed by CORS'));
+        }
+    },
     credentials: true,
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'token']
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'token', 'X-Requested-With']
 }));
 
 // Rate limiting
@@ -115,6 +132,15 @@ app.use('/uploads', (req, res, next) => {
     res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
     next();
 }, express.static(path.join(__dirname, 'uploads')));
+
+// Static files for assets (frontend/public/assets) with enhanced CORS
+app.use('/assets', (req, res, next) => {
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Methods', 'GET');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+    res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
+    next();
+}, express.static(path.join(__dirname, '../frontend/public/assets')));
 
 // Alternative 2: Image proxy endpoint (ACTIVE SOLUTION)
 app.get('/api/image-proxy/:filename', (req, res) => {
@@ -152,6 +178,8 @@ app.use('/api/report', reportRouter);
 app.use('/api/admin', adminRouter);
 app.use('/api/courier-management', courierManagementRouter);
 app.use('/api/branches', branchRouter);
+app.use('/api/webhook-config', webhookConfigRouter);
+app.use('/api/webhook', webhookRouter);
 
 // Swagger Documentation
 swaggerDocs(app);

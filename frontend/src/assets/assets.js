@@ -76,7 +76,6 @@ import razorpay_logo from './razorpay_logo.png'
 import stripe_logo from './stripe_logo.png'
 import cross_icon from './cross_icon.png'
 import banner from './banner.png'
-import whatsapp_icon from './whatsapp-icon.png'
 
 // Hero section background images (using existing assets)
 import hero_bg_1 from './hero_img.png'
@@ -123,7 +122,6 @@ export const assets = {
     stripe_logo,
     cross_icon,
     banner,
-    whatsapp_icon,
 
     // Hero section backgrounds
     hero_bg_1,

@@ -19,11 +19,14 @@ const mediaSchema = new mongoose.Schema({
         required: true
     },
 
-    // Cloudinary Specific
+    // Cloudinary Specific (optional for local storage)
+    // Note: publicId is only used for Cloudinary, not for local storage
+    // We don't set unique constraint here to avoid issues with null values
     publicId: {
         type: String,
-        required: true,
-        unique: true
+        required: false
+        // Removed unique constraint - only needed when using Cloudinary
+        // If using Cloudinary, set unique index manually: mediaSchema.index({ publicId: 1 }, { sparse: true, unique: true });
     },
     url: {
         type: String,
@@ -31,7 +34,7 @@ const mediaSchema = new mongoose.Schema({
     },
     secureUrl: {
         type: String,
-        required: true
+        required: false // Optional for local storage
     },
     resourceType: {
         type: String,

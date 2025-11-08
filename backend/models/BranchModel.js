@@ -70,7 +70,6 @@ const branchSchema = new mongoose.Schema({
 });
 
 // Performance indexes
-branchSchema.index({ code: 1 }, { unique: true });
 branchSchema.index({ status: 1 });
 branchSchema.index({ 'address.city': 1, 'address.district': 1 });
 branchSchema.index({ assignedZones: 1 });

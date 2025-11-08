@@ -101,22 +101,28 @@ if (isLoading) {
             {featuredProducts.map((product) => (
               <div key={product._id} className="group relative">
                 <div className="bg-white rounded-xl shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden">
-                  <div className="relative overflow-hidden aspect-square">
-                    <img
-                      src={product.image[0]}
-                      alt={product.name}
-                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-                    />
-                    {product.labels && product.labels.includes('ÇOK SATAN') && (
-                      <span className="absolute top-4 left-4 bg-orange-500 text-white px-3 py-1 rounded-full text-sm font-semibold">
-                        ÇOK SATAN
-                      </span>
-                    )}
-                  </div>
+                  <Link to={`/product/${product._id}`} className="block">
+                    <div className="relative overflow-hidden aspect-square">
+                      <img
+                        src={product.image?.[0] || '/placeholder.png'}
+                        alt={product.name}
+                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                      />
+                      {/* Overlay on hover */}
+                      <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-10 transition-all duration-300" />
+                      {product.labels && product.labels.includes('ÇOK SATAN') && (
+                        <span className="absolute top-4 left-4 bg-orange-500 text-white px-3 py-1 rounded-full text-sm font-semibold z-10">
+                          ÇOK SATAN
+                        </span>
+                      )}
+                    </div>
+                  </Link>
                   <div className="p-6">
-                    <h3 className="text-lg font-semibold text-gray-900 mb-2 group-hover:text-orange-500 transition-colors">
-                      {product.name}
-                    </h3>
+                    <Link to={`/product/${product._id}`} className="block">
+                      <h3 className="text-lg font-semibold text-gray-900 mb-2 group-hover:text-orange-500 transition-colors line-clamp-2">
+                        {product.name}
+                      </h3>
+                    </Link>
                     <div className="flex items-center justify-between mb-4">
                       <span className="text-2xl font-bold text-gray-900">
                         ₺{product.basePrice}
@@ -136,7 +142,11 @@ if (isLoading) {
                         İncele
                       </Link>
                       <button
-                        onClick={() => handleAddToCart(product._id)}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          handleAddToCart(product._id);
+                        }}
                         className="flex-1 bg-orange-500 text-white py-2 px-4 rounded-lg hover:bg-orange-600 transition-colors"
                       >
                         Sepete Ekle
@@ -201,20 +211,26 @@ if (isLoading) {
             {bestSellers.map((product) => (
               <div key={product._id} className="group">
                 <div className="bg-white rounded-xl shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden">
-                  <div className="relative overflow-hidden aspect-square">
-                    <img
-                      src={product.image[0]}
-                      alt={product.name}
-                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-                    />
-                    <span className="absolute top-4 left-4 bg-yellow-400 text-gray-900 px-3 py-1 rounded-full text-sm font-semibold">
-                      EN ÇOK SATAN
-                    </span>
-                  </div>
+                  <Link to={`/product/${product._id}`} className="block">
+                    <div className="relative overflow-hidden aspect-square">
+                      <img
+                        src={product.image?.[0] || '/placeholder.png'}
+                        alt={product.name}
+                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                      />
+                      {/* Overlay on hover */}
+                      <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-10 transition-all duration-300" />
+                      <span className="absolute top-4 left-4 bg-yellow-400 text-gray-900 px-3 py-1 rounded-full text-sm font-semibold z-10">
+                        EN ÇOK SATAN
+                      </span>
+                    </div>
+                  </Link>
                   <div className="p-6">
-                    <h3 className="text-lg font-semibold text-gray-900 mb-2 group-hover:text-orange-500 transition-colors">
-                      {product.name}
-                    </h3>
+                    <Link to={`/product/${product._id}`} className="block">
+                      <h3 className="text-lg font-semibold text-gray-900 mb-2 group-hover:text-orange-500 transition-colors line-clamp-2">
+                        {product.name}
+                      </h3>
+                    </Link>
                     <div className="flex items-center justify-between mb-4">
                       <span className="text-2xl font-bold text-gray-900">
                         ₺{product.basePrice}
@@ -227,7 +243,11 @@ if (isLoading) {
                       </div>
                     </div>
                     <button
-                      onClick={() => handleAddToCart(product._id)}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        handleAddToCart(product._id);
+                      }}
                       className="w-full bg-orange-500 text-white py-2 px-4 rounded-lg hover:bg-orange-600 transition-colors"
                     >
                       Sepete Ekle

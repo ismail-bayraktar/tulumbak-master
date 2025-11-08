@@ -5,7 +5,11 @@ import {
   updateSetting,
   updateSettings,
   deleteSetting,
-  testEmail
+  testEmail,
+  getWhatsAppSettings,
+  updateWhatsAppSettings,
+  getBranchAssignmentSettings,
+  updateBranchAssignmentSettings
 } from '../controllers/SettingsController.js';
 import adminAuth from '../middleware/AdminAuth.js';
 
@@ -18,5 +22,14 @@ settingsRouter.post('/update', adminAuth, updateSetting);
 settingsRouter.post('/update-multiple', adminAuth, updateSettings);
 settingsRouter.post('/test-email', adminAuth, testEmail);
 settingsRouter.delete('/', adminAuth, deleteSetting);
+
+// WhatsApp support settings
+// GET is public (for frontend), POST requires admin auth
+settingsRouter.get('/whatsapp', getWhatsAppSettings);
+settingsRouter.post('/whatsapp', adminAuth, updateWhatsAppSettings);
+
+// Branch assignment settings
+settingsRouter.get('/branch-assignment', adminAuth, getBranchAssignmentSettings);
+settingsRouter.post('/branch-assignment', adminAuth, updateBranchAssignmentSettings);
 
 export default settingsRouter;

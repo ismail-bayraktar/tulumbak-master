@@ -2,6 +2,7 @@ import { useParams } from "react-router-dom";
 import { useContext, useEffect, useState } from "react";
 import { ShopContext } from "../context/ShopContext.jsx";
 import RelatedProducts from "../components/RelatedProducts.jsx";
+import WhatsAppSupport from "./WhatsAppSupport.jsx";
 import { useNavigate } from "react-router-dom";
 import {
     ShoppingBag,
@@ -41,6 +42,8 @@ const ModernProductDetail = () => {
     }
 
     useEffect(() => {
+        // Scroll to top when product changes
+        window.scrollTo({ top: 0, behavior: 'smooth' });
         fetchProductData();
     }, [productId, products]);
 
@@ -290,8 +293,19 @@ const ModernProductDetail = () => {
 
             {/* RELATED PRODUCTS */}
             <RelatedProducts category={productData.category} subCategory={productData.subCategory} />
+            
+            {/* WhatsApp Support */}
+            <WhatsAppSupport 
+                productName={productData.name}
+                productUrl={`/product/${productData._id}`}
+            />
         </div>
-    ) : <div className="opacity-0"></div>
+    ) : (
+        <>
+            <div className="opacity-0"></div>
+            <WhatsAppSupport />
+        </>
+    )
 };
 
 export default ModernProductDetail;

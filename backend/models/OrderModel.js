@@ -34,12 +34,17 @@ const orderSchema = new mongoose.Schema({
     branchId: { type: String },
     branchCode: { type: String },
     assignment: {
-        mode: { type: String, enum: ['auto', 'hybrid'], default: 'auto' },
+        mode: { type: String, enum: ['auto', 'hybrid', 'manual'], default: 'auto' },
         status: { type: String, enum: ['assigned', 'suggested', 'pending'], default: 'assigned' },
         suggestedBranchId: { type: String },
         decidedBy: { type: String, enum: ['system', 'admin'], default: 'system' },
         decidedAt: { type: Number }
-    }
+    },
+    // Order processing timestamps
+    preparationStartedAt: { type: Number },
+    sentToCourierAt: { type: Number },
+    // EsnafExpress integration
+    esnafExpressOrderId: { type: String }
 });
 
 // Performance indexes

@@ -2,9 +2,12 @@ import { useState, useEffect } from 'react';
 import { toast } from 'react-toastify';
 import axios from 'axios';
 import { backendUrl } from '../App.jsx';
+import { useTheme } from '../context/ThemeContext.jsx';
+import { Image, Target, Sparkles, Ruler, Eye, Copy, Power, PowerOff, Edit, Trash2, X, Upload, Smartphone, Layers } from 'lucide-react';
 // import MediaLibrary from './MediaLibrary.jsx';
 
 const ModernSlider = ({ token }) => {
+    const { isDarkMode } = useTheme();
     const [sliders, setSliders] = useState([]);
     const [activeTab, setActiveTab] = useState('list');
     const [editingSlider, setEditingSlider] = useState(null);
@@ -38,27 +41,32 @@ const ModernSlider = ({ token }) => {
 
     // Template options
     const templates = [
-        { id: 'split-left', name: 'Sola Hizalı', icon: '🖼️' },
-        { id: 'split-right', name: 'Sağa Hizalı', icon: '🖼️' },
-        { id: 'centered', name: 'Ortalanmış', icon: '🎯' },
-        { id: 'overlay', name: 'Overlay', icon: '🌟' },
-        { id: 'full-width', name: 'Tam Genişlik', icon: '📐' }
+        { id: 'split-left', name: 'Sola Hizalı', icon: Image },
+        { id: 'split-right', name: 'Sağa Hizalı', icon: Image },
+        { id: 'centered', name: 'Ortalanmış', icon: Target },
+        { id: 'overlay', name: 'Overlay', icon: Sparkles },
+        { id: 'full-width', name: 'Tam Genişlik', icon: Ruler }
     ];
 
     const buttonStyles = [
-        { id: 'primary', name: 'Ana Buton', class: 'bg-red-600 hover:bg-red-700' },
-        { id: 'secondary', name: 'İkincil', class: 'bg-gray-600 hover:bg-gray-700' },
-        { id: 'outline', name: 'Outline', class: 'border-2 border-white hover:bg-white hover:text-gray-900' }
+        { id: 'primary', name: 'Ana Buton', class: 'bg-primary-600 hover:bg-primary-700 dark:bg-primary-500 dark:hover:bg-primary-600' },
+        { id: 'secondary', name: 'İkincil', class: 'bg-gray-600 hover:bg-gray-700 dark:bg-gray-500 dark:hover:bg-gray-600' },
+        { id: 'outline', name: 'Outline', class: 'border-2 border-white dark:border-gray-300 hover:bg-white dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-white' }
     ];
 
     const fetchSliders = async () => {
         try {
-            const response = await axios.get(`${backendUrl}/api/slider/list`);
+            const response = await axios.get(`${backendUrl}/api/slider/admin/list`, {
+                headers: { token }
+            });
+            
             if (response.data.success) {
-                setSliders(response.data.sliders);
+                setSliders(response.data.sliders || []);
+            } else {
+                toast.error(response.data.message || 'Sliderler yüklenemedi');
             }
         } catch (error) {
-            toast.error('Sliderler yüklenemedi');
+            toast.error(error.response?.data?.message || error.message || 'Sliderler yüklenirken hata oluştu');
         }
     };
 
@@ -106,9 +114,7 @@ const ModernSlider = ({ token }) => {
                 toast.error(response.data.message || 'İşlem başarısız');
             }
         } catch (error) {
-            console.error('Slider submit error:', error);
-            const errorMessage = error.response?.data?.message || error.message || 'İşlem başarısız';
-            toast.error(errorMessage);
+            toast.error(error.response?.data?.message || error.message || 'İşlem başarısız');
         }
     };
 
@@ -148,7 +154,7 @@ const ModernSlider = ({ token }) => {
                     fetchSliders();
                 }
             } catch (error) {
-                toast.error('Silme işlemi başarısız');
+                toast.error(error.response?.data?.message || error.message || 'Silme işlemi başarısız');
             }
         }
     };
@@ -165,7 +171,7 @@ const ModernSlider = ({ token }) => {
                 fetchSliders();
             }
         } catch (error) {
-            toast.error('Durum güncellenemedi');
+            toast.error(error.response?.data?.message || error.message || 'Durum güncellenemedi');
         }
     };
 
@@ -211,27 +217,36 @@ const ModernSlider = ({ token }) => {
             );
             toast.success('Slider sıraları güncellendi');
         } catch (error) {
-            toast.error('Sıralama güncellenemedi');
+            toast.error(error.response?.data?.message || error.message || 'Sıralama güncellenemedi');
             fetchSliders(); // Reset to original order
         }
     };
 
     const duplicateSlider = async (slider) => {
         try {
-            const duplicatedSlider = {
-                ...slider,
-                title: `${slider.title} (Kopyası)`,
-                order: sliders.length
-            };
+            const formDataObj = new FormData();
+            
+            // Copy all slider fields
+            Object.keys(slider).forEach(key => {
+                if (key !== '_id' && key !== '__v' && key !== 'image' && key !== 'mobileImage' && key !== 'backgroundImage' && key !== 'createdAt' && key !== 'updatedAt') {
+                    if (slider[key] !== null && slider[key] !== undefined) {
+                        formDataObj.append(key, slider[key]);
+                    }
+                }
+            });
+            
+            // Update title and order
+            formDataObj.set('title', `${slider.title} (Kopyası)`);
+            formDataObj.set('order', sliders.length.toString());
 
-            await axios.post(`${backendUrl}/api/slider/add`, duplicatedSlider, {
+            await axios.post(`${backendUrl}/api/slider/add`, formDataObj, {
                 headers: { token }
             });
 
             toast.success('Slider kopyalandı');
             fetchSliders();
         } catch (error) {
-            toast.error('Kopyalama başarısız');
+            toast.error(error.response?.data?.message || error.message || 'Kopyalama başarısız');
         }
     };
 
@@ -278,21 +293,23 @@ const ModernSlider = ({ token }) => {
     };
 
     useEffect(() => {
-        fetchSliders();
-    }, []);
+        if (token) {
+            fetchSliders();
+        }
+    }, [token]);
 
     return (
-        <div className='flex-1 p-4 bg-gray-50'>
+        <div className='flex-1 p-4 bg-gray-50 dark:bg-gray-900'>
             {/* Header */}
-            <div className='bg-white rounded-lg shadow-sm p-6 mb-6'>
+            <div className='bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6 mb-6 border border-gray-200 dark:border-gray-700'>
                 <div className='flex items-center justify-between'>
                     <div>
-                        <h1 className='text-2xl font-bold text-gray-900'>Modern Slider Yönetimi</h1>
-                        <p className='text-gray-600 mt-1'>Profesyonel slider yönetimi ve analiz</p>
+                        <h1 className='text-2xl font-bold text-gray-900 dark:text-white'>Modern Slider Yönetimi</h1>
+                        <p className='text-gray-600 dark:text-gray-400 mt-1'>Profesyonel slider yönetimi ve analiz</p>
                     </div>
                     <button
                         onClick={() => setActiveTab('edit')}
-                        className='px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors flex items-center gap-2'
+                        className='px-6 py-3 bg-primary-600 hover:bg-primary-700 dark:bg-primary-500 dark:hover:bg-primary-600 text-white rounded-lg transition-colors flex items-center gap-2 font-medium'
                     >
                         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -303,15 +320,15 @@ const ModernSlider = ({ token }) => {
             </div>
 
             {/* Tabs */}
-            <div className='bg-white rounded-lg shadow-sm mb-6'>
-                <div className='border-b border-gray-200'>
+            <div className='bg-white dark:bg-gray-800 rounded-lg shadow-sm mb-6 border border-gray-200 dark:border-gray-700'>
+                <div className='border-b border-gray-200 dark:border-gray-700'>
                     <div className='flex'>
                         <button
                             onClick={() => setActiveTab('list')}
                             className={`px-6 py-3 font-medium text-sm border-b-2 transition-colors ${
                                 activeTab === 'list'
-                                    ? 'border-red-600 text-red-600'
-                                    : 'border-transparent text-gray-500 hover:text-gray-700'
+                                    ? 'border-primary-600 text-primary-600 dark:text-primary-400'
+                                    : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
                             }`}
                         >
                             Slider Listesi
@@ -320,8 +337,8 @@ const ModernSlider = ({ token }) => {
                             onClick={() => setActiveTab('edit')}
                             className={`px-6 py-3 font-medium text-sm border-b-2 transition-colors ${
                                 activeTab === 'edit'
-                                    ? 'border-red-600 text-red-600'
-                                    : 'border-transparent text-gray-500 hover:text-gray-700'
+                                    ? 'border-primary-600 text-primary-600 dark:text-primary-400'
+                                    : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
                             }`}
                         >
                             {editingSlider ? 'Slider Düzenle' : 'Yeni Slider Ekle'}
@@ -332,15 +349,15 @@ const ModernSlider = ({ token }) => {
 
             {/* List Tab */}
             {activeTab === 'list' && (
-                <div className='bg-white rounded-lg shadow-sm'>
+                <div className='bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700'>
                     <div className='p-6'>
                         <div className='flex items-center justify-between mb-6'>
-                            <h2 className='text-lg font-semibold text-gray-900'>Tüm Sliderlar</h2>
+                            <h2 className='text-lg font-semibold text-gray-900 dark:text-white'>Tüm Sliderlar</h2>
                             <div className='flex items-center gap-4'>
-                                <span className='text-sm text-gray-600'>
+                                <span className='text-sm text-gray-600 dark:text-gray-400'>
                                     Toplam: {sliders.length} slider
                                 </span>
-                                <span className='text-sm text-green-600'>
+                                <span className='text-sm text-success-600 dark:text-success-400'>
                                     Aktif: {sliders.filter(s => s.isActive).length} slider
                                 </span>
                             </div>
@@ -348,12 +365,12 @@ const ModernSlider = ({ token }) => {
 
                         {sliders.length === 0 ? (
                             <div className='text-center py-12'>
-                                <div className='text-gray-400 text-6xl mb-4'>📸</div>
-                                <h3 className='text-lg font-medium text-gray-900 mb-2'>Henüz slider eklenmedi</h3>
-                                <p className='text-gray-600 mb-4'>İlk modern sliderınızı oluşturun</p>
+                                <Image className='w-16 h-16 text-gray-400 dark:text-gray-500 mx-auto mb-4' />
+                                <h3 className='text-lg font-medium text-gray-900 dark:text-white mb-2'>Henüz slider eklenmedi</h3>
+                                <p className='text-gray-600 dark:text-gray-400 mb-4'>İlk modern sliderınızı oluşturun</p>
                                 <button
                                     onClick={() => setActiveTab('edit')}
-                                    className='px-6 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors'
+                                    className='px-6 py-2 bg-primary-600 hover:bg-primary-700 dark:bg-primary-500 dark:hover:bg-primary-600 text-white rounded-lg transition-colors font-medium'
                                 >
                                     İlk Sliderı Oluştur
                                 </button>
@@ -367,15 +384,15 @@ const ModernSlider = ({ token }) => {
                                         onDragStart={(e) => handleDragStart(e, index)}
                                         onDragOver={handleDragOver}
                                         onDrop={(e) => handleDrop(e, index)}
-                                        className='border border-gray-200 rounded-lg p-6 hover:shadow-md transition-shadow cursor-move'
+                                        className='border border-gray-200 dark:border-gray-700 rounded-lg p-6 hover:shadow-md transition-shadow cursor-move bg-white dark:bg-gray-800'
                                     >
                                         <div className='flex items-start gap-6'>
                                             {/* Drag Handle */}
-                                            <div className='flex flex-col items-center justify-center text-gray-400'>
+                                            <div className='flex flex-col items-center justify-center text-gray-400 dark:text-gray-500'>
                                                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
                                                 </svg>
-                                                <span className='text-xs mt-1'>#{slider.order + 1}</span>
+                                                <span className='text-xs mt-1 text-gray-600 dark:text-gray-400'>#{slider.order + 1}</span>
                                             </div>
 
                                             {/* Preview Image */}
@@ -387,9 +404,9 @@ const ModernSlider = ({ token }) => {
                                                 />
                                                 <div className='mt-2 flex items-center gap-1'>
                                                     <span className={`inline-block w-2 h-2 rounded-full ${
-                                                        slider.isActive ? 'bg-green-500' : 'bg-red-500'
+                                                        slider.isActive ? 'bg-success-500' : 'bg-danger-500'
                                                     }`}></span>
-                                                    <span className='text-xs text-gray-600'>
+                                                    <span className='text-xs text-gray-600 dark:text-gray-400'>
                                                         {slider.isActive ? 'Aktif' : 'Pasif'}
                                                     </span>
                                                 </div>
@@ -399,19 +416,35 @@ const ModernSlider = ({ token }) => {
                                             <div className='flex-1'>
                                                 <div className='flex items-start justify-between'>
                                                     <div>
-                                                        <h3 className='text-lg font-semibold text-gray-900 mb-2'>
+                                                        <h3 className='text-lg font-semibold text-gray-900 dark:text-white mb-2'>
                                                             {slider.title}
                                                         </h3>
-                                                        <p className='text-gray-600 text-sm mb-3'>{slider.subtitle}</p>
+                                                        <p className='text-gray-600 dark:text-gray-400 text-sm mb-3'>{slider.subtitle}</p>
 
-                                                        <div className='flex items-center gap-6 text-sm text-gray-500'>
-                                                            <span>🎨 {templates.find(t => t.id === slider.template)?.name}</span>
-                                                            <span>🔗 {slider.buttonLink}</span>
+                                                        <div className='flex items-center gap-6 text-sm text-gray-500 dark:text-gray-400'>
+                                                            <span className='flex items-center gap-1'>
+                                                                <Image className='w-4 h-4' />
+                                                                {templates.find(t => t.id === slider.template)?.name}
+                                                            </span>
+                                                            <span className='flex items-center gap-1'>
+                                                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+                                                                </svg>
+                                                                {slider.buttonLink}
+                                                            </span>
                                                             {slider.viewCount > 0 && (
-                                                                <span>👁️ {slider.viewCount} görüntülenme</span>
+                                                                <span className='flex items-center gap-1'>
+                                                                    <Eye className='w-4 h-4' />
+                                                                    {slider.viewCount} görüntülenme
+                                                                </span>
                                                             )}
                                                             {slider.clickCount > 0 && (
-                                                                <span>🖱️ {slider.clickCount} tıklama</span>
+                                                                <span className='flex items-center gap-1'>
+                                                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5M7.188 2.239l.777 2.897M5.136 7.965l-2.898-.777M13.95 4.05l-2.122 2.122m-5.657 5.656l-2.12 2.122" />
+                                                                    </svg>
+                                                                    {slider.clickCount} tıklama
+                                                                </span>
                                                             )}
                                                         </div>
                                                     </div>
@@ -420,59 +453,46 @@ const ModernSlider = ({ token }) => {
                                                     <div className='flex items-center gap-2'>
                                                         <button
                                                             onClick={() => previewSliderHandler(slider)}
-                                                            className='p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors'
+                                                            className='p-2 text-primary-600 hover:bg-primary-50 dark:hover:bg-primary-900/30 rounded-lg transition-colors'
                                                             title='Önizleme'
                                                         >
-                                                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                                                            </svg>
+                                                            <Eye className="w-5 h-5" />
                                                         </button>
                                                         <button
                                                             onClick={() => duplicateSlider(slider)}
-                                                            className='p-2 text-green-600 hover:bg-green-50 rounded-lg transition-colors'
+                                                            className='p-2 text-success-600 hover:bg-success-50 dark:hover:bg-success-900/30 rounded-lg transition-colors'
                                                             title='Kopyala'
                                                         >
-                                                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                                                            </svg>
+                                                            <Copy className="w-5 h-5" />
                                                         </button>
                                                         <button
                                                             onClick={() => toggleActive(slider._id, slider.isActive)}
                                                             className={`p-2 rounded-lg transition-colors ${
                                                                 slider.isActive
-                                                                    ? 'text-green-600 hover:bg-green-50'
-                                                                    : 'text-red-600 hover:bg-red-50'
+                                                                    ? 'text-success-600 hover:bg-success-50 dark:hover:bg-success-900/30'
+                                                                    : 'text-danger-600 hover:bg-danger-50 dark:hover:bg-danger-900/30'
                                                             }`}
                                                             title={slider.isActive ? 'Pasif yap' : 'Aktif yap'}
                                                         >
                                                             {slider.isActive ? (
-                                                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                                                </svg>
+                                                                <PowerOff className="w-5 h-5" />
                                                             ) : (
-                                                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                                                </svg>
+                                                                <Power className="w-5 h-5" />
                                                             )}
                                                         </button>
                                                         <button
                                                             onClick={() => handleEdit(slider)}
-                                                            className='p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors'
+                                                            className='p-2 text-primary-600 hover:bg-primary-50 dark:hover:bg-primary-900/30 rounded-lg transition-colors'
                                                             title='Düzenle'
                                                         >
-                                                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                                                            </svg>
+                                                            <Edit className="w-5 h-5" />
                                                         </button>
                                                         <button
                                                             onClick={() => handleDelete(slider._id)}
-                                                            className='p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors'
+                                                            className='p-2 text-danger-600 hover:bg-danger-50 dark:hover:bg-danger-900/30 rounded-lg transition-colors'
                                                             title='Sil'
                                                         >
-                                                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                                            </svg>
+                                                            <Trash2 className="w-5 h-5" />
                                                         </button>
                                                     </div>
                                                 </div>
@@ -488,10 +508,10 @@ const ModernSlider = ({ token }) => {
 
             {/* Edit Tab */}
             {activeTab === 'edit' && (
-                <div className='bg-white rounded-lg shadow-sm'>
+                <div className='bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700'>
                     <div className='p-6'>
                         <div className='flex items-center justify-between mb-6'>
-                            <h2 className='text-lg font-semibold text-gray-900'>
+                            <h2 className='text-lg font-semibold text-gray-900 dark:text-white'>
                                 {editingSlider ? 'Slider Düzenle' : 'Yeni Slider Oluştur'}
                             </h2>
                             <button
@@ -499,64 +519,73 @@ const ModernSlider = ({ token }) => {
                                     setActiveTab('list');
                                     resetForm();
                                 }}
-                                className='text-gray-600 hover:text-gray-900'
+                                className='text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
                             >
-                                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                                </svg>
+                                <X className="w-6 h-6" />
                             </button>
                         </div>
 
                         <form onSubmit={handleSubmit} className='space-y-8'>
                             {/* Template Selection */}
                             <div>
-                                <label className='block text-sm font-medium text-gray-700 mb-3'>
+                                <label className='block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3'>
                                     Şablon Seçimi
                                 </label>
                                 <div className='grid grid-cols-2 md:grid-cols-5 gap-3'>
-                                    {templates.map(template => (
-                                        <button
-                                            key={template.id}
-                                            type='button'
-                                            onClick={() => setFormData({...formData, template: template.id})}
-                                            className={`p-4 rounded-lg border-2 transition-all ${
-                                                formData.template === template.id
-                                                    ? 'border-red-600 bg-red-50'
-                                                    : 'border-gray-200 hover:border-gray-300'
-                                            }`}
-                                        >
-                                            <div className='text-2xl mb-2'>{template.icon}</div>
-                                            <div className='text-sm font-medium'>{template.name}</div>
-                                        </button>
-                                    ))}
+                                    {templates.map(template => {
+                                        const IconComponent = template.icon;
+                                        return (
+                                            <button
+                                                key={template.id}
+                                                type='button'
+                                                onClick={() => setFormData({...formData, template: template.id})}
+                                                className={`p-4 rounded-lg border-2 transition-all ${
+                                                    formData.template === template.id
+                                                        ? 'border-primary-600 bg-primary-50 dark:bg-primary-900/30 dark:border-primary-500'
+                                                        : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 bg-white dark:bg-gray-800'
+                                                }`}
+                                            >
+                                                <IconComponent className={`w-6 h-6 mx-auto mb-2 ${
+                                                    formData.template === template.id
+                                                        ? 'text-primary-600 dark:text-primary-400'
+                                                        : 'text-gray-600 dark:text-gray-400'
+                                                }`} />
+                                                <div className={`text-sm font-medium ${
+                                                    formData.template === template.id
+                                                        ? 'text-primary-700 dark:text-primary-300'
+                                                        : 'text-gray-700 dark:text-gray-300'
+                                                }`}>{template.name}</div>
+                                            </button>
+                                        );
+                                    })}
                                 </div>
                             </div>
 
                             {/* Content Fields */}
                             <div className='grid grid-cols-1 md:grid-cols-2 gap-6'>
                                 <div>
-                                    <label className='block text-sm font-medium text-gray-700 mb-2'>
-                                        Başlık <span className='text-red-600'>*</span>
+                                    <label className='block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2'>
+                                        Başlık <span className='text-danger-600 dark:text-danger-400'>*</span>
                                     </label>
                                     <input
                                         type='text'
                                         value={formData.title}
                                         onChange={(e) => setFormData({...formData, title: e.target.value})}
-                                        className='w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-600 focus:border-transparent'
+                                        className='w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-400'
                                         required
                                         placeholder='Dikkat çeken başlık'
                                     />
                                 </div>
 
                                 <div>
-                                    <label className='block text-sm font-medium text-gray-700 mb-2'>
-                                        Alt Başlık <span className='text-red-600'>*</span>
+                                    <label className='block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2'>
+                                        Alt Başlık <span className='text-danger-600 dark:text-danger-400'>*</span>
                                     </label>
                                     <input
                                         type='text'
                                         value={formData.subtitle}
                                         onChange={(e) => setFormData({...formData, subtitle: e.target.value})}
-                                        className='w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-600 focus:border-transparent'
+                                        className='w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-400'
                                         required
                                         placeholder='Destekleyici alt başlık'
                                     />
@@ -564,13 +593,13 @@ const ModernSlider = ({ token }) => {
                             </div>
 
                             <div>
-                                <label className='block text-sm font-medium text-gray-700 mb-2'>
-                                    Açıklama <span className='text-red-600'>*</span>
+                                <label className='block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2'>
+                                    Açıklama <span className='text-danger-600 dark:text-danger-400'>*</span>
                                 </label>
                                 <textarea
                                     value={formData.description}
                                     onChange={(e) => setFormData({...formData, description: e.target.value})}
-                                    className='w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-600 focus:border-transparent'
+                                    className='w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-400'
                                     rows={3}
                                     required
                                     placeholder='Ürün veya kampanya açıklaması'
@@ -580,40 +609,40 @@ const ModernSlider = ({ token }) => {
                             {/* CTA Button */}
                             <div className='grid grid-cols-1 md:grid-cols-3 gap-6'>
                                 <div>
-                                    <label className='block text-sm font-medium text-gray-700 mb-2'>
-                                        Buton Metni <span className='text-red-600'>*</span>
+                                    <label className='block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2'>
+                                        Buton Metni <span className='text-danger-600 dark:text-danger-400'>*</span>
                                     </label>
                                     <input
                                         type='text'
                                         value={formData.buttonText}
                                         onChange={(e) => setFormData({...formData, buttonText: e.target.value})}
-                                        className='w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-600 focus:border-transparent'
+                                        className='w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-400'
                                         required
                                         placeholder='Şimdi Alışveriş Yap'
                                     />
                                 </div>
 
                                 <div>
-                                    <label className='block text-sm font-medium text-gray-700 mb-2'>
+                                    <label className='block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2'>
                                         Buton Linki
                                     </label>
                                     <input
                                         type='text'
                                         value={formData.buttonLink}
                                         onChange={(e) => setFormData({...formData, buttonLink: e.target.value})}
-                                        className='w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-600 focus:border-transparent'
+                                        className='w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-400'
                                         placeholder='/collection'
                                     />
                                 </div>
 
                                 <div>
-                                    <label className='block text-sm font-medium text-gray-700 mb-2'>
+                                    <label className='block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2'>
                                         Buton Stili
                                     </label>
                                     <select
                                         value={formData.buttonStyle}
                                         onChange={(e) => setFormData({...formData, buttonStyle: e.target.value})}
-                                        className='w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-600 focus:border-transparent'
+                                        className='w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-400'
                                     >
                                         {buttonStyles.map(style => (
                                             <option key={style.id} value={style.id}>
@@ -627,13 +656,13 @@ const ModernSlider = ({ token }) => {
                             {/* Visual Settings */}
                             <div className='grid grid-cols-1 md:grid-cols-3 gap-6'>
                                 <div>
-                                    <label className='block text-sm font-medium text-gray-700 mb-2'>
+                                    <label className='block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2'>
                                         Metin Rengi
                                     </label>
                                     <select
                                         value={formData.textColor}
                                         onChange={(e) => setFormData({...formData, textColor: e.target.value})}
-                                        className='w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-600 focus:border-transparent'
+                                        className='w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-400'
                                     >
                                         <option value='auto'>Otomatik</option>
                                         <option value='light'>Açık (Beyaz)</option>
@@ -642,7 +671,7 @@ const ModernSlider = ({ token }) => {
                                 </div>
 
                                 <div>
-                                    <label className='block text-sm font-medium text-gray-700 mb-2'>
+                                    <label className='block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2'>
                                         Overlay Opaklığı (%)
                                     </label>
                                     <input
@@ -653,18 +682,18 @@ const ModernSlider = ({ token }) => {
                                         onChange={(e) => setFormData({...formData, overlayOpacity: e.target.value})}
                                         className='w-full'
                                     />
-                                    <div className='text-sm text-gray-600'>{formData.overlayOpacity}%</div>
+                                    <div className='text-sm text-gray-600 dark:text-gray-400'>{formData.overlayOpacity}%</div>
                                 </div>
 
                                 <div>
-                                    <label className='block text-sm font-medium text-gray-700 mb-2'>
+                                    <label className='block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2'>
                                         Sıra
                                     </label>
                                     <input
                                         type='number'
                                         value={formData.order}
                                         onChange={(e) => setFormData({...formData, order: e.target.value})}
-                                        className='w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-600 focus:border-transparent'
+                                        className='w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-400'
                                         min='0'
                                         placeholder='0'
                                     />
@@ -674,27 +703,27 @@ const ModernSlider = ({ token }) => {
                             {/* SEO Fields */}
                             <div className='grid grid-cols-1 md:grid-cols-2 gap-6'>
                                 <div>
-                                    <label className='block text-sm font-medium text-gray-700 mb-2'>
+                                    <label className='block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2'>
                                         Alt Text (SEO)
                                     </label>
                                     <input
                                         type='text'
                                         value={formData.altText}
                                         onChange={(e) => setFormData({...formData, altText: e.target.value})}
-                                        className='w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-600 focus:border-transparent'
+                                        className='w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-400'
                                         placeholder='Görsel açıklaması'
                                     />
                                 </div>
 
                                 <div>
-                                    <label className='block text-sm font-medium text-gray-700 mb-2'>
+                                    <label className='block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2'>
                                         SEO Başlığı
                                     </label>
                                     <input
                                         type='text'
                                         value={formData.seoTitle}
                                         onChange={(e) => setFormData({...formData, seoTitle: e.target.value})}
-                                        className='w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-600 focus:border-transparent'
+                                        className='w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-400'
                                         placeholder='SEO başlığı'
                                     />
                                 </div>
@@ -703,26 +732,26 @@ const ModernSlider = ({ token }) => {
                             {/* Schedule */}
                             <div className='grid grid-cols-1 md:grid-cols-2 gap-6'>
                                 <div>
-                                    <label className='block text-sm font-medium text-gray-700 mb-2'>
+                                    <label className='block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2'>
                                         Başlangıç Tarihi
                                     </label>
                                     <input
                                         type='datetime-local'
                                         value={formData.startDate}
                                         onChange={(e) => setFormData({...formData, startDate: e.target.value})}
-                                        className='w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-600 focus:border-transparent'
+                                        className='w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-400'
                                     />
                                 </div>
 
                                 <div>
-                                    <label className='block text-sm font-medium text-gray-700 mb-2'>
+                                    <label className='block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2'>
                                         Bitiş Tarihi
                                     </label>
                                     <input
                                         type='datetime-local'
                                         value={formData.endDate}
                                         onChange={(e) => setFormData({...formData, endDate: e.target.value})}
-                                        className='w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-600 focus:border-transparent'
+                                        className='w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-400'
                                     />
                                 </div>
                             </div>
@@ -730,26 +759,26 @@ const ModernSlider = ({ token }) => {
                             {/* Image Uploads */}
                             <div className='space-y-6'>
                                 <div>
-                                    <label className='block text-sm font-medium text-gray-700 mb-2'>
-                                        Ana Görsel <span className='text-red-600'>*</span>
+                                    <label className='block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2'>
+                                        Ana Görsel <span className='text-danger-600 dark:text-danger-400'>*</span>
                                     </label>
 
                                     {/* Current Image Display */}
-                                    {formData.image && (
-                                        <div className='mb-4 border border-gray-200 rounded-lg p-3'>
+                                    {editingSlider && editingSlider.image && (
+                                        <div className='mb-4 border border-gray-200 dark:border-gray-700 rounded-lg p-3 bg-white dark:bg-gray-800'>
                                             <img
-                                                src={`${backendUrl}/api/media/${formData.image.split('/').pop()}/base64`}
+                                                src={`${backendUrl}${editingSlider.image}`}
                                                 alt='Mevcut görsel'
                                                 className='w-full h-32 object-cover rounded'
                                                 onError={(e) => {
-                                                    e.target.src = formData.image;
+                                                    e.target.src = `${backendUrl}${editingSlider.image}`;
                                                 }}
                                             />
-                                            <p className='text-xs text-gray-600 mt-2 truncate'>Mevcut görsel</p>
+                                            <p className='text-xs text-gray-600 dark:text-gray-400 mt-2 truncate'>Mevcut görsel</p>
                                         </div>
                                     )}
 
-                                    <div className='border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-gray-400 transition-colors'>
+                                    <div className='border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-6 text-center hover:border-gray-400 dark:hover:border-gray-500 transition-colors bg-white dark:bg-gray-800'>
                                         <input
                                             type='file'
                                             onChange={(e) => setImage(e.target.files[0])}
@@ -765,15 +794,13 @@ const ModernSlider = ({ token }) => {
                                                         alt='Önizleme'
                                                         className='mx-auto h-32 object-cover rounded-lg mb-4'
                                                     />
-                                                    <p className='text-sm text-gray-600'>{image.name}</p>
+                                                    <p className='text-sm text-gray-600 dark:text-gray-400'>{image.name}</p>
                                                 </div>
                                             ) : (
                                                 <div>
-                                                    <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
-                                                    </svg>
-                                                    <p className='mt-2 text-sm text-gray-600'>Görsel yüklemek için tıklayın</p>
-                                                    <p className='text-xs text-gray-500'>PNG, JPG, GIF (max. 10MB)</p>
+                                                    <Upload className="mx-auto h-12 w-12 text-gray-400 dark:text-gray-500" />
+                                                    <p className='mt-2 text-sm text-gray-600 dark:text-gray-400'>Görsel yüklemek için tıklayın</p>
+                                                    <p className='text-xs text-gray-500 dark:text-gray-500'>PNG, JPG, GIF (max. 10MB)</p>
                                                 </div>
                                             )}
                                         </label>
@@ -782,10 +809,10 @@ const ModernSlider = ({ token }) => {
 
                                 <div className='grid grid-cols-1 md:grid-cols-2 gap-6'>
                                     <div>
-                                        <label className='block text-sm font-medium text-gray-700 mb-2'>
+                                        <label className='block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2'>
                                             Mobil Görsel (İsteğe Bağlı)
                                         </label>
-                                        <div className='border-2 border-dashed border-gray-300 rounded-lg p-4 text-center hover:border-gray-400 transition-colors'>
+                                        <div className='border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-4 text-center hover:border-gray-400 dark:hover:border-gray-500 transition-colors bg-white dark:bg-gray-800'>
                                             <input
                                                 type='file'
                                                 onChange={(e) => setMobileImage(e.target.files[0])}
@@ -801,14 +828,12 @@ const ModernSlider = ({ token }) => {
                                                             alt='Mobil Önizleme'
                                                             className='mx-auto h-20 object-cover rounded mb-2'
                                                         />
-                                                        <p className='text-xs text-gray-600'>{mobileImage.name}</p>
+                                                        <p className='text-xs text-gray-600 dark:text-gray-400'>{mobileImage.name}</p>
                                                     </div>
                                                 ) : (
                                                     <div>
-                                                        <svg className="mx-auto h-8 w-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
-                                                        </svg>
-                                                        <p className='mt-1 text-xs text-gray-600'>Mobil görsel</p>
+                                                        <Smartphone className="mx-auto h-8 w-8 text-gray-400 dark:text-gray-500" />
+                                                        <p className='mt-1 text-xs text-gray-600 dark:text-gray-400'>Mobil görsel</p>
                                                     </div>
                                                 )}
                                             </label>
@@ -816,10 +841,10 @@ const ModernSlider = ({ token }) => {
                                     </div>
 
                                     <div>
-                                        <label className='block text-sm font-medium text-gray-700 mb-2'>
+                                        <label className='block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2'>
                                             Arkaplan Görseli (İsteğe Bağlı)
                                         </label>
-                                        <div className='border-2 border-dashed border-gray-300 rounded-lg p-4 text-center hover:border-gray-400 transition-colors'>
+                                        <div className='border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-4 text-center hover:border-gray-400 dark:hover:border-gray-500 transition-colors bg-white dark:bg-gray-800'>
                                             <input
                                                 type='file'
                                                 onChange={(e) => setBackgroundImage(e.target.files[0])}
@@ -835,14 +860,12 @@ const ModernSlider = ({ token }) => {
                                                             alt='Arkaplan Önizleme'
                                                             className='mx-auto h-20 object-cover rounded mb-2'
                                                         />
-                                                        <p className='text-xs text-gray-600'>{backgroundImage.name}</p>
+                                                        <p className='text-xs text-gray-600 dark:text-gray-400'>{backgroundImage.name}</p>
                                                     </div>
                                                 ) : (
                                                     <div>
-                                                        <svg className="mx-auto h-8 w-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                                                        </svg>
-                                                        <p className='mt-1 text-xs text-gray-600'>Arkaplan görseli</p>
+                                                        <Layers className="mx-auto h-8 w-8 text-gray-400 dark:text-gray-500" />
+                                                        <p className='mt-1 text-xs text-gray-600 dark:text-gray-400'>Arkaplan görseli</p>
                                                     </div>
                                                 )}
                                             </label>
@@ -852,16 +875,16 @@ const ModernSlider = ({ token }) => {
                             </div>
 
                             {/* Form Actions */}
-                            <div className='flex items-center justify-between pt-6 border-t border-gray-200'>
+                            <div className='flex items-center justify-between pt-6 border-t border-gray-200 dark:border-gray-700'>
                                 <div className='flex items-center'>
                                     <input
                                         type='checkbox'
                                         id='isActive'
                                         checked={formData.isActive}
                                         onChange={(e) => setFormData({...formData, isActive: e.target.checked})}
-                                        className='h-4 w-4 text-red-600 focus:ring-red-500 border-gray-300 rounded'
+                                        className='h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 dark:border-gray-600 rounded'
                                     />
-                                    <label htmlFor='isActive' className='ml-2 block text-sm text-gray-900'>
+                                    <label htmlFor='isActive' className='ml-2 block text-sm text-gray-900 dark:text-white'>
                                         Sliderı yayında tut
                                     </label>
                                 </div>
@@ -873,13 +896,13 @@ const ModernSlider = ({ token }) => {
                                             setActiveTab('list');
                                             resetForm();
                                         }}
-                                        className='px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors'
+                                        className='px-6 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors font-medium'
                                     >
                                         İptal
                                     </button>
                                     <button
                                         type='submit'
-                                        className='px-6 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors'
+                                        className='px-6 py-2 bg-primary-600 hover:bg-primary-700 dark:bg-primary-500 dark:hover:bg-primary-600 text-white rounded-lg transition-colors font-medium'
                                     >
                                         {editingSlider ? 'Güncelle' : 'Oluştur'}
                                     </button>
@@ -892,34 +915,32 @@ const ModernSlider = ({ token }) => {
 
             {/* Preview Modal */}
             {isPreviewMode && previewSlider && (
-                <div className='fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50'>
-                    <div className='bg-white rounded-lg max-w-6xl w-full mx-4 max-h-[90vh] overflow-auto'>
-                        <div className='sticky top-0 bg-white border-b border-gray-200 p-6 flex items-center justify-between'>
-                            <h3 className='text-lg font-semibold text-gray-900'>Slider Önizleme</h3>
+                <div className='fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4'>
+                    <div className='bg-white dark:bg-gray-800 rounded-lg max-w-6xl w-full mx-4 max-h-[90vh] overflow-auto border border-gray-200 dark:border-gray-700'>
+                        <div className='sticky top-0 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 p-6 flex items-center justify-between'>
+                            <h3 className='text-lg font-semibold text-gray-900 dark:text-white'>Slider Önizleme</h3>
                             <button
                                 onClick={() => setIsPreviewMode(false)}
-                                className='text-gray-600 hover:text-gray-900'
+                                className='text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
                             >
-                                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                                </svg>
+                                <X className="w-6 h-6" />
                             </button>
                         </div>
 
                         <div className='p-6'>
                             {/* Preview content based on template */}
-                            <div className='bg-gray-100 rounded-lg p-8 min-h-[400px] flex items-center justify-center'>
+                            <div className='bg-gray-100 dark:bg-gray-700 rounded-lg p-8 min-h-[400px] flex items-center justify-center'>
                                 <div className='text-center'>
                                     <img
                                         src={`${backendUrl}${previewSlider.image}`}
                                         alt={previewSlider.title}
                                         className='mx-auto max-w-md rounded-lg shadow-lg mb-6'
                                     />
-                                    <h4 className='text-2xl font-bold text-gray-900 mb-2'>{previewSlider.title}</h4>
-                                    <p className='text-lg text-gray-600 mb-4'>{previewSlider.subtitle}</p>
-                                    <p className='text-gray-600 mb-6'>{previewSlider.description}</p>
+                                    <h4 className='text-2xl font-bold text-gray-900 dark:text-white mb-2'>{previewSlider.title}</h4>
+                                    <p className='text-lg text-gray-600 dark:text-gray-400 mb-4'>{previewSlider.subtitle}</p>
+                                    <p className='text-gray-600 dark:text-gray-400 mb-6'>{previewSlider.description}</p>
                                     <button className={`px-8 py-3 rounded-lg font-medium ${
-                                        buttonStyles.find(s => s.id === previewSlider.buttonStyle)?.class || 'bg-red-600 hover:bg-red-700 text-white'
+                                        buttonStyles.find(s => s.id === previewSlider.buttonStyle)?.class || 'bg-primary-600 hover:bg-primary-700 text-white'
                                     }`}>
                                         {previewSlider.buttonText}
                                     </button>

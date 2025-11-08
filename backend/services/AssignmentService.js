@@ -64,6 +64,91 @@ function pickNearestByCoordinates(branches, address) {
     return best;
 }
 
-export default { findBestBranch };
+/**
+ * Suggest branch for an order (for hybrid/manual modes)
+ */
+export async function suggestBranch(orderId) {
+    try {
+        const orderModel = (await import("../models/OrderModel.js")).default;
+        const order = await orderModel.findById(orderId);
+        
+        if (!order) {
+            return { success: false, message: 'Order not found' };
+        }
+        
+        const bestBranch = await findBestBranch({ 
+            delivery: order.delivery, 
+            address: order.address 
+        });
+        
+        if (!bestBranch) {
+            return { success: false, message: 'No suitable branch found' };
+        }
+        
+        return {
+            success: true,
+            branch: {
+                _id: bestBranch._id.toString(),
+                name: bestBranch.name,
+                code: bestBranch.code,
+                address: bestBranch.address
+            }
+        };
+    } catch (error) {
+        console.error('Error suggesting branch:', error);
+        return { success: false, message: error.message };
+    }
+}
+
+/**
+ * Assign branch to order
+ */
+export async function assignBranch(orderId, branchId) {
+    try {
+        const orderModel = (await import("../models/OrderModel.js")).default;
+        const branchModel = (await import("../models/BranchModel.js")).default;
+        
+        const order = await orderModel.findById(orderId);
+        if (!order) {
+            return { success: false, message: 'Order not found' };
+        }
+        
+        const branch = await branchModel.findById(branchId);
+        if (!branch) {
+            return { success: false, message: 'Branch not found' };
+        }
+        
+        if (branch.status !== 'active') {
+            return { success: false, message: 'Branch is not active' };
+        }
+        
+        // Update order
+        order.branchId = branch._id.toString();
+        order.branchCode = branch.code;
+        order.assignment = {
+            mode: order.assignment?.mode || 'manual',
+            status: 'assigned',
+            decidedBy: 'admin',
+            decidedAt: Date.now()
+        };
+        
+        await order.save();
+        
+        return {
+            success: true,
+            message: `Order assigned to ${branch.name}`,
+            branch: {
+                _id: branch._id.toString(),
+                name: branch.name,
+                code: branch.code
+            }
+        };
+    } catch (error) {
+        console.error('Error assigning branch:', error);
+        return { success: false, message: error.message };
+    }
+}
+
+export default { findBestBranch, suggestBranch, assignBranch };
 
 

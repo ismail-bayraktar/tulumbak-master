@@ -32,7 +32,7 @@ const OrderSummary = ({ deliveryFee = 0, couponDiscount = 0, couponCode = '', se
     const finalTotal = subtotal + deliveryFee - couponDiscount;
     
     return (
-        <div className="sticky top-4">
+        <div>
             {/* Ürünler */}
             <div className="space-y-4 mb-6">
                 {cartItemsArray.map((item, idx) => (

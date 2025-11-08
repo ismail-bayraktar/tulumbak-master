@@ -182,11 +182,15 @@ const MediaLibrary = ({ token, onSelectMedia, selectedMediaId, multiple = false 
                                 <div className="aspect-square relative bg-gray-100">
                                     {media.mimetype.startsWith('image/') ? (
                                         <img
-                                            src={`${backendUrl}/api/media/${media.id}/base64`}
+                                            src={media.url.startsWith('http') ? media.url : `${backendUrl}${media.url}`}
                                             alt={media.alt || media.title}
                                             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                                             onError={(e) => {
-                                                e.target.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="100" height="100"%3E%3Crect width="100" height="100" fill="%23f3f4f6"/%3E%3Ctext x="50" y="50" text-anchor="middle" dy=".3em" fill="%239ca3af"%3EResim%3C/text%3E%3C/svg%3E';
+                                                // Fallback to base64 if direct URL fails
+                                                e.target.src = `${backendUrl}/api/media/${media.id}/base64`;
+                                                e.target.onerror = () => {
+                                                    e.target.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="100" height="100"%3E%3Crect width="100" height="100" fill="%23f3f4f6"/%3E%3Ctext x="50" y="50" text-anchor="middle" dy=".3em" fill="%239ca3af"%3EResim%3C/text%3E%3C/svg%3E';
+                                                };
                                             }}
                                         />
                                     ) : (

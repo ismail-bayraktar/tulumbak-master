@@ -20,10 +20,15 @@ import {
   Activity,
   Users,
   TrendingUp,
-  Archive
+  Archive,
+  Image,
+  PackageSearch,
+  Navigation
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useSidebar } from "../context/SidebarContext.jsx";
+import { useTheme } from "../context/ThemeContext.jsx";
+import { assets } from "../assets/assets.js";
 
 const Sidebar = () => {
   const [expandedSections, setExpandedSections] = useState({
@@ -34,6 +39,7 @@ const Sidebar = () => {
   });
 
   const { isCollapsed, isMobile, toggleSidebar, closeSidebar } = useSidebar();
+  const { isDarkMode } = useTheme();
 
   const toggleSection = (section) => {
     setExpandedSections(prev => ({
@@ -79,12 +85,6 @@ const Sidebar = () => {
           description: 'Tüm siparişleri yönet'
         },
         {
-          to: '/courier-management',
-          icon: Truck,
-          label: 'Kurye Yönetimi',
-          description: 'Kurye takibi ve yönetimi'
-        },
-        {
           to: '/corporate-orders',
           icon: Building,
           label: 'Kurumsal Siparişler',
@@ -93,15 +93,27 @@ const Sidebar = () => {
       ]
     },
 
-    // Settings Section
+    // Delivery Management Section
     {
-      section: 'settings',
+      section: 'delivery',
       items: [
         {
-          to: '/slider',
-          icon: Activity,
-          label: 'Slider Yönetimi',
-          description: 'Ana sayfa slider ayarları'
+          to: '/order-processing',
+          icon: PackageSearch,
+          label: 'Sipariş İşleme',
+          description: 'Sipariş hazırlama ve kurye yönetimi'
+        },
+        {
+          to: '/branch-assignment-settings',
+          icon: Settings,
+          label: 'Şube Atama Ayarları',
+          description: 'Şube atama modu ve ayarları'
+        },
+        {
+          to: '/branches',
+          icon: Store,
+          label: 'Şubeler',
+          description: 'Şube yönetimi'
         },
         {
           to: '/delivery-zones',
@@ -116,16 +128,41 @@ const Sidebar = () => {
           description: 'Teslimat zaman dilimleri'
         },
         {
+          to: '/courier-management',
+          icon: Truck,
+          label: 'Kurye Yönetimi',
+          description: 'Kurye takibi ve yönetimi'
+        },
+        {
+          to: '/courier-integration',
+          icon: Navigation,
+          label: 'Entegrasyon Ayarları',
+          description: 'Kurye paneli webhook entegrasyonları'
+        }
+      ]
+    },
+
+    // Settings Section
+    {
+      section: 'settings',
+      items: [
+        {
+          to: '/media-library',
+          icon: Image,
+          label: 'Medya Kütüphanesi',
+          description: 'Görsel ve medya dosyaları yönetimi'
+        },
+        {
+          to: '/slider',
+          icon: Activity,
+          label: 'Slider Yönetimi',
+          description: 'Ana sayfa slider ayarları'
+        },
+        {
           to: '/coupons',
           icon: Ticket,
           label: 'Kuponlar',
           description: 'İndirim kuponları yönetimi'
-        },
-        {
-          to: '/branches',
-          icon: Store,
-          label: 'Şubeler',
-          description: 'Şube yönetimi'
         },
         {
           to: '/settings',
@@ -166,6 +203,7 @@ const Sidebar = () => {
     const icons = {
         main: Archive,
         orders: ShoppingCart,
+        delivery: Truck,
         settings: Settings,
         reports: BarChart3
     };
@@ -189,19 +227,25 @@ const Sidebar = () => {
         fixed lg:static inset-y-0 left-0 z-50
         ${isCollapsed ? '-translate-x-full lg:translate-x-0' : 'translate-x-0'}
         ${isCollapsed ? 'lg:w-16' : 'lg:w-64'}
-        w-64 min-h-screen bg-white border-r border-gray-200 shadow-sidebar
+        w-64 h-screen
+        flex flex-col
+        bg-white dark:bg-gray-900 
+        border-r border-gray-200 dark:border-gray-700 
+        shadow-sidebar
         transition-all duration-300 ease-in-out
       `}>
       {/* Sidebar Header */}
-      <div className="p-6 border-b border-gray-200">
+      <div className="flex-shrink-0 p-6 border-b border-gray-200 dark:border-gray-700">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-primary-500 rounded-lg flex items-center justify-center flex-shrink-0">
-            <LayoutDashboard className="w-6 h-6 text-white" />
-          </div>
+          <img
+            src={assets.logo}
+            alt="Tulumbak Logo"
+            className={`${isCollapsed ? 'w-10 h-10' : 'w-10 h-10'} object-contain flex-shrink-0`}
+          />
           {!isCollapsed && (
             <div>
-              <h2 className="text-lg font-bold text-gray-900">Tulumbak</h2>
-              <p className="text-xs text-gray-500">Admin Panel</p>
+              <h2 className="text-lg font-bold text-gray-900 dark:text-white">Tulumbak</h2>
+              <p className="text-xs text-gray-500 dark:text-gray-400">Admin Panel</p>
             </div>
           )}
         </div>
@@ -218,14 +262,18 @@ const Sidebar = () => {
       </div>
 
       {/* Navigation */}
-      <div className="flex-1 overflow-y-auto">
+      <div className="flex-1 overflow-y-auto overflow-x-hidden">
         <nav className="p-4 space-y-6">
           {navigationItems.map((navSection) => (
             <div key={navSection.section} className="space-y-2">
               {/* Section Header */}
               <button
                 onClick={() => toggleSection(navSection.section)}
-                className="flex items-center justify-between w-full px-3 py-2 text-sm font-semibold text-gray-500 hover:text-gray-700 transition-colors duration-200"
+                className="flex items-center justify-between w-full px-3 py-2 text-sm font-semibold 
+                  text-gray-500 dark:text-gray-400 
+                  hover:text-gray-700 dark:hover:text-gray-200 
+                  transition-colors duration-200
+                  hover:bg-gray-50 dark:hover:bg-gray-800 rounded-lg"
               >
                 <div className="flex items-center gap-2">
                   <SectionIcon
@@ -236,17 +284,20 @@ const Sidebar = () => {
                     <span className="uppercase tracking-wider">
                       {navSection.section === 'main' && 'Ana Menü'}
                       {navSection.section === 'orders' && 'Siparişler'}
+                      {navSection.section === 'delivery' && 'Teslimat Yönetimi'}
                       {navSection.section === 'settings' && 'Ayarlar'}
                       {navSection.section === 'reports' && 'Raporlar'}
                     </span>
                   )}
                 </div>
                 {!isCollapsed && (
-                  expandedSections[navSection.section] ? (
-                    <ChevronDown className="w-4 h-4" />
-                  ) : (
-                    <ChevronRight className="w-4 h-4" />
-                  )
+                  <div className="transition-transform duration-200">
+                    {expandedSections[navSection.section] ? (
+                      <ChevronDown className="w-4 h-4" />
+                    ) : (
+                      <ChevronRight className="w-4 h-4" />
+                    )}
+                  </div>
                 )}
               </button>
 
@@ -261,8 +312,8 @@ const Sidebar = () => {
                       className={({ isActive }) => `
                         flex items-center gap-3 px-3 py-2 text-sm rounded-lg transition-all duration-200
                         ${isActive
-                          ? 'sidebar-item-active text-primary-700 bg-primary-50'
-                          : 'sidebar-item hover:bg-gray-100 text-gray-700'
+                          ? 'sidebar-item-active text-primary-700 dark:text-primary-300 bg-primary-50 dark:bg-primary-900/30'
+                          : 'sidebar-item hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300'
                         }
                       `}
                     >
@@ -293,8 +344,8 @@ const Sidebar = () => {
 
       {/* Sidebar Footer */}
       {!isCollapsed && (
-        <div className="p-4 border-t border-gray-200">
-          <div className="flex items-center gap-3 px-3 py-2 text-sm text-gray-500">
+        <div className="flex-shrink-0 p-4 border-t border-gray-200 dark:border-gray-700">
+          <div className="flex items-center gap-3 px-3 py-2 text-sm text-gray-500 dark:text-gray-400">
             <div className="w-2 h-2 bg-success-500 rounded-full flex-shrink-0"></div>
             <span>Sistem Aktif</span>
           </div>

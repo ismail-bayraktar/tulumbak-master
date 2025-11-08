@@ -2,8 +2,11 @@ import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { backendUrl } from '../App.jsx';
 import { toast } from 'react-toastify';
+import { useTheme } from '../context/ThemeContext.jsx';
+import { MessageSquare, CheckCircle, XCircle, BarChart3 } from 'lucide-react';
 
 const SmsLogs = ({ token }) => {
+    const { isDarkMode } = useTheme();
     const [logs, setLogs] = useState([]);
     const [filteredLogs, setFilteredLogs] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -61,8 +64,7 @@ const SmsLogs = ({ token }) => {
             setLogs(mockLogs);
             calculateStats(mockLogs);
         } catch (error) {
-            console.error('Error fetching SMS logs:', error);
-            toast.error('SMS logları yüklenirken hata oluştu');
+            toast.error(error.response?.data?.message || 'SMS logları yüklenirken hata oluştu');
         } finally {
             setLoading(false);
         }
@@ -147,14 +149,14 @@ const SmsLogs = ({ token }) => {
 
     const getStatusColor = (status) => {
         return status === 'success' 
-            ? 'bg-green-100 text-green-800' 
-            : 'bg-red-100 text-red-800';
+            ? 'bg-success-100 text-success-800 dark:bg-success-900/30 dark:text-success-400' 
+            : 'bg-danger-100 text-danger-800 dark:bg-danger-900/30 dark:text-danger-400';
     };
 
     if (loading) {
         return (
             <div className="flex justify-center items-center h-64">
-                <p className="text-gray-500">Yükleniyor...</p>
+                <p className="text-gray-600 dark:text-gray-400">Yükleniyor...</p>
             </div>
         );
     }
@@ -163,73 +165,73 @@ const SmsLogs = ({ token }) => {
         <div className="space-y-6">
             {/* Header */}
             <div>
-                <h1 className="text-3xl font-bold text-gray-800">SMS Logları</h1>
-                <p className="text-gray-600 mt-2">SMS gönderim geçmişi ve istatistikleri</p>
+                <h1 className="text-3xl font-bold text-gray-900 dark:text-white">SMS Logları</h1>
+                <p className="text-gray-600 dark:text-gray-400 mt-2">SMS gönderim geçmişi ve istatistikleri</p>
             </div>
 
             {/* Stats Cards */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+                <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
                     <div className="flex items-center justify-between">
                         <div>
-                            <p className="text-sm text-gray-600 mb-1">Toplam SMS</p>
-                            <p className="text-2xl font-bold text-gray-800">{stats.total}</p>
+                            <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Toplam SMS</p>
+                            <p className="text-2xl font-bold text-gray-900 dark:text-white">{stats.total}</p>
                         </div>
-                        <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
-                            <span className="text-2xl">📱</span>
+                        <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center">
+                            <MessageSquare className="w-6 h-6 text-blue-600 dark:text-blue-400" />
                         </div>
                     </div>
                 </div>
 
-                <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+                <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
                     <div className="flex items-center justify-between">
                         <div>
-                            <p className="text-sm text-gray-600 mb-1">Başarılı</p>
-                            <p className="text-2xl font-bold text-green-600">{stats.success}</p>
+                            <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Başarılı</p>
+                            <p className="text-2xl font-bold text-success-600 dark:text-success-400">{stats.success}</p>
                         </div>
-                        <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
-                            <span className="text-2xl">✅</span>
+                        <div className="w-12 h-12 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center">
+                            <CheckCircle className="w-6 h-6 text-green-600 dark:text-green-400" />
                         </div>
                     </div>
                 </div>
 
-                <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+                <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
                     <div className="flex items-center justify-between">
                         <div>
-                            <p className="text-sm text-gray-600 mb-1">Başarısız</p>
-                            <p className="text-2xl font-bold text-red-600">{stats.failed}</p>
+                            <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Başarısız</p>
+                            <p className="text-2xl font-bold text-danger-600 dark:text-danger-400">{stats.failed}</p>
                         </div>
-                        <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center">
-                            <span className="text-2xl">❌</span>
+                        <div className="w-12 h-12 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center">
+                            <XCircle className="w-6 h-6 text-red-600 dark:text-red-400" />
                         </div>
                     </div>
                 </div>
 
-                <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+                <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
                     <div className="flex items-center justify-between">
                         <div>
-                            <p className="text-sm text-gray-600 mb-1">Başarı Oranı</p>
-                            <p className="text-2xl font-bold text-blue-600">{stats.successRate.toFixed(1)}%</p>
+                            <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Başarı Oranı</p>
+                            <p className="text-2xl font-bold text-primary-600 dark:text-primary-400">{stats.successRate.toFixed(1)}%</p>
                         </div>
-                        <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
-                            <span className="text-2xl">📊</span>
+                        <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center">
+                            <BarChart3 className="w-6 h-6 text-blue-600 dark:text-blue-400" />
                         </div>
                     </div>
                 </div>
             </div>
 
             {/* Filters and Actions */}
-            <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
+            <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                     {/* Status Filter */}
                     <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                             Durum
                         </label>
                         <select
                             value={filters.status}
                             onChange={(e) => setFilters({...filters, status: e.target.value})}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-400"
                         >
                             <option value="all">Tümü</option>
                             <option value="success">Başarılı</option>
@@ -239,13 +241,13 @@ const SmsLogs = ({ token }) => {
 
                     {/* Date Range Filter */}
                     <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                             Tarih Aralığı
                         </label>
                         <select
                             value={filters.dateRange}
                             onChange={(e) => setFilters({...filters, dateRange: e.target.value})}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-400"
                         >
                             <option value="all">Tümü</option>
                             <option value="today">Bugün</option>
@@ -256,7 +258,7 @@ const SmsLogs = ({ token }) => {
 
                     {/* Search */}
                     <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                             Arama
                         </label>
                         <input
@@ -264,7 +266,7 @@ const SmsLogs = ({ token }) => {
                             value={filters.searchQuery}
                             onChange={(e) => setFilters({...filters, searchQuery: e.target.value})}
                             placeholder="Telefon, mesaj, hata..."
-                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-400"
                         />
                     </div>
 
@@ -272,7 +274,7 @@ const SmsLogs = ({ token }) => {
                     <div className="flex items-end">
                         <button
                             onClick={sendTestSms}
-                            className="w-full px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600"
+                            className="w-full px-4 py-2 bg-primary-600 hover:bg-primary-700 dark:bg-primary-500 dark:hover:bg-primary-600 text-white rounded-md transition-colors font-medium"
                         >
                             Test SMS Gönder
                         </button>
@@ -281,42 +283,42 @@ const SmsLogs = ({ token }) => {
             </div>
 
             {/* Logs Table */}
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200">
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
                 <div className="overflow-x-auto">
                     <table className="w-full">
-                        <thead className="bg-gray-50">
+                        <thead className="bg-gray-50 dark:bg-gray-900">
                             <tr>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                                     Alıcı
                                 </th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                                     Mesaj
                                 </th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                                     Durum
                                 </th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                                     Gönderim Zamanı
                                 </th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                                     Hata
                                 </th>
                             </tr>
                         </thead>
-                        <tbody className="bg-white divide-y divide-gray-200">
+                        <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
                             {filteredLogs.length === 0 ? (
                                 <tr>
-                                    <td colSpan="5" className="px-6 py-12 text-center text-gray-500">
+                                    <td colSpan="5" className="px-6 py-12 text-center text-gray-500 dark:text-gray-400">
                                         Log bulunamadı
                                     </td>
                                 </tr>
                             ) : (
                                 filteredLogs.map((log) => (
-                                    <tr key={log.id} className="hover:bg-gray-50">
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                    <tr key={log.id} className="hover:bg-gray-50 dark:hover:bg-gray-900">
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
                                             {log.recipient}
                                         </td>
-                                        <td className="px-6 py-4 text-sm text-gray-900 max-w-xs">
+                                        <td className="px-6 py-4 text-sm text-gray-900 dark:text-white max-w-xs">
                                             <div className="truncate" title={log.message}>
                                                 {log.message}
                                             </div>
@@ -326,16 +328,16 @@ const SmsLogs = ({ token }) => {
                                                 {log.status === 'success' ? 'Başarılı' : 'Başarısız'}
                                             </span>
                                         </td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
                                             {formatDate(log.sentAt)}
                                         </td>
-                                        <td className="px-6 py-4 text-sm text-gray-900">
+                                        <td className="px-6 py-4 text-sm text-gray-900 dark:text-white">
                                             {log.error ? (
-                                                <span className="text-red-600" title={log.error}>
+                                                <span className="text-danger-600 dark:text-danger-400" title={log.error}>
                                                     {log.error.length > 50 ? log.error.substring(0, 50) + '...' : log.error}
                                                 </span>
                                             ) : (
-                                                <span className="text-gray-400">-</span>
+                                                <span className="text-gray-400 dark:text-gray-500">-</span>
                                             )}
                                         </td>
                                     </tr>
@@ -347,10 +349,10 @@ const SmsLogs = ({ token }) => {
             </div>
 
             {/* Stats Summary */}
-            <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
-                <p className="text-sm text-gray-600">
-                    Toplam <span className="font-semibold text-gray-800">{logs.length}</span> log,
-                    gösterilen: <span className="font-semibold text-gray-800">{filteredLogs.length}</span>
+            <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
+                <p className="text-sm text-gray-600 dark:text-gray-400">
+                    Toplam <span className="font-semibold text-gray-900 dark:text-white">{logs.length}</span> log,
+                    gösterilen: <span className="font-semibold text-gray-900 dark:text-white">{filteredLogs.length}</span>
                 </p>
             </div>
         </div>

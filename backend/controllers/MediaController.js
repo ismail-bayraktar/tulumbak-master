@@ -1,6 +1,7 @@
 import Media from '../models/MediaModel.js';
 import fs from 'fs';
 import path from 'path';
+import logger from '../utils/logger.js';
 
 // Upload media file
 const uploadMedia = async (req, res) => {
@@ -25,13 +26,18 @@ const uploadMedia = async (req, res) => {
             }
         }
 
+        // Generate full URL
+        const baseUrl = `${req.protocol}://${req.get('host')}`;
+        const mediaUrl = `/uploads/${req.file.filename}`;
+        
         const media = new Media({
             filename: req.file.filename,
             originalName: req.file.originalname,
             mimetype: req.file.mimetype,
             size: req.file.size,
             path: req.file.path,
-            url: `/uploads/${req.file.filename}`,
+            url: mediaUrl,
+            secureUrl: `${baseUrl}${mediaUrl}`, // Full URL for compatibility
             width,
             height,
             folder: req.body.folder || 'general',
@@ -66,9 +72,29 @@ const uploadMedia = async (req, res) => {
         });
     } catch (error) {
         console.error('Media upload error:', error);
+        logger.error('Media upload error', { 
+            error: error.message, 
+            stack: error.stack,
+            filename: req.file?.filename,
+            code: error.code,
+            keyPattern: error.keyPattern,
+            keyValue: error.keyValue
+        });
+        
+        // Provide more detailed error message
+        let errorMessage = "Medya yüklenemedi";
+        if (error.code === 11000) {
+            // Duplicate key error
+            const field = Object.keys(error.keyPattern || {})[0];
+            errorMessage = `${field} zaten kullanılıyor. Lütfen farklı bir dosya seçin.`;
+        } else if (error.message) {
+            errorMessage = error.message;
+        }
+        
         res.status(500).json({
             success: false,
-            message: "Medya yüklenemedi"
+            message: errorMessage,
+            error: process.env.NODE_ENV === 'development' ? error.message : undefined
         });
     }
 };
