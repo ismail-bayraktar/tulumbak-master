@@ -67,15 +67,14 @@ export const getPaytrToken = async (paymentData) => {
             body: new URLSearchParams(formData).toString(),
 
         });
-        //console.log("PayTR'den gelen yanıt (status):", response.status); // Yanıt durumunu logla
-        //console.log("PayTR'den gelen yanıt (headers):", response.headers); // Yanıt başlıklarını logla
+        // Response status and headers available in response object
 
         const textResponse = await response.text(); // Yanıtı plain text olarak al
-        //console.log("PayTR'den gelen yanıt (plain text):", textResponse);
+        // Plain text response available in textResponse variable
 
         try {
             const jsonResponse = JSON.parse(textResponse); // Yanıtı JSON'a çevir
-            //console.log("JSON'a çevrilmiş yanıt:", jsonResponse);
+            // JSON response available in jsonResponse variable
             const orderData = {
                 userId: paymentData.userId,
                 items : paymentData.user_basket,
@@ -113,9 +112,7 @@ export const validatePaytrCallback = (callbackData) => {
         .update(paytr_token)
         .digest('base64');
 
-   // console.log("Callback Data:", callbackData);
-   // console.log("Calculated Token:", calculatedToken);
-   // console.log("PayTR Provided Hash:", hash);
+   // Callback data, calculated token, and hash are available in respective variables
 
     if (calculatedToken !== hash) {
         throw new Error("Hash mismatch! PayTR notification might be tampered.");

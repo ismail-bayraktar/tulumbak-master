@@ -53,7 +53,7 @@ const Dashboard = ({ token }) => {
                     setStats(statsResponse.data.data || {});
                 }
             } catch (err) {
-                console.warn('Dashboard stats not available:', err);
+                // Stats endpoint may not be available, continue without stats
             }
 
             // Fetch recent orders
@@ -69,10 +69,10 @@ const Dashboard = ({ token }) => {
                     setRecentOrders(ordersResponse.data.orders?.slice(0, 5) || []);
                 }
             } catch (err) {
-                console.warn('Recent orders not available:', err);
+                // Recent orders may not be available, continue without them
             }
         } catch (error) {
-            console.error('Dashboard fetch error:', error);
+            toast.error('Dashboard verileri yüklenirken hata oluştu');
         } finally {
             setLoading(false);
         }

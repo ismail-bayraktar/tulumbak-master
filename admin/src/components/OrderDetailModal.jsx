@@ -34,7 +34,7 @@ const OrderDetailModal = ({ order, isOpen, onClose }) => {
                 timeline: timelineResponse.data.success ? timelineResponse.data : null
             });
         } catch (error) {
-            console.error('Error fetching order details:', error);
+            // Order details may not be available
         } finally {
             setLoading(false);
         }

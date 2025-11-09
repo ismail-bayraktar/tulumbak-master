@@ -1,6 +1,7 @@
 import orderModel from "../models/OrderModel.js";
 import productModel from "../models/ProductModel.js";
 import userModel from "../models/UserModel.js";
+import logger from "../utils/logger.js";
 
 /**
  * Daily sales report
@@ -43,8 +44,8 @@ const dailySales = async (req, res) => {
       }
     });
   } catch (error) {
-    console.log(error);
-    res.json({ success: false, message: error.message });
+    logger.error('Error in dailySales report', { error: error.message, stack: error.stack, date: req.query.date });
+    res.status(500).json({ success: false, message: error.message });
   }
 };
 
@@ -83,8 +84,8 @@ const weeklySales = async (req, res) => {
       }
     });
   } catch (error) {
-    console.log(error);
-    res.json({ success: false, message: error.message });
+    logger.error('Error in weeklySales report', { error: error.message, stack: error.stack });
+    res.status(500).json({ success: false, message: error.message });
   }
 };
 
@@ -113,8 +114,8 @@ const monthlySales = async (req, res) => {
       }
     });
   } catch (error) {
-    console.log(error);
-    res.json({ success: false, message: error.message });
+    logger.error('Error in monthlySales report', { error: error.message, stack: error.stack });
+    res.status(500).json({ success: false, message: error.message });
   }
 };
 
@@ -179,8 +180,8 @@ const productAnalytics = async (req, res) => {
       }
     });
   } catch (error) {
-    console.log(error);
-    res.json({ success: false, message: error.message });
+    logger.error('Error in productAnalytics report', { error: error.message, stack: error.stack, dateFrom: req.query.dateFrom, dateTo: req.query.dateTo });
+    res.status(500).json({ success: false, message: error.message });
   }
 };
 
@@ -234,8 +235,8 @@ const userBehavior = async (req, res) => {
       }
     });
   } catch (error) {
-    console.log(error);
-    res.json({ success: false, message: error.message });
+    logger.error('Error in userBehavior report', { error: error.message, stack: error.stack, dateFrom: req.query.dateFrom, dateTo: req.query.dateTo });
+    res.status(500).json({ success: false, message: error.message });
   }
 };
 
@@ -281,8 +282,8 @@ const deliveryStatus = async (req, res) => {
       }
     });
   } catch (error) {
-    console.log(error);
-    res.json({ success: false, message: error.message });
+    logger.error('Error in deliveryStatus report', { error: error.message, stack: error.stack });
+    res.status(500).json({ success: false, message: error.message });
   }
 };
 
@@ -347,8 +348,8 @@ const dashboardStats = async (req, res) => {
       }
     });
   } catch (error) {
-    console.log(error);
-    res.json({ success: false, message: error.message });
+    logger.error('Error in dashboardStats report', { error: error.message, stack: error.stack });
+    res.status(500).json({ success: false, message: error.message });
   }
 };
 

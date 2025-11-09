@@ -61,7 +61,7 @@ setTimeout(async () => {
     const { initDefaultSettings } = await import("./controllers/SettingsController.js");
     await initDefaultSettings();
   } catch (error) {
-    console.error("Error initializing settings:", error);
+    logger.error("Error initializing settings", { error: error.message, stack: error.stack });
   }
 }, 2000);
 
@@ -69,7 +69,7 @@ setTimeout(async () => {
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 const viewsPath = path.join(__dirname, '/app_server/views');
-console.log("viewsPath", viewsPath);
+logger.debug("Views path configured", { viewsPath });
 
 app.set('views', path.join(__dirname, '/app_server/views'));
 app.use(express.urlencoded({ extended: true }));
@@ -79,6 +79,11 @@ app.use(ejsLayouts);
 
 
 // MIDDLEWARES
+// CSP allowed image sources from environment or defaults
+const cspImageSources = process.env.CSP_IMAGE_SOURCES 
+    ? process.env.CSP_IMAGE_SOURCES.split(',').map(src => src.trim())
+    : ["'self'", "data:", `http://localhost:${port}`, "http://localhost:5176"];
+
 app.use(helmet({
     crossOriginResourcePolicy: { policy: "cross-origin" },
     contentSecurityPolicy: {
@@ -88,7 +93,7 @@ app.use(helmet({
             fontSrc: ["'self'", "https:", "data:"],
             formAction: ["'self'"],
             frameAncestors: ["'self'"],
-            imgSrc: ["'self'", "data:", "http://localhost:4001", "http://localhost:5176"],
+            imgSrc: cspImageSources,
             objectSrc: ["'none'"],
             scriptSrc: ["'self'"],
             scriptSrcAttr: ["'none'"],
@@ -197,5 +202,4 @@ app.use(errorHandler);
 
 app.listen(port, () => {
     logInfo(`Server running on PORT: ${port}`, { port, environment: process.env.NODE_ENV });
-    console.log("Server running on PORT: " + port);
 })

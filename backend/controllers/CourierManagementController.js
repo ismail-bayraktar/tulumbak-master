@@ -1,5 +1,6 @@
 import courierModel from '../models/CourierModel.js';
 import orderModel from '../models/OrderModel.js';
+import logger from '../utils/logger.js';
 
 /**
  * Create a new courier
@@ -41,8 +42,8 @@ const createCourier = async (req, res) => {
             courier: newCourier
         });
     } catch (error) {
-        console.error('Error creating courier:', error);
-        res.json({ success: false, message: error.message });
+        logger.error('Error creating courier', { error: error.message, stack: error.stack, body: req.body });
+        res.status(500).json({ success: false, message: error.message });
     }
 };
 
@@ -66,8 +67,8 @@ const getAllCouriers = async (req, res) => {
             count: couriers.length
         });
     } catch (error) {
-        console.error('Error fetching couriers:', error);
-        res.json({ success: false, message: error.message });
+        logger.error('Error fetching couriers', { error: error.message, stack: error.stack, query: req.query });
+        res.status(500).json({ success: false, message: error.message });
     }
 };
 
@@ -86,8 +87,8 @@ const getCourierById = async (req, res) => {
 
         res.json({ success: true, courier });
     } catch (error) {
-        console.error('Error fetching courier:', error);
-        res.json({ success: false, message: error.message });
+        logger.error('Error fetching courier', { error: error.message, stack: error.stack, courierId: req.params.id });
+        res.status(500).json({ success: false, message: error.message });
     }
 };
 
@@ -115,8 +116,8 @@ const updateCourier = async (req, res) => {
             courier
         });
     } catch (error) {
-        console.error('Error updating courier:', error);
-        res.json({ success: false, message: error.message });
+        logger.error('Error updating courier', { error: error.message, stack: error.stack, courierId: req.params.id });
+        res.status(500).json({ success: false, message: error.message });
     }
 };
 
@@ -141,8 +142,8 @@ const deleteCourier = async (req, res) => {
 
         res.json({ success: true, message: 'Courier deleted successfully' });
     } catch (error) {
-        console.error('Error deleting courier:', error);
-        res.json({ success: false, message: error.message });
+        logger.error('Error deleting courier', { error: error.message, stack: error.stack, courierId: req.params.id });
+        res.status(500).json({ success: false, message: error.message });
     }
 };
 
@@ -213,8 +214,8 @@ const assignOrderToCourier = async (req, res) => {
             courier
         });
     } catch (error) {
-        console.error('Error assigning order:', error);
-        res.json({ success: false, message: error.message });
+        logger.error('Error assigning order to courier', { error: error.message, stack: error.stack, courierId: req.body.courierId, orderId: req.body.orderId });
+        res.status(500).json({ success: false, message: error.message });
     }
 };
 
@@ -243,8 +244,8 @@ const getCourierPerformance = async (req, res) => {
             activeOrdersList: activeOrders
         });
     } catch (error) {
-        console.error('Error fetching courier performance:', error);
-        res.json({ success: false, message: error.message });
+        logger.error('Error fetching courier performance', { error: error.message, stack: error.stack, courierId: req.params.id });
+        res.status(500).json({ success: false, message: error.message });
     }
 };
 
@@ -276,8 +277,8 @@ const updateCourierStatus = async (req, res) => {
             courier
         });
     } catch (error) {
-        console.error('Error updating courier status:', error);
-        res.json({ success: false, message: error.message });
+        logger.error('Error updating courier status', { error: error.message, stack: error.stack, courierId: req.params.id, status: req.body.status });
+        res.status(500).json({ success: false, message: error.message });
     }
 };
 
@@ -306,8 +307,8 @@ const getCouriersForZone = async (req, res) => {
             count: couriers.length
         });
     } catch (error) {
-        console.error('Error fetching couriers for zone:', error);
-        res.json({ success: false, message: error.message });
+        logger.error('Error fetching couriers for zone', { error: error.message, stack: error.stack, zoneId: req.params.zoneId });
+        res.status(500).json({ success: false, message: error.message });
     }
 };
 

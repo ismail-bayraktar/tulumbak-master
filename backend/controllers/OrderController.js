@@ -4,6 +4,7 @@ import deliveryZoneModel from "../models/DeliveryZoneModel.js";
 import { reduceStock, checkLowStockAlert } from "../middleware/StockCheck.js";
 import AssignmentService, { assignBranch, suggestBranch } from "../services/AssignmentService.js";
 import settingsModel from "../models/SettingsModel.js";
+import logger from "../utils/logger.js";
 
 // Generate unique tracking ID
 const generateTrackingId = () => {
@@ -37,7 +38,7 @@ const addStatusHistory = async (orderId, status, location = '', note = '', updat
 
         await order.save();
     } catch (error) {
-        console.error('Error adding status history:', error);
+        logger.error('Error adding status history', { error: error.message, orderId, stack: error.stack });
     }
 };
 
@@ -91,7 +92,7 @@ const placeOrder = async (req, res) => {
                 assignmentMode = assignmentModeSetting.value;
             }
         } catch (error) {
-            console.error('Error reading branch assignment settings:', error);
+            logger.warn('Error reading branch assignment settings', { error: error.message });
         }
         
         // Find best branch (suggestion or direct assignment)
@@ -198,8 +199,8 @@ const placeOrder = async (req, res) => {
         
         res.json({ success: true, order: newOrder, trackingId, trackingLink });
     } catch (error) {
-        console.log(error);
-        res.json({success: false, message: error.message});
+        logger.error('Error placing order', { error: error.message, stack: error.stack, userId: req.body.userId });
+        res.status(500).json({success: false, message: error.message});
     }
 }
 
@@ -219,8 +220,8 @@ const allOrders = async (req, res) => {
         const orders = await orderModel.find({});
         res.json({success: true, orders});
     } catch (error) {
-        console.log(error);
-        res.json({success: false, message: error.message});
+        logger.error('Error fetching all orders', { error: error.message, stack: error.stack });
+        res.status(500).json({success: false, message: error.message});
     }
 }
 
@@ -231,8 +232,8 @@ const userOrders = async (req, res) => {
         const orders = await orderModel.find({userId});
         res.json({success: true, orders});
     } catch (error) {
-        console.log(error);
-        res.json({success: false, message: error.message});
+        logger.error('Error fetching user orders', { error: error.message, stack: error.stack, userId: req.body.userId });
+        res.status(500).json({success: false, message: error.message});
     }
 }
 
@@ -304,22 +305,23 @@ const updateStatus = async (req, res) => {
         
         res.json({success: true, message: "Order status successfully updated"});
     } catch (error) {
-        console.log(error);
-        res.json({success: false, message: error.message});
+        logger.error('Error updating order status', { error: error.message, stack: error.stack, orderId: req.body.orderId });
+        res.status(500).json({success: false, message: error.message});
     }
 }
 
 // Bank info (havale/EFT)
 const bankInfo = async (_req, res) => {
     try {
+        logger.info('Bank info requested');
         res.json({ success: true, bank: {
             iban: process.env.BANK_IBAN || 'TR00 0000 0000 0000 0000 0000 00',
             accountName: process.env.BANK_ACCOUNT_NAME || 'Tulumbak Gıda',
             bankName: process.env.BANK_NAME || 'Banka'
         }});
     } catch (error) {
-        console.log(error);
-        res.json({ success: false, message: error.message });
+        logger.error('Error getting bank info', { error: error.message, stack: error.stack });
+        res.status(500).json({ success: false, message: error.message });
     }
 }
 
@@ -340,8 +342,8 @@ const getOrderStatus = async (req, res) => {
             nextSteps: getNextSteps(order.status || order.courierStatus)
         });
     } catch (error) {
-        console.log(error);
-        res.json({ success: false, message: error.message });
+        logger.error('Error getting order status', { error: error.message, stack: error.stack, orderId: req.params.orderId });
+        res.status(500).json({ success: false, message: error.message });
     }
 };
 
@@ -360,8 +362,8 @@ const getOrderHistory = async (req, res) => {
             history: order.statusHistory || []
         });
     } catch (error) {
-        console.log(error);
-        res.json({ success: false, message: error.message });
+        logger.error('Error getting order history', { error: error.message, stack: error.stack, orderId: req.params.orderId });
+        res.status(500).json({ success: false, message: error.message });
     }
 };
 
@@ -413,8 +415,8 @@ const getOrderTimeline = async (req, res) => {
             timeline: statusSteps
         });
     } catch (error) {
-        console.log(error);
-        res.json({ success: false, message: error.message });
+        logger.error('Error getting order timeline', { error: error.message, stack: error.stack, orderId: req.params.orderId });
+        res.status(500).json({ success: false, message: error.message });
     }
 };
 
@@ -449,8 +451,8 @@ const assignBranchToOrder = async (req, res) => {
             res.json({ success: false, message: result.message });
         }
     } catch (error) {
-        console.log(error);
-        res.json({ success: false, message: error.message });
+        logger.error('Error assigning branch to order', { error: error.message, stack: error.stack, orderId: req.body.orderId, branchId: req.body.branchId });
+        res.status(500).json({ success: false, message: error.message });
     }
 };
 
@@ -466,8 +468,8 @@ const getBranchSuggestion = async (req, res) => {
             res.json({ success: false, message: result.message });
         }
     } catch (error) {
-        console.log(error);
-        res.json({ success: false, message: error.message });
+        logger.error('Error getting branch suggestion', { error: error.message, stack: error.stack, orderId: req.params.id });
+        res.status(500).json({ success: false, message: error.message });
     }
 };
 
@@ -503,8 +505,8 @@ const prepareOrder = async (req, res) => {
         
         res.json({ success: true, message: 'Order marked as preparing', order });
     } catch (error) {
-        console.log(error);
-        res.json({ success: false, message: error.message });
+        logger.error('Error preparing order', { error: error.message, stack: error.stack, orderId: req.body.orderId });
+        res.status(500).json({ success: false, message: error.message });
     }
 };
 
@@ -558,8 +560,8 @@ const sendToCourier = async (req, res) => {
             courierTrackingId: order.courierTrackingId
         });
     } catch (error) {
-        console.log(error);
-        res.json({ success: false, message: error.message });
+        logger.error('Error sending order to courier', { error: error.message, stack: error.stack, orderId: req.body.orderId });
+        res.status(500).json({ success: false, message: error.message });
     }
 };
 
@@ -588,8 +590,8 @@ const approveBranchAssignment = async (req, res) => {
 
         res.json({ success: true, message: 'Branch assignment approved', order });
     } catch (error) {
-        console.log(error);
-        res.json({ success: false, message: error.message });
+        logger.error('Error approving branch assignment', { error: error.message, stack: error.stack, orderId: req.body.orderId });
+        res.status(500).json({ success: false, message: error.message });
     }
 };
 

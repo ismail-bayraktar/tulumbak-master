@@ -8,10 +8,24 @@ export default {
     'services/**/*.js',
     'middleware/**/*.js',
     'routes/**/*.js',
+    'utils/**/*.js',
     '!**/node_modules/**',
-    '!**/vendor/**'
+    '!**/vendor/**',
+    '!**/scripts/**'
   ],
   coverageDirectory: 'coverage',
-  verbose: true
+  verbose: true,
+  extensionsToTreatAsEsm: ['.js'],
+  globals: {
+    'ts-jest': {
+      useESM: true
+    }
+  },
+  transformIgnorePatterns: [
+    'node_modules/(?!(.*\\.mjs$))'
+  ],
+  moduleNameMapper: {
+    '^(\\.{1,2}/.*)\\.js$': '$1'
+  }
 };
 

@@ -1,5 +1,6 @@
 import productModel from "../models/ProductModel.js";
 import settingsModel from "../models/SettingsModel.js";
+import logger from "../utils/logger.js";
 
 /**
  * Check cart items stock availability before placing order
@@ -30,8 +31,8 @@ export const checkStockAvailability = async (req, res, next) => {
 
         next();
     } catch (error) {
-        console.log(error);
-        res.json({ success: false, message: error.message });
+        logger.error('Error checking stock availability', { error: error.message, stack: error.stack, items: req.body.items });
+        res.status(500).json({ success: false, message: error.message });
     }
 };
 
@@ -71,10 +72,15 @@ export const checkLowStockAlert = async (productId) => {
 
         if (Number(product.stock || 0) <= threshold) {
             // In future: integrate with EmailService/Slack, create notification record, etc.
-            console.warn(`LOW STOCK: ${product.name} (ID: ${product._id}) stock=${product.stock} <= threshold=${threshold}`);
+            logger.warn('Low stock alert', { 
+                productId: product._id, 
+                productName: product.name, 
+                stock: product.stock, 
+                threshold 
+            });
         }
     } catch (error) {
-        console.error('Low stock check error:', error);
+        logger.error('Low stock check error', { error: error.message, stack: error.stack, productId });
     }
 };
 

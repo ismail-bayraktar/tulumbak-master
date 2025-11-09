@@ -1,4 +1,5 @@
 import orderModel from "../models/OrderModel.js";
+import logger from "../utils/logger.js";
 
 // Generate unique tracking ID
 const generateTrackingId = () => {
@@ -32,7 +33,7 @@ const addStatusHistory = async (orderId, status, location = '', note = '', updat
 
         await order.save();
     } catch (error) {
-        console.error('Error adding status history:', error);
+        logger.error('Error adding status history', { error: error.message, stack: error.stack, orderId });
     }
 };
 
@@ -71,8 +72,8 @@ const requestCourierPickup = async (req, res) => {
             trackingLink: order.trackingLink
         });
     } catch (error) {
-        console.log(error);
-        res.json({ success: false, message: error.message });
+        logger.error('Error in courier controller', { error: error.message, stack: error.stack, endpoint: req.path, orderId: req.body.orderId });
+        res.status(500).json({ success: false, message: error.message });
     }
 };
 
@@ -103,8 +104,8 @@ const getOrderTracking = async (req, res) => {
             }
         });
     } catch (error) {
-        console.log(error);
-        res.json({ success: false, message: error.message });
+        logger.error('Error in courier controller', { error: error.message, stack: error.stack, endpoint: req.path, orderId: req.body.orderId });
+        res.status(500).json({ success: false, message: error.message });
     }
 };
 
@@ -142,8 +143,8 @@ const updateCourierStatus = async (req, res) => {
 
         res.json({ success: true });
     } catch (error) {
-        console.log(error);
-        res.json({ success: false, message: error.message });
+        logger.error('Error in courier controller', { error: error.message, stack: error.stack, endpoint: req.path, orderId: req.body.orderId });
+        res.status(500).json({ success: false, message: error.message });
     }
 };
 

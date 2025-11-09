@@ -22,7 +22,7 @@ const uploadMedia = async (req, res) => {
                 width = null;
                 height = null;
             } catch (error) {
-                console.log('Could not get image dimensions:', error);
+                logger.warn('Could not get image dimensions', { error: error.message, filename: req.file?.filename });
             }
         }
 
@@ -71,7 +71,6 @@ const uploadMedia = async (req, res) => {
             }
         });
     } catch (error) {
-        console.error('Media upload error:', error);
         logger.error('Media upload error', { 
             error: error.message, 
             stack: error.stack,
@@ -160,7 +159,7 @@ const listMedia = async (req, res) => {
             }
         });
     } catch (error) {
-        console.error('Media list error:', error);
+        logger.error('Media list error', { error: error.message, stack: error.stack, query: req.query });
         res.status(500).json({
             success: false,
             message: "Medya listelenemedi"
@@ -201,7 +200,7 @@ const getMediaById = async (req, res) => {
             }
         });
     } catch (error) {
-        console.error('Media get error:', error);
+        logger.error('Media get error', { error: error.message, stack: error.stack, mediaId: req.params.id });
         res.status(500).json({
             success: false,
             message: "Medya alınamadı"
@@ -248,7 +247,7 @@ const updateMedia = async (req, res) => {
             media
         });
     } catch (error) {
-        console.error('Media update error:', error);
+        logger.error('Media update error', { error: error.message, stack: error.stack, mediaId: req.params.id });
         res.status(500).json({
             success: false,
             message: "Medya güncellenemedi"
@@ -282,7 +281,7 @@ const deleteMedia = async (req, res) => {
             message: "Medya silindi"
         });
     } catch (error) {
-        console.error('Media delete error:', error);
+        logger.error('Media delete error', { error: error.message, stack: error.stack, mediaId: req.params.id });
         res.status(500).json({
             success: false,
             message: "Medya silinemedi"
@@ -334,7 +333,7 @@ const getMediaBase64 = async (req, res) => {
             }
         });
     } catch (error) {
-        console.error('Media base64 error:', error);
+        logger.error('Media base64 error', { error: error.message, stack: error.stack, mediaId: req.params.id });
         res.status(500).json({
             success: false,
             message: "Medya alınamadı"

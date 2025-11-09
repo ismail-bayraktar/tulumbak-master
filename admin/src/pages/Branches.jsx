@@ -66,7 +66,7 @@ const Branches = ({ token }) => {
                 setZones(response.data.zones);
             }
         } catch (error) {
-            console.error(error);
+            // Zones may not be available, continue without them
         }
     };
 
@@ -89,7 +89,6 @@ const Branches = ({ token }) => {
                 fetchBranches();
             }
         } catch (error) {
-            console.error(error);
             toast.error(error.response?.data?.message || 'Bir hata oluştu');
         }
     };
@@ -105,7 +104,6 @@ const Branches = ({ token }) => {
                 fetchBranches();
             }
         } catch (error) {
-            console.error(error);
             toast.error('Silme işlemi başarısız');
         }
     };

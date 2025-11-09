@@ -74,7 +74,6 @@ const MediaGallery = ({
             }
         } catch (error) {
             toast.error('Medya yüklenemedi');
-            console.error('Media fetch error:', error);
         } finally {
             setLoading(false);
         }
@@ -126,7 +125,6 @@ const MediaGallery = ({
                     const errorMessage = fileError.response?.data?.message || fileError.message || 'Bilinmeyen hata';
                     toast.error(`${file.name}: ${errorMessage}`);
                     uploadResults.push({ file: file.name, success: false, error: errorMessage });
-                    console.error(`Upload error for ${file.name}:`, fileError);
                 }
             }
 
@@ -136,7 +134,6 @@ const MediaGallery = ({
             }
         } catch (error) {
             toast.error('Dosya yükleme işlemi başarısız oldu');
-            console.error('Upload error:', error);
         } finally {
             setUploadLoading(false);
         }

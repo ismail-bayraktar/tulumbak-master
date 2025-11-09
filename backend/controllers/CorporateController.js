@@ -1,4 +1,5 @@
 import corporateOrderModel from "../models/CorporateOrderModel.js";
+import logger from "../utils/logger.js";
 
 const createCorporateOrder = async (req, res) => {
     try {
@@ -7,8 +8,8 @@ const createCorporateOrder = async (req, res) => {
         await order.save();
         res.json({ success: true, order });
     } catch (error) {
-        console.log(error);
-        res.json({ success: false, message: error.message });
+        logger.error('Error creating corporate order', { error: error.message, stack: error.stack, body: req.body });
+        res.status(500).json({ success: false, message: error.message });
     }
 }
 
@@ -17,8 +18,8 @@ const listCorporateOrders = async (_req, res) => {
         const orders = await corporateOrderModel.find({}).sort({ date: -1 });
         res.json({ success: true, orders });
     } catch (error) {
-        console.log(error);
-        res.json({ success: false, message: error.message });
+        logger.error('Error creating corporate order', { error: error.message, stack: error.stack, body: req.body });
+        res.status(500).json({ success: false, message: error.message });
     }
 }
 
@@ -30,8 +31,8 @@ const updateCorporateOrderStatus = async (req, res) => {
         await corporateOrderModel.findByIdAndUpdate(id, updatePayload);
         res.json({ success: true });
     } catch (error) {
-        console.log(error);
-        res.json({ success: false, message: error.message });
+        logger.error('Error creating corporate order', { error: error.message, stack: error.stack, body: req.body });
+        res.status(500).json({ success: false, message: error.message });
     }
 }
 

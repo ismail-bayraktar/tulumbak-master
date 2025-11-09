@@ -1,103 +1,112 @@
-# Tulumbak İzmir Baklava - Proje Dökümantasyonu
+# 📚 Tulumbak E-Commerce - Dokümantasyon
+
+Merkezi dokümantasyon dizini. Tüm proje dokümantasyonu burada organize edilmiştir.
 
 ## 📋 İçindekiler
 
-1. [Genel Bakış](./01-overview.md)
-2. [Backend Dökümantasyonu](./backend/README.md)
-3. [Frontend Dökümantasyonu](./frontend/README.md)
-4. [Admin Panel Dökümantasyonu](./admin/README.md)
-5. [API Referansı](./api-reference.md)
-6. [Kurulum](./setup.md)
-7. [Kullanım](./usage.md)
-8. [Geliştirme Rehberi](./development.md)
-9. [Deployment](./deployment.md)
+### 🚀 Başlangıç
+- [Genel Bakış](./01-overview.md) - Proje hakkında genel bilgiler
+- [Kurulum Rehberi](./getting-started/setup.md) - Detaylı kurulum adımları
+- [Docker Kurulumu](./getting-started/docker-setup.md) - Docker ile MongoDB kurulumu
+- [Hızlı Başlangıç](./getting-started/quick-start.md) - Hızlı başlangıç rehberi
 
-## 🎯 Proje Hakkında
+### 🏗️ Mimari ve Tasarım
+- [Sistem Mimarisi](./architecture/system-architecture.md) - Genel sistem mimarisi
+- [Veritabanı Yapısı](./architecture/database-schema.md) - MongoDB şema yapısı
+- [API Tasarımı](./architecture/api-design.md) - RESTful API tasarım prensipleri
 
-**Tulumbak İzmir Baklava**, İzmir ve çevresinde baklava ve tatlı ürünleri satan modern bir e-ticaret platformudur. React + Node.js tabanlı ölçeklenebilir ve kullanıcı dostu bir yapıya sahiptir.
+### 💻 Geliştirme
+- [Backend Dokümantasyonu](./backend/README.md) - Backend geliştirme rehberi
+- [Frontend Dokümantasyonu](./frontend/README.md) - Frontend geliştirme rehberi
+- [Admin Panel Dokümantasyonu](./admin/README.md) - Admin panel geliştirme rehberi
+- [Geliştirme Rehberi](./development/development-guide.md) - Genel geliştirme best practices
 
-### 🚀 Son Güncellemeler (v2.0.0 - 29.10.2024)
+### 🔌 API Referansı
+- [API Dokümantasyonu](./api/api-reference.md) - Tüm API endpoint'leri
+- [Webhook API](./api/webhook-api.md) - Webhook entegrasyonu
+- [Authentication](./api/authentication.md) - Authentication ve authorization
 
-#### Frontend Geliştirmeleri:
-- ✅ **Orange Tema Uygulandı**: Tüm site turuncu renk paletine güncellendi
-- ✅ **Baklava-İzmir SEO Section**: Modern tanıtım bölümü eklendi
-- ✅ **İkon Sistemi**: Lucide React professional ikonlara geçildi
-- ✅ **Typography**: Türkçe karakter dostu modern fontlar
-- ✅ **Minimalist Design**: Product detail sayfası sadeleştirildi
-- ✅ **Slider Sorunları**: CORS ve CSP düzenlemeleri yapıldı
+### ✨ Özellikler
+- [WhatsApp Desteği](./features/whatsapp-support.md) - WhatsApp entegrasyonu
+- [Kurye Takip Sistemi](./features/courier-tracking.md) - Kurye entegrasyonu
+- [Teslimat Yönetimi](./features/delivery-management.md) - Teslimat bölgeleri ve zaman aralıkları
+- [Media Library](./features/media-library.md) - Medya yönetim sistemi
+- [Kupon Sistemi](./features/coupon-system.md) - Kupon ve indirim sistemi
 
-#### Backend Geliştirmeleri:
-- ✅ **CORS Düzeltmeleri**: Cross-origin görsel erişimi sağlandı
-- ✅ **Schema Index'ler**: Duplicate mongoose index'ler kaldırıldı
-- ✅ **Security**: Helmet CSP ayarları güncellendi
+### 🧪 Test ve Kalite
+- [Test Stratejisi](./testing/test-strategy.md) - Test yaklaşımı ve stratejisi
+- [Güvenlik Testleri](./testing/security-tests.md) - Güvenlik test rehberi
+- [Test Coverage](./testing/coverage.md) - Coverage raporları ve hedefleri
 
-## 🏗️ Mimari Yapı
+### 🔒 Güvenlik
+- [Güvenlik Rehberi](./security/security-guide.md) - Güvenlik best practices
+- [Authentication & Authorization](./security/auth-guide.md) - Auth sistemi
+- [Input Validation](./security/input-validation.md) - Input validation ve sanitization
 
-```
-tulumbak-master/
-├── backend/          # Node.js + Express API
-├── frontend/         # React + Vite Müşteri Arayüzü
-├── admin/            # React + Vite Admin Panel
-├── Docs/             # Proje Dökümantasyonu
-└── docker-compose.yml
-```
+### 📊 Raporlar ve Analizler
+- [Production Ready Analizi](./reports/production-ready-analysis.md) - Production hazırlık durumu
+- [Code Cleanup Raporu](./reports/code-cleanup-report.md) - Kod temizlik raporu
+- [Test ve Güvenlik Analizi](./reports/test-security-analysis.md) - Test ve güvenlik analizi
 
-## 🚀 Hızlı Başlangıç
+### 🚀 Deployment
+- [Deployment Rehberi](./deployment/deployment-guide.md) - Production deployment
+- [Environment Variables](./deployment/environment-variables.md) - Environment değişkenleri
+- [CI/CD Pipeline](./deployment/ci-cd.md) - Continuous integration/deployment
 
-### Gereksinimler
-- Node.js 18+
-- MongoDB (Docker ile)
-- Git
+## 🎯 Hızlı Erişim
 
-### Kurulum
+### Yeni Başlayanlar İçin
+1. [Genel Bakış](./01-overview.md) - Projeyi tanıyın
+2. [Kurulum Rehberi](./getting-started/setup.md) - Sistemi kurun
+3. [Hızlı Başlangıç](./getting-started/quick-start.md) - İlk adımlar
 
-1. **Repository'yi klonlayın:**
-```bash
-git clone https://github.com/ismail-bayraktar/tulumbak-nextjs-eticaret.git
-cd tulumbak-nextjs-eticaret
-```
+### Geliştiriciler İçin
+1. [Backend README](./backend/README.md) - Backend geliştirme
+2. [Frontend README](./frontend/README.md) - Frontend geliştirme
+3. [API Referansı](./api/api-reference.md) - API dokümantasyonu
 
-2. **Docker ile MongoDB'yi başlatın:**
-```bash
-docker compose up -d
-```
+### Özellik Dokümantasyonu
+1. [WhatsApp Desteği](./features/whatsapp-support.md)
+2. [Kurye Takip](./features/courier-tracking.md)
+3. [Teslimat Yönetimi](./features/delivery-management.md)
 
-3. **Backend'i başlatın:**
-```bash
-cd backend
-npm install
-npm start
-```
+## 📝 Dokümantasyon Standartları
 
-4. **Frontend'i başlatın:**
-```bash
-cd frontend
-npm install
-npm run dev
-```
+### Dosya İsimlendirme
+- Küçük harf kullanın
+- Kelimeler arasında tire (-) kullanın
+- Örnek: `getting-started.md`, `api-reference.md`
 
-5. **Admin Panel'i başlatın:**
-```bash
-cd admin
-npm install
-npm run dev
-```
+### Yapı
+- Her dokümantasyon dosyası bir başlık ile başlamalı
+- İçindekiler tablosu ekleyin (uzun dokümanlar için)
+- Kod örnekleri için syntax highlighting kullanın
+- Güncelleme tarihi ekleyin
 
-## 📚 Dökümantasyon Rehberi
+### Kategoriler
+- **getting-started/** - Başlangıç rehberleri
+- **architecture/** - Mimari dokümantasyon
+- **features/** - Özellik dokümantasyonu
+- **api/** - API referansı
+- **testing/** - Test dokümantasyonu
+- **security/** - Güvenlik dokümantasyonu
+- **deployment/** - Deployment rehberleri
+- **reports/** - Analiz ve raporlar
 
-- **Backend geliştiriciler için**: [Backend README](./backend/README.md)
-- **Frontend geliştiriciler için**: [Frontend README](./frontend/README.md)
-- **Admin geliştiriciler için**: [Admin README](./admin/README.md)
+## 🔄 Güncelleme Süreci
 
-## 🤝 Katkıda Bulunma
-
-Projeye katkıda bulunmak için lütfen:
-1. Yeni bir branch oluşturun
-2. Değişikliklerinizi yapın
-3. Test edin
-4. Pull request oluşturun
+1. Yeni özellik eklendiğinde ilgili dokümantasyonu güncelleyin
+2. API değişikliklerinde API dokümantasyonunu güncelleyin
+3. Breaking changes için CHANGELOG.md'yi güncelleyin
+4. Dokümantasyon PR'larında review isteyin
 
 ## 📞 İletişim
 
-Proje ile ilgili sorularınız için: ismail.bayraktar.dev@gmail.com
+Dokümantasyon ile ilgili sorularınız için:
+- Email: ismail.bayraktar.dev@gmail.com
+- GitHub Issues: [Proje Issues](https://github.com/ismail-bayraktar/tulumbak-master/issues)
 
+---
+
+**Son Güncelleme:** 2025-11-08
+**Versiyon:** 2.0.0

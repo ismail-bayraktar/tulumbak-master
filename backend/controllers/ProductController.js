@@ -1,4 +1,3 @@
-//import { v2 as cloudinary } from 'cloudinary';
 import productModel from "../models/ProductModel.js";
 import Media from "../models/MediaModel.js";
 import logger from "../utils/logger.js";

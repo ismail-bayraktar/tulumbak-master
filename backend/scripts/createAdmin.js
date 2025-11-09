@@ -77,10 +77,10 @@ const createAdmin = async () => {
     console.log("\n✅ Admin hesabı başarıyla oluşturuldu!");
     console.log("\n📋 Admin Bilgileri:");
     console.log(`   Email: ${adminEmail}`);
-    console.log(`   Şifre: ${adminPassword}`);
+    console.log(`   Şifre: [GÜVENLİK: Şifre loglanmıyor]`);
     console.log(`   Rol: super_admin`);
     console.log(`   Yetkiler: Tüm yetkilere sahip`);
-    console.log("\n⚠️  GÜVENLİK UYARISI: Bu şifreyi güvenli bir yerde saklayın ve ilk girişten sonra değiştirin!");
+    console.log("\n⚠️  GÜVENLİK UYARISI: Şifre güvenlik nedeniyle loglanmıyor. İlk girişten sonra mutlaka değiştirin!");
     
     await mongoose.disconnect();
     console.log("\n✅ İşlem tamamlandı!");

@@ -1,4 +1,5 @@
 import axios from 'axios';
+import logger from '../utils/logger.js';
 
 /**
  * SMS Service for sending transactional SMS
@@ -18,16 +19,16 @@ class SmsService {
    */
   init() {
     if (!this.enabled) {
-      console.warn('SMS service is disabled. Set SMS_ENABLED=true to enable.');
+      logger.warn('SMS service is disabled. Set SMS_ENABLED=true to enable.');
       return;
     }
 
     if (!this.apiUrl || !this.apiKey) {
-      console.warn('SMS service not configured. Set SMS_API_URL and SMS_API_KEY.');
+      logger.warn('SMS service not configured. Set SMS_API_URL and SMS_API_KEY.');
       return;
     }
 
-    console.log(`SMS service initialized with provider: ${this.provider}`);
+    logger.info('SMS service initialized', { provider: this.provider });
   }
 
   /**
@@ -52,14 +53,14 @@ class SmsService {
       
       // Netgsm response format: "00 OK" for success
       if (response.data.includes('00 OK')) {
-        console.log('SMS sent successfully via Netgsm');
+        logger.info('SMS sent successfully via Netgsm', { phoneNumber });
         return { success: true, message: 'SMS sent successfully' };
       } else {
-        console.error('SMS failed:', response.data);
+        logger.error('SMS failed via Netgsm', { phoneNumber, response: response.data });
         return { success: false, message: response.data };
       }
     } catch (error) {
-      console.error('SMS send error:', error);
+      logger.error('SMS send error (Netgsm)', { error: error.message, stack: error.stack, phoneNumber });
       return { success: false, message: error.message };
     }
   }
@@ -81,13 +82,14 @@ class SmsService {
       });
 
       if (response.data.status === 'success') {
-        console.log('SMS sent successfully via MesajPanel');
+        logger.info('SMS sent successfully via MesajPanel', { phoneNumber });
         return { success: true, message: 'SMS sent successfully' };
       } else {
+        logger.error('SMS failed via MesajPanel', { phoneNumber, response: response.data });
         return { success: false, message: response.data.message };
       }
     } catch (error) {
-      console.error('SMS send error:', error);
+      logger.error('SMS send error (MesajPanel)', { error: error.message, stack: error.stack, phoneNumber });
       return { success: false, message: error.message };
     }
   }
@@ -100,7 +102,7 @@ class SmsService {
    */
   async sendSms(phoneNumber, message) {
     if (!this.enabled) {
-      console.log('SMS service disabled. Skipping SMS send.');
+      logger.debug('SMS service disabled. Skipping SMS send.', { phoneNumber });
       return { success: false, message: 'SMS service disabled' };
     }
 
@@ -117,7 +119,7 @@ class SmsService {
       case 'mesajpanel':
         return await this.sendMesajPanel(formattedPhone, message);
       default:
-        console.warn(`Unknown SMS provider: ${this.provider}`);
+        logger.warn('Unknown SMS provider', { provider: this.provider, phoneNumber });
         return { success: false, message: 'Unknown SMS provider' };
     }
   }

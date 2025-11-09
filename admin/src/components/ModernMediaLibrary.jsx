@@ -53,7 +53,6 @@ const ModernMediaLibrary = ({
             }
         } catch (error) {
             toast.error('Medya yüklenemedi');
-            console.error('Media fetch error:', error);
         } finally {
             setLoading(false);
         }
@@ -116,7 +115,6 @@ const ModernMediaLibrary = ({
             setUploadProgress({});
         } catch (error) {
             toast.error('Dosya yüklenemedi');
-            console.error('Upload error:', error);
         } finally {
             setUploadLoading(false);
         }
@@ -150,7 +148,7 @@ const ModernMediaLibrary = ({
 
     const handleEdit = (media) => {
         // Implement edit functionality
-        console.log('Edit media:', media);
+        // Edit functionality to be implemented
     };
 
     const handleDelete = async (media) => {

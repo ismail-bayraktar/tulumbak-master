@@ -28,7 +28,7 @@ const BranchAssignmentSettings = ({ token }) => {
         setBranchAssignmentSettings(response.data.settings);
       }
     } catch (error) {
-      console.log('Branch assignment settings not found, using defaults');
+      // Settings will use default values
       toast.error('Ayarlar yüklenirken hata oluştu');
     } finally {
       setLoading(false);

@@ -1,5 +1,6 @@
 import Media from '../models/MediaModel.js';
 import { getCloudinaryStorage, generateResponsiveImages, getOptimizedUrl, cloudinary } from '../config/cloudinary.js';
+import logger from '../utils/logger.js';
 
 // Upload media to Cloudinary
 const uploadMedia = async (req, res) => {
@@ -93,7 +94,7 @@ const uploadMedia = async (req, res) => {
             }
         });
     } catch (error) {
-        console.error('Enhanced media upload error:', error);
+        logger.error('Enhanced media upload error', { error: error.message, stack: error.stack });
         res.status(500).json({
             success: false,
             message: "Medya yüklenemedi",
@@ -179,7 +180,7 @@ const listMedia = async (req, res) => {
             }
         });
     } catch (error) {
-        console.error('Enhanced media list error:', error);
+        logger.error('Enhanced media list error', { error: error.message, stack: error.stack, query: req.query });
         res.status(500).json({
             success: false,
             message: "Medya listelenemedi"
@@ -238,7 +239,7 @@ const getMediaById = async (req, res) => {
             }
         });
     } catch (error) {
-        console.error('Enhanced media get error:', error);
+        logger.error('Enhanced media get error', { error: error.message, stack: error.stack, mediaId: req.params.id });
         res.status(500).json({
             success: false,
             message: "Medya alınamadı"
@@ -289,7 +290,7 @@ const updateMedia = async (req, res) => {
             media
         });
     } catch (error) {
-        console.error('Enhanced media update error:', error);
+        logger.error('Enhanced media update error', { error: error.message, stack: error.stack, mediaId: req.params.id });
         res.status(500).json({
             success: false,
             message: "Medya güncellenemedi"
@@ -329,7 +330,7 @@ const deleteMedia = async (req, res) => {
             message: "Medya silindi"
         });
     } catch (error) {
-        console.error('Enhanced media delete error:', error);
+        logger.error('Enhanced media delete error', { error: error.message, stack: error.stack, mediaId: req.params.id });
         res.status(500).json({
             success: false,
             message: "Medya silinemedi"
@@ -378,7 +379,7 @@ const trackUsage = async (req, res) => {
             message: "Kullanım takip edildi"
         });
     } catch (error) {
-        console.error('Media usage tracking error:', error);
+        logger.error('Media usage tracking error', { error: error.message, stack: error.stack });
         res.status(500).json({
             success: false,
             message: "Kullanım takibi yapılamadı"
@@ -415,7 +416,7 @@ const getOptimizedImage = async (req, res) => {
             options
         });
     } catch (error) {
-        console.error('Optimized image error:', error);
+        logger.error('Optimized image error', { error: error.message, stack: error.stack, mediaId: req.params.id });
         res.status(500).json({
             success: false,
             message: "Görüntü optimize edilemedi"

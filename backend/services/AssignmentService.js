@@ -1,4 +1,5 @@
 import branchModel from "../models/BranchModel.js";
+import logger from "../utils/logger.js";
 
 // Haversine distance in kilometers
 const haversineKm = (lat1, lon1, lat2, lon2) => {
@@ -95,7 +96,7 @@ export async function suggestBranch(orderId) {
             }
         };
     } catch (error) {
-        console.error('Error suggesting branch:', error);
+        logger.error('Error suggesting branch', { error: error.message, stack: error.stack, orderId });
         return { success: false, message: error.message };
     }
 }
@@ -144,7 +145,7 @@ export async function assignBranch(orderId, branchId) {
             }
         };
     } catch (error) {
-        console.error('Error assigning branch:', error);
+        logger.error('Error assigning branch', { error: error.message, stack: error.stack, orderId, branchId });
         return { success: false, message: error.message };
     }
 }

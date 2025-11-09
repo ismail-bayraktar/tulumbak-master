@@ -129,7 +129,7 @@ const Settings = ({ token }) => {
       }
     } catch (error) {
       // If settings don't exist, use defaults
-      console.log('WhatsApp settings not found, using defaults');
+      // Settings will use default values
     }
   };
 

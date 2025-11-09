@@ -67,7 +67,7 @@ const OrderProcessing = ({ token }) => {
                 setBranches(response.data.branches.filter(b => b.status === 'active'));
             }
         } catch (error) {
-            console.error('Error fetching branches:', error);
+            // Branches may not be available, continue without them
         }
     };
 

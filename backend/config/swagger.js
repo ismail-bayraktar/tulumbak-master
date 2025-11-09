@@ -24,11 +24,11 @@ const options = {
     },
     servers: [
       {
-        url: 'http://localhost:4001',
+        url: process.env.SWAGGER_DEV_URL || `http://localhost:${process.env.PORT || 4001}`,
         description: 'Development server'
       },
       {
-        url: 'https://api.tulumbak.com',
+        url: process.env.SWAGGER_PROD_URL || process.env.BACKEND_URL || 'https://api.tulumbak.com',
         description: 'Production server'
       }
     ],

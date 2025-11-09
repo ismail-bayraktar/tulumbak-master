@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import logger from "../utils/logger.js";
 
 function buildMongoUri() {
   if (process.env.MONGODB_URI && process.env.MONGODB_URI.trim() !== '') {
@@ -23,7 +24,7 @@ async function connectWithRetry(uri, maxAttempts = 5) {
   while (attempt < maxAttempts) {
     attempt++;
     try {
-      console.log(`MongoDB connection attempt ${attempt}/${maxAttempts}`);
+      logger.info(`MongoDB connection attempt ${attempt}/${maxAttempts}`);
       await mongoose.connect(uri, {
         serverSelectionTimeoutMS: 15000,
         connectTimeoutMS: 15000,
@@ -33,7 +34,7 @@ async function connectWithRetry(uri, maxAttempts = 5) {
     } catch (err) {
       lastError = err;
       const backoff = Math.min(5000, attempt * 1000);
-      console.warn(`MongoDB connect failed: ${err.message}. Retrying in ${backoff}ms...`);
+      logger.warn(`MongoDB connect failed: ${err.message}. Retrying in ${backoff}ms...`, { attempt, maxAttempts });
       await new Promise(r => setTimeout(r, backoff));
     }
   }
@@ -43,26 +44,25 @@ async function connectWithRetry(uri, maxAttempts = 5) {
 const connectDB = async () => {
   try {
     mongoose.connection.on("connected", () => {
-      console.log("DB Connected");
+      logger.info("MongoDB connected");
     });
 
     mongoose.connection.on("error", (err) => {
-      console.log("DB Connection Error:", err);
+      logger.error("MongoDB connection error", { error: err.message, stack: err.stack });
     });
 
     mongoose.connection.on("disconnected", () => {
-      console.log("DB Disconnected");
+      logger.warn("MongoDB disconnected");
     });
 
     const mongoUri = buildMongoUri();
-    console.log("Connecting to MongoDB:", mongoUri.replace(/\/\/.+@/, "//***@"));
+    logger.info("Connecting to MongoDB", { uri: mongoUri.replace(/\/\/.+@/, "//***@") });
 
     await connectWithRetry(mongoUri);
 
-    console.log("✅ MongoDB Connected Successfully");
+    logger.info("MongoDB connected successfully");
   } catch (error) {
-    console.log("MongoDB not available, running without database...");
-    console.log("Error:", error.message);
+    logger.error("MongoDB connection failed, running without database", { error: error.message, stack: error.stack });
   }
 }
 

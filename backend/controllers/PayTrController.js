@@ -3,12 +3,13 @@ import {render} from "ejs";
 import orderModel from "../models/OrderModel.js";
 import {response} from "express";
 import userModel from "../models/UserModel.js";
+import logger from "../utils/logger.js";
 
 // PayTR Token isteği
 export const requestPaytrToken = async (req, res) => {
     try {
         const paymentData = req.body;
-        //console.log("user id: " + paymentData.userId)
+        // User ID is available in paymentData.userId
         const data = await getPaytrToken(paymentData);
         if (data.status === 'success') {
             res.status(200).json({ success: true, token: data.token });
@@ -17,7 +18,7 @@ export const requestPaytrToken = async (req, res) => {
         }
 
     } catch (error) {
-        console.error("Backend hatası:", error);
+        logger.error("PayTR token request error", { error: error.message, stack: error.stack, paymentData: req.body });
         res.status(500).json({ success: false, message: "Server Error", error: error.message });
     }
 };
@@ -58,7 +59,7 @@ export const updatePayTrOrderItemsAndAddress = async (req, res) => {
         });
 
     } catch (error) {
-        console.error("Güncelleme hatası:", error);
+        logger.error("PayTR order update error", { error: error.message, stack: error.stack, body: req.body });
         res.status(500).json({
             success: false,
             message: "Sunucu hatası",

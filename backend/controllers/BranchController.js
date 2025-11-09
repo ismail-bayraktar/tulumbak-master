@@ -1,4 +1,5 @@
 import branchModel from '../models/BranchModel.js';
+import logger from '../utils/logger.js';
 
 /**
  * Create a new branch
@@ -72,8 +73,8 @@ const createBranch = async (req, res) => {
             branch: newBranch
         });
     } catch (error) {
-        console.error('Error creating branch:', error);
-        res.json({ success: false, message: error.message });
+        logger.error('Error creating branch', { error: error.message, stack: error.stack, body: req.body });
+        res.status(500).json({ success: false, message: error.message });
     }
 };
 
@@ -97,8 +98,8 @@ const getAllBranches = async (req, res) => {
             count: branches.length
         });
     } catch (error) {
-        console.error('Error fetching branches:', error);
-        res.json({ success: false, message: error.message });
+        logger.error('Error fetching branches', { error: error.message, stack: error.stack, query: req.query });
+        res.status(500).json({ success: false, message: error.message });
     }
 };
 
@@ -117,8 +118,8 @@ const getBranchById = async (req, res) => {
 
         res.json({ success: true, branch });
     } catch (error) {
-        console.error('Error fetching branch:', error);
-        res.json({ success: false, message: error.message });
+        logger.error('Error fetching branch', { error: error.message, stack: error.stack, branchId: req.params.id });
+        res.status(500).json({ success: false, message: error.message });
     }
 };
 
@@ -151,8 +152,8 @@ const updateBranch = async (req, res) => {
             branch
         });
     } catch (error) {
-        console.error('Error updating branch:', error);
-        res.json({ success: false, message: error.message });
+        logger.error('Error updating branch', { error: error.message, stack: error.stack, branchId: req.params.id });
+        res.status(500).json({ success: false, message: error.message });
     }
 };
 
@@ -174,8 +175,8 @@ const deleteBranch = async (req, res) => {
             message: 'Branch deleted successfully' 
         });
     } catch (error) {
-        console.error('Error deleting branch:', error);
-        res.json({ success: false, message: error.message });
+        logger.error('Error deleting branch', { error: error.message, stack: error.stack, branchId: req.params.id });
+        res.status(500).json({ success: false, message: error.message });
     }
 };
 

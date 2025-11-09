@@ -1,4 +1,5 @@
 import userModel from "../models/UserModel.js";
+import logger from "../utils/logger.js";
 
 // add products to user cart
 const addToCart = async (req, res) => {
@@ -21,8 +22,8 @@ const addToCart = async (req, res) => {
         await userModel.findByIdAndUpdate(userId, {cartData});
         res.json({success: true, message: "Added to cart!"});
     } catch (error) {
-        console.log(error);
-        res.json({success: false, error: error.message});
+        logger.error('Error in cart controller', { error: error.message, stack: error.stack, endpoint: req.path, userId: req.body.userId, itemId: req.body.itemId });
+        res.status(500).json({success: false, error: error.message});
     }
 }
 
@@ -39,8 +40,8 @@ const updateCart = async (req, res) => {
         res.json({success: true, message: "Cart updated!"});
 
     } catch (error) {
-        console.log(error);
-        res.json({success: false, error: error.message});
+        logger.error('Error in cart controller', { error: error.message, stack: error.stack, endpoint: req.path, userId: req.body.userId, itemId: req.body.itemId });
+        res.status(500).json({success: false, error: error.message});
     }
 }
 
@@ -54,8 +55,8 @@ const getUserCart = async (req, res) => {
 
         res.json({success: true, cartData});
     } catch (error) {
-        console.log(error);
-        res.json({success: false, error: error.message});
+        logger.error('Error in cart controller', { error: error.message, stack: error.stack, endpoint: req.path, userId: req.body.userId, itemId: req.body.itemId });
+        res.status(500).json({success: false, error: error.message});
     }
 }
 

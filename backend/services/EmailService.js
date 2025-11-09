@@ -1,4 +1,5 @@
 import nodemailer from 'nodemailer';
+import logger from '../utils/logger.js';
 
 /**
  * Email Service for sending transactional emails
@@ -14,7 +15,7 @@ class EmailService {
    */
   init() {
     if (!process.env.SMTP_HOST) {
-      console.warn('Email service not configured. Set SMTP environment variables to enable email notifications.');
+      logger.warn('Email service not configured. Set SMTP environment variables to enable email notifications.');
       return;
     }
 
@@ -28,7 +29,7 @@ class EmailService {
       },
     });
 
-    console.log('Email service initialized');
+    logger.info('Email service initialized', { host: process.env.SMTP_HOST, port: process.env.SMTP_PORT });
   }
 
   /**
@@ -38,7 +39,7 @@ class EmailService {
     const { host, port, user, password, enabled } = smtpConfig;
     
     if (!enabled) {
-      console.log('Email service disabled in settings');
+      logger.info('Email service disabled in settings');
       this.transporter = null;
       return;
     }
@@ -53,7 +54,7 @@ class EmailService {
       },
     });
 
-    console.log('Email service configuration updated');
+    logger.info('Email service configuration updated', { host, port: port || process.env.SMTP_PORT });
   }
 
   /**
@@ -63,16 +64,16 @@ class EmailService {
    */
   async sendEmail(mailOptions) {
     if (!this.transporter) {
-      console.log('Email service not configured. Skipping email send.');
+      logger.warn('Email service not configured. Skipping email send.', { to: mailOptions.to });
       return { success: false, message: 'Email service not configured' };
     }
 
     try {
       const info = await this.transporter.sendMail(mailOptions);
-      console.log('Email sent:', info.messageId);
+      logger.info('Email sent successfully', { messageId: info.messageId, to: mailOptions.to, subject: mailOptions.subject });
       return { success: true, messageId: info.messageId };
     } catch (error) {
-      console.error('Email send error:', error);
+      logger.error('Email send error', { error: error.message, stack: error.stack, to: mailOptions.to, subject: mailOptions.subject });
       return { success: false, message: error.message };
     }
   }

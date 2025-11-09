@@ -1,5 +1,6 @@
 import settingsModel from "../models/SettingsModel.js";
 import { validateWhatsAppSettings, sanitizeSvg, defaultWhatsAppSettings } from "../schemas/WhatsAppSettingsSchema.js";
+import logger from "../utils/logger.js";
 
 /**
  * Get all settings or by category
@@ -23,8 +24,8 @@ const getSettings = async (req, res) => {
     
     res.json({ success: true, settings: settingsObject });
   } catch (error) {
-    console.log(error);
-    res.json({ success: false, message: error.message });
+    logger.error('Error fetching settings', { error: error.message, stack: error.stack, category: req.query.category });
+    res.status(500).json({ success: false, message: error.message });
   }
 };
 
@@ -42,8 +43,8 @@ const getSetting = async (req, res) => {
     
     res.json({ success: true, setting });
   } catch (error) {
-    console.log(error);
-    res.json({ success: false, message: error.message });
+    logger.error('Error fetching setting', { error: error.message, stack: error.stack, key: req.body.key });
+    res.status(500).json({ success: false, message: error.message });
   }
 };
 
@@ -71,8 +72,8 @@ const updateSetting = async (req, res) => {
     
     res.json({ success: true, setting, message: "Setting updated successfully" });
   } catch (error) {
-    console.log(error);
-    res.json({ success: false, message: error.message });
+    logger.error('Error updating setting', { error: error.message, stack: error.stack, key: req.body.key });
+    res.status(500).json({ success: false, message: error.message });
   }
 };
 
@@ -104,8 +105,8 @@ const updateSettings = async (req, res) => {
     
     res.json({ success: true, message: "Settings updated successfully" });
   } catch (error) {
-    console.log(error);
-    res.json({ success: false, message: error.message });
+    logger.error('Error updating multiple settings', { error: error.message, stack: error.stack });
+    res.status(500).json({ success: false, message: error.message });
   }
 };
 
@@ -120,8 +121,8 @@ const deleteSetting = async (req, res) => {
     
     res.json({ success: true, message: "Setting deleted successfully" });
   } catch (error) {
-    console.log(error);
-    res.json({ success: false, message: error.message });
+    logger.error('Error deleting setting', { error: error.message, stack: error.stack, key: req.params.key });
+    res.status(500).json({ success: false, message: error.message });
   }
 };
 
@@ -154,12 +155,12 @@ const testEmail = async (req, res) => {
 
     if (result.success) {
       res.json({ success: true, message: "Test email sent successfully" });
-    } else {
+      } else {
       res.json({ success: false, message: result.message || "Failed to send test email" });
-    }
-  } catch (error) {
-    console.log(error);
-    res.json({ success: false, message: error.message });
+      }
+    } catch (error) {
+    logger.error('Error sending test email', { error: error.message, stack: error.stack, email: req.body.email });
+    res.status(500).json({ success: false, message: error.message });
   }
 };
 
@@ -227,10 +228,10 @@ const initDefaultSettings = async () => {
       );
     }
     
-    console.log('Default settings initialized');
-  } catch (error) {
-    console.error('Error initializing default settings:', error);
-  }
+      logger.info('Default settings initialized');
+    } catch (error) {
+      logger.error('Error initializing default settings', { error: error.message, stack: error.stack });
+    }
 };
 
 /**
@@ -250,8 +251,8 @@ const getWhatsAppSettings = async (req, res) => {
     
     res.json({ success: true, settings: setting.value });
   } catch (error) {
-    console.log(error);
-    res.json({ success: false, message: error.message });
+    logger.error('Error fetching WhatsApp settings', { error: error.message, stack: error.stack });
+    res.status(500).json({ success: false, message: error.message });
   }
 };
 
@@ -298,8 +299,8 @@ const updateWhatsAppSettings = async (req, res) => {
       message: "WhatsApp ayarları başarıyla güncellendi" 
     });
   } catch (error) {
-    console.log(error);
-    res.json({ success: false, message: error.message });
+    logger.error('Error updating WhatsApp settings', { error: error.message, stack: error.stack });
+    res.status(500).json({ success: false, message: error.message });
   }
 };
 
@@ -319,8 +320,8 @@ const getBranchAssignmentSettings = async (req, res) => {
       }
     });
   } catch (error) {
-    console.log(error);
-    res.json({ success: false, message: error.message });
+    logger.error('Error fetching branch assignment settings', { error: error.message, stack: error.stack });
+    res.status(500).json({ success: false, message: error.message });
   }
 };
 
@@ -374,8 +375,8 @@ const updateBranchAssignmentSettings = async (req, res) => {
     
     res.json({ success: true, message: 'Branch assignment settings updated successfully' });
   } catch (error) {
-    console.log(error);
-    res.json({ success: false, message: error.message });
+    logger.error('Error updating branch assignment settings', { error: error.message, stack: error.stack });
+    res.status(500).json({ success: false, message: error.message });
   }
 };
 

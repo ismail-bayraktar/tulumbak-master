@@ -75,7 +75,6 @@ const CourierIntegrationSettings = ({ token }) => {
             }
         } catch (error) {
             toast.error('Ayarlar yüklenirken hata oluştu');
-            console.error(error);
         } finally {
             setLoading(false);
         }
@@ -106,7 +105,6 @@ const CourierIntegrationSettings = ({ token }) => {
             }
         } catch (error) {
             toast.error(error.response?.data?.message || 'Bir hata oluştu');
-            console.error(error);
         } finally {
             setLoading(false);
         }
@@ -146,7 +144,6 @@ const CourierIntegrationSettings = ({ token }) => {
             }
         } catch (error) {
             toast.error('Silme işlemi sırasında hata oluştu');
-            console.error(error);
         }
     };
 
@@ -164,7 +161,6 @@ const CourierIntegrationSettings = ({ token }) => {
             }
         } catch (error) {
             toast.error('Test sırasında hata oluştu');
-            console.error(error);
         }
     };
 
@@ -182,7 +178,6 @@ const CourierIntegrationSettings = ({ token }) => {
             }
         } catch (error) {
             toast.error('Güncelleme sırasında hata oluştu');
-            console.error(error);
         }
     };
 

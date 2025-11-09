@@ -19,7 +19,7 @@ const listSliders = async (req, res) => {
 
         res.json({ success: true, sliders });
     } catch (error) {
-        console.log(error);
+        logger.error('Error listing sliders', { error: error.message, stack: error.stack });
         res.status(500).json({ success: false, message: "Sliderler listelenemedi" });
     }
 };
@@ -47,7 +47,7 @@ const trackSliderView = async (req, res) => {
         });
         res.json({ success: true });
     } catch (error) {
-        console.log(error);
+        logger.error('Error tracking slider view', { error: error.message, stack: error.stack, sliderId: req.params.id });
         res.status(500).json({ success: false, message: "View takibi yapılamadı" });
     }
 };
@@ -61,7 +61,7 @@ const trackSliderClick = async (req, res) => {
         });
         res.json({ success: true });
     } catch (error) {
-        console.log(error);
+        logger.error('Error tracking slider click', { error: error.message, stack: error.stack, sliderId: req.params.id });
         res.status(500).json({ success: false, message: "Click takibi yapılamadı" });
     }
 };
@@ -109,9 +109,10 @@ const addSlider = async (req, res) => {
         });
 
         await slider.save();
+        logger.info('Slider created', { sliderId: slider._id, title: slider.title });
         res.json({ success: true, message: "Slider eklendi" });
     } catch (error) {
-        console.log(error);
+        logger.error('Error creating slider', { error: error.message, stack: error.stack, body: req.body });
         res.status(500).json({ success: false, message: "Slider eklenemedi" });
     }
 };
@@ -153,9 +154,10 @@ const updateSlider = async (req, res) => {
         if (endDate) updateData.endDate = new Date(endDate);
 
         await Slider.findByIdAndUpdate(id, updateData);
+        logger.info('Slider updated', { sliderId: id });
         res.json({ success: true, message: "Slider güncellendi" });
     } catch (error) {
-        console.log(error);
+        logger.error('Error updating slider', { error: error.message, stack: error.stack, sliderId: id });
         res.status(500).json({ success: false, message: "Slider güncellenemedi" });
     }
 };
@@ -165,9 +167,10 @@ const deleteSlider = async (req, res) => {
     try {
         const { id } = req.params;
         await Slider.findByIdAndDelete(id);
+        logger.info('Slider deleted', { sliderId: id });
         res.json({ success: true, message: "Slider silindi" });
     } catch (error) {
-        console.log(error);
+        logger.error('Error deleting slider', { error: error.message, stack: error.stack, sliderId: id });
         res.status(500).json({ success: false, message: "Slider silinemedi" });
     }
 };
