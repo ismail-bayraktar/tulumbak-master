@@ -1,3 +1,14 @@
 node_modules
 
 *.env
+
+# Logs
+logs/
+*.log
+backend/logs/
+backend/nul
+nul
+
+# Temporary files
+*.tmp
+plan.plan.md
