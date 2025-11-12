@@ -2,6 +2,7 @@ import axios from 'axios';
 import crypto from 'crypto';
 import CourierIntegrationConfigModel from '../models/CourierIntegrationConfigModel.js';
 import DeadLetterQueueModel from '../models/DeadLetterQueueModel.js';
+import WebhookSecurity from '../utils/webhookSecurity.js';
 import logger from '../utils/logger.js';
 
 /**
@@ -541,24 +542,26 @@ class MuditaKuryeService {
 
     /**
      * Verify webhook signature
+     * Now uses WebhookSecurity utility (DRY principle)
      */
     verifyWebhookSignature(payload, signature, timestamp) {
         try {
-            // Use webhook secret from config or credentials
+            // Get secret key from config or env
             const secretKey = this.config?.webhookSecret ||
                               this.config?.credentials?.webhookSecret ||
                               process.env.MUDITA_WEBHOOK_SECRET;
-            const message = timestamp + '.' + JSON.stringify(payload);
-            const expectedSignature = crypto
-                .createHmac('sha256', secretKey)
-                .update(message)
-                .digest('hex');
 
-            const receivedSignature = signature.replace('sha256=', '');
+            if (!secretKey) {
+                logger.error('Webhook secret key not configured');
+                return false;
+            }
 
-            return crypto.timingSafeEqual(
-                Buffer.from(expectedSignature),
-                Buffer.from(receivedSignature)
+            // Use WebhookSecurity utility for verification
+            return WebhookSecurity.verifySignature(
+                payload,
+                signature,
+                timestamp,
+                secretKey
             );
         } catch (error) {
             logger.error('Webhook signature verification error', {

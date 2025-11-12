@@ -3,30 +3,8 @@ import webhookConfigModel from '../models/WebhookConfigModel.js';
 import webhookLogModel from '../models/WebhookLogModel.js';
 import orderModel from '../models/OrderModel.js';
 import CourierIntegrationService from '../services/CourierIntegrationService.js';
+import WebhookSecurity from '../utils/webhookSecurity.js';
 import logger from '../utils/logger.js';
-
-/**
- * Verify webhook signature
- */
-const verifySignature = (secretKey, timestamp, payload, signature) => {
-    try {
-        const message = timestamp + '.' + JSON.stringify(payload);
-        const expectedSignature = crypto
-            .createHmac('sha256', secretKey)
-            .update(message)
-            .digest('hex');
-        const receivedSignature = signature.replace('sha256=', '');
-        
-        // Constant-time comparison to prevent timing attacks
-        return crypto.timingSafeEqual(
-            Buffer.from(expectedSignature),
-            Buffer.from(receivedSignature)
-        );
-    } catch (error) {
-        logger.error('Signature verification error', { error: error.message });
-        return false;
-    }
-};
 
 /**
  * Webhook receiver endpoint
@@ -135,49 +113,19 @@ export const receiveWebhook = async (req, res) => {
             });
         }
 
-        // Verify timestamp (prevent replay attacks)
-        const timestampNum = Number(timestamp);
+        // Verify webhook (timestamp + signature)
+        const verification = WebhookSecurity.verifyWebhook(
+            payload,
+            signature,
+            timestamp,
+            secretKey,
+            {
+                maxAgeMs: 5 * 60 * 1000, // 5 minutes
+                clockSkewMs: 30000 // 30 seconds
+            }
+        );
 
-        // Validate timestamp format
-        if (isNaN(timestampNum) || timestampNum <= 0) {
-            return res.status(400).json({
-                success: false,
-                error: 'Invalid timestamp format',
-                code: 'INVALID_TIMESTAMP',
-                required: 'Unix timestamp in milliseconds'
-            });
-        }
-
-        const now = Date.now();
-        const clockSkew = 30000; // 30 seconds clock skew tolerance
-        const maxAge = 5 * 60 * 1000; // 5 minutes max age
-
-        // Reject future timestamps (beyond clock skew)
-        if (timestampNum > now + clockSkew) {
-            return res.status(400).json({
-                success: false,
-                error: 'Timestamp is in the future',
-                code: 'FUTURE_TIMESTAMP',
-                serverTime: now,
-                requestTime: timestampNum,
-                difference: timestampNum - now
-            });
-        }
-
-        // Reject old timestamps (replay attack prevention)
-        if (now - timestampNum > maxAge) {
-            return res.status(401).json({
-                success: false,
-                error: 'Request timestamp too old',
-                code: 'EXPIRED_TIMESTAMP',
-                maxAge,
-                age: now - timestampNum
-            });
-        }
-
-        // Verify signature
-        const isValidSignature = verifySignature(secretKey, timestamp, payload, signature);
-        if (!isValidSignature) {
+        if (!verification.valid) {
             // Log failed webhook
             webhookLog = new webhookLogModel({
                 webhookId,
@@ -188,17 +136,19 @@ export const receiveWebhook = async (req, res) => {
                 payload,
                 signature,
                 status: 'failed',
-                statusCode: 401,
-                error: 'Invalid signature',
-                errorCode: 'INVALID_SIGNATURE',
+                statusCode: verification.code === 'INVALID_SIGNATURE' ? 401 : 400,
+                error: verification.error,
+                errorCode: verification.code,
                 createdAt: Date.now()
             });
             await webhookLog.save();
 
-            return res.status(401).json({
+            const statusCode = verification.code === 'INVALID_SIGNATURE' ? 401 : 400;
+            return res.status(statusCode).json({
                 success: false,
-                error: 'Invalid signature',
-                code: 'INVALID_SIGNATURE'
+                error: verification.error,
+                code: verification.code,
+                details: verification.details || {}
             });
         }
 
