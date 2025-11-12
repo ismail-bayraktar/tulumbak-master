@@ -202,7 +202,7 @@ app.use('/api/courier-management', courierManagementRouter);
 app.use('/api/branches', branchRouter);
 app.use('/api/webhook-config', webhookConfigRouter);
 app.use('/api/webhook', webhookRouter);
-app.use('/api/courier-integration', courierIntegrationRouter);
+app.use('/api/admin/courier-integration', courierIntegrationRouter);
 app.use('/api/dlq', deadLetterQueueRouter);
 
 // Swagger Documentation
