@@ -1,6 +1,11 @@
 import CourierIntegrationConfigModel from '../models/CourierIntegrationConfigModel.js';
 import CourierIntegrationService from '../services/CourierIntegrationService.js';
 import CircuitBreakerService from '../services/CircuitBreakerService.js';
+import RetryService from '../services/RetryService.js';
+import MuditaKuryeService from '../services/MuditaKuryeService.js';
+import WebhookEventModel from '../models/WebhookEventModel.js';
+import DeadLetterQueueModel from '../models/DeadLetterQueueModel.js';
+import orderModel from '../models/OrderModel.js';
 import logger from '../utils/logger.js';
 
 /**
@@ -442,6 +447,487 @@ export const getOrderTracking = async (req, res) => {
         res.status(500).json({
             success: false,
             message: 'Failed to get tracking information',
+            error: error.message
+        });
+    }
+};
+
+/**
+ * Get integration dashboard overview
+ * GET /api/courier-integration/dashboard
+ */
+export const getDashboard = async (req, res) => {
+    try {
+        const { platform = 'muditakurye' } = req.query;
+
+        // Get config
+        const config = await CourierIntegrationConfigModel.findOne({ platform });
+        if (!config) {
+            return res.status(404).json({
+                success: false,
+                message: 'Configuration not found'
+            });
+        }
+
+        // Get circuit breaker status
+        const circuitBreaker = CircuitBreakerService.getStatus(platform);
+
+        // Get retry queue stats
+        const retryStats = await RetryService.getStats();
+
+        // Get recent orders with courier integration
+        const recentOrders = await orderModel.find({
+            'courierIntegration.platform': platform
+        })
+        .sort({ createdAt: -1 })
+        .limit(10)
+        .select('_id orderNumber courierIntegration.syncStatus courierIntegration.externalOrderId createdAt')
+        .lean();
+
+        // Get DLQ count
+        const dlqCount = await DeadLetterQueueModel.countDocuments({
+            platform,
+            status: 'pending'
+        });
+
+        // Get webhook stats (last 7 days)
+        const webhookStats = await WebhookEventModel.aggregate([
+            {
+                $match: {
+                    'metadata.platform': platform,
+                    createdAt: { $gte: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000) }
+                }
+            },
+            {
+                $group: {
+                    _id: '$status',
+                    count: { $sum: 1 }
+                }
+            }
+        ]);
+
+        // Calculate success rates
+        const totalOrders = recentOrders.length;
+        const syncedOrders = recentOrders.filter(o => o.courierIntegration?.syncStatus === 'synced').length;
+        const successRate = totalOrders > 0 ? ((syncedOrders / totalOrders) * 100).toFixed(2) : 0;
+
+        res.json({
+            success: true,
+            data: {
+                platform,
+                config: {
+                    enabled: config.enabled,
+                    testMode: config.testMode,
+                    apiUrl: config.apiUrl,
+                    webhookOnlyMode: config.webhookOnlyMode
+                },
+                status: {
+                    circuitBreaker: circuitBreaker || { state: 'CLOSED', platform },
+                    retryQueue: {
+                        size: retryStats.queueSize,
+                        activeRetries: retryStats.activeRetries
+                    },
+                    dlqPending: dlqCount
+                },
+                metrics: {
+                    totalOrders,
+                    syncedOrders,
+                    successRate: parseFloat(successRate),
+                    webhookStats: webhookStats.reduce((acc, stat) => {
+                        acc[stat._id] = stat.count;
+                        return acc;
+                    }, {})
+                },
+                recentOrders: recentOrders.map(o => ({
+                    id: o._id,
+                    orderNumber: o.orderNumber,
+                    status: o.courierIntegration?.syncStatus,
+                    externalId: o.courierIntegration?.externalOrderId,
+                    createdAt: o.createdAt
+                }))
+            }
+        });
+
+    } catch (error) {
+        logger.error('Failed to get integration dashboard', {
+            error: error.message,
+            stack: error.stack
+        });
+        res.status(500).json({
+            success: false,
+            message: 'Failed to get dashboard data',
+            error: error.message
+        });
+    }
+};
+
+/**
+ * Validate configuration
+ * POST /api/courier-integration/validate/:platform
+ */
+export const validateConfiguration = async (req, res) => {
+    try {
+        const { platform } = req.params;
+
+        const config = await CourierIntegrationConfigModel.findOne({ platform });
+        if (!config) {
+            return res.status(404).json({
+                success: false,
+                message: 'Configuration not found'
+            });
+        }
+
+        const validation = {
+            valid: true,
+            errors: [],
+            warnings: []
+        };
+
+        // Check required fields
+        if (!config.apiKey || config.apiKey.length < 10) {
+            validation.valid = false;
+            validation.errors.push('API Key is missing or invalid');
+        }
+
+        if (!config.restaurantId) {
+            validation.valid = false;
+            validation.errors.push('Restaurant ID is required');
+        }
+
+        if (!config.webhookSecret) {
+            validation.warnings.push('Webhook secret is not configured');
+        }
+
+        if (!config.apiUrl) {
+            validation.errors.push('API URL is required');
+        }
+
+        // Check test mode
+        if (config.testMode) {
+            validation.warnings.push('Running in TEST MODE');
+        }
+
+        // Check circuit breaker
+        if (!config.circuitBreaker?.enabled) {
+            validation.warnings.push('Circuit breaker is disabled');
+        }
+
+        // Check retry config
+        if (!config.retryConfig?.maxRetries) {
+            validation.warnings.push('Retry configuration not set');
+        }
+
+        res.json({
+            success: true,
+            validation
+        });
+
+    } catch (error) {
+        logger.error('Failed to validate configuration', {
+            platform: req.params.platform,
+            error: error.message
+        });
+        res.status(500).json({
+            success: false,
+            message: 'Failed to validate configuration',
+            error: error.message
+        });
+    }
+};
+
+/**
+ * Send test order
+ * POST /api/courier-integration/test-order/:platform
+ */
+export const sendTestOrder = async (req, res) => {
+    try {
+        const { platform } = req.params;
+
+        // Initialize service
+        await CourierIntegrationService.initialize();
+
+        // Get config
+        const config = await CourierIntegrationConfigModel.findOne({ platform });
+        if (!config) {
+            return res.status(404).json({
+                success: false,
+                message: 'Configuration not found'
+            });
+        }
+
+        if (!config.testMode) {
+            return res.status(400).json({
+                success: false,
+                message: 'Test orders can only be sent in TEST MODE. Enable test mode first.'
+            });
+        }
+
+        // Create a test order object
+        const testOrder = {
+            _id: `test_${Date.now()}`,
+            orderNumber: `TEST-${Date.now()}`,
+            address: {
+                name: 'Test Müşteri',
+                phone: '+905551234567',
+                email: 'test@example.com',
+                address: 'Test Cad. No:1, Çankaya, Ankara',
+                latitude: 39.9208,
+                longitude: 32.8541
+            },
+            paymentMethod: 'Cash On Delivery',
+            payment: false,
+            amount: 150.00,
+            delivery: {
+                fee: 15.00
+            },
+            codFee: 5.00,
+            items: [
+                {
+                    productId: 'TEST_PROD_001',
+                    name: 'Test Pizza',
+                    quantity: 2,
+                    price: 50.00
+                },
+                {
+                    productId: 'TEST_PROD_002',
+                    name: 'Test İçecek',
+                    quantity: 1,
+                    price: 30.00
+                }
+            ],
+            giftNote: 'Test siparişi - Admin panelinden gönderildi',
+            createdAt: new Date(),
+            courierIntegration: {}
+        };
+
+        // Get the service
+        const service = platform === 'muditakurye' ? MuditaKuryeService : null;
+        if (!service) {
+            return res.status(400).json({
+                success: false,
+                message: `Service not found for platform: ${platform}`
+            });
+        }
+
+        // Initialize service if needed
+        if (service.initialize) {
+            await service.initialize();
+        }
+
+        logger.info('Sending test order', {
+            platform,
+            testMode: config.testMode,
+            orderId: testOrder._id
+        });
+
+        // Send order
+        const result = await service.createOrder(testOrder);
+
+        if (result.success) {
+            res.json({
+                success: true,
+                message: 'Test order sent successfully',
+                data: {
+                    testOrderId: testOrder._id,
+                    externalOrderId: result.externalOrderId,
+                    response: result.response,
+                    note: 'This is a TEST order. It will not create a real delivery.'
+                }
+            });
+        } else {
+            res.status(400).json({
+                success: false,
+                message: 'Failed to send test order',
+                error: result.error,
+                details: result.response
+            });
+        }
+
+    } catch (error) {
+        logger.error('Failed to send test order', {
+            platform: req.params.platform,
+            error: error.message,
+            stack: error.stack
+        });
+        res.status(500).json({
+            success: false,
+            message: 'Failed to send test order',
+            error: error.message
+        });
+    }
+};
+
+/**
+ * Simulate incoming webhook
+ * POST /api/courier-integration/test-webhook/:platform
+ */
+export const testIncomingWebhook = async (req, res) => {
+    try {
+        const { platform } = req.params;
+        const { eventType = 'order.status_changed', orderId, status = 'PREPARED' } = req.body;
+
+        if (!orderId) {
+            return res.status(400).json({
+                success: false,
+                message: 'orderId is required'
+            });
+        }
+
+        // Create test webhook payload
+        const webhookPayload = {
+            event: eventType,
+            orderId: orderId,
+            status: status,
+            timestamp: new Date().toISOString(),
+            test: true,
+            platform: platform
+        };
+
+        logger.info('Simulating incoming webhook', {
+            platform,
+            payload: webhookPayload
+        });
+
+        // Find the order
+        const order = await orderModel.findById(orderId);
+        if (!order) {
+            return res.status(404).json({
+                success: false,
+                message: 'Order not found'
+            });
+        }
+
+        // Update order status based on webhook
+        order.courierIntegration = order.courierIntegration || {};
+        order.courierIntegration.lastWebhookAt = new Date();
+        order.courierIntegration.lastStatus = status;
+
+        await order.save();
+
+        res.json({
+            success: true,
+            message: 'Webhook simulation successful',
+            data: {
+                payload: webhookPayload,
+                orderUpdated: true,
+                note: 'This was a simulated webhook event'
+            }
+        });
+
+    } catch (error) {
+        logger.error('Failed to simulate webhook', {
+            platform: req.params.platform,
+            error: error.message
+        });
+        res.status(500).json({
+            success: false,
+            message: 'Failed to simulate webhook',
+            error: error.message
+        });
+    }
+};
+
+/**
+ * Get integration health
+ * GET /api/courier-integration/health/:platform
+ */
+export const getIntegrationHealth = async (req, res) => {
+    try {
+        const { platform } = req.params;
+
+        const health = {
+            platform,
+            status: 'healthy',
+            checks: [],
+            timestamp: new Date().toISOString()
+        };
+
+        // Check 1: Configuration exists
+        const config = await CourierIntegrationConfigModel.findOne({ platform });
+        health.checks.push({
+            name: 'Configuration',
+            status: config ? 'pass' : 'fail',
+            message: config ? 'Configuration found' : 'Configuration not found'
+        });
+
+        if (!config) {
+            health.status = 'unhealthy';
+            return res.status(503).json({ success: false, health });
+        }
+
+        // Check 2: Circuit breaker state
+        const circuitBreaker = CircuitBreakerService.getStatus(platform);
+        health.checks.push({
+            name: 'Circuit Breaker',
+            status: circuitBreaker?.state === 'CLOSED' ? 'pass' : 'warn',
+            message: `State: ${circuitBreaker?.state || 'UNKNOWN'}`,
+            details: circuitBreaker
+        });
+
+        if (circuitBreaker?.state === 'OPEN') {
+            health.status = 'degraded';
+        }
+
+        // Check 3: API Connection (only if not webhook-only)
+        if (!config.webhookOnlyMode) {
+            try {
+                await CourierIntegrationService.initialize();
+                const testResult = await CourierIntegrationService.testConnection(platform);
+
+                health.checks.push({
+                    name: 'API Connection',
+                    status: testResult.success ? 'pass' : 'fail',
+                    message: testResult.success ? 'API reachable' : 'API not reachable',
+                    details: testResult
+                });
+
+                if (!testResult.success) {
+                    health.status = 'unhealthy';
+                }
+            } catch (error) {
+                health.checks.push({
+                    name: 'API Connection',
+                    status: 'fail',
+                    message: error.message
+                });
+                health.status = 'unhealthy';
+            }
+        }
+
+        // Check 4: Recent failures
+        const recentFailures = await DeadLetterQueueModel.countDocuments({
+            platform,
+            status: 'pending',
+            createdAt: { $gte: new Date(Date.now() - 60 * 60 * 1000) } // Last hour
+        });
+
+        health.checks.push({
+            name: 'Recent Failures',
+            status: recentFailures > 10 ? 'warn' : 'pass',
+            message: `${recentFailures} failures in last hour`,
+            count: recentFailures
+        });
+
+        if (recentFailures > 10) {
+            health.status = 'degraded';
+        }
+
+        const statusCode = health.status === 'healthy' ? 200 :
+                          health.status === 'degraded' ? 200 : 503;
+
+        res.status(statusCode).json({
+            success: health.status !== 'unhealthy',
+            health
+        });
+
+    } catch (error) {
+        logger.error('Failed to check integration health', {
+            platform: req.params.platform,
+            error: error.message
+        });
+        res.status(500).json({
+            success: false,
+            message: 'Health check failed',
             error: error.message
         });
     }
