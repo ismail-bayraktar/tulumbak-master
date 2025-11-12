@@ -30,7 +30,9 @@ import webhookRouter from "./routes/WebhookRoute.js";
 import courierIntegrationRouter from "./routes/CourierIntegrationRoute.js";
 import deadLetterQueueRouter from "./routes/DeadLetterQueueRoute.js";
 import cacheManagementRouter from "./routes/CacheManagementRoute.js";
+import outgoingWebhookRouter from "./routes/OutgoingWebhookRoute.js";
 import RateLimiterService from "./services/RateLimiter.js";
+import OutgoingWebhookService from "./services/OutgoingWebhookService.js";
 import logger, { logInfo } from "./utils/logger.js";
 import { initSentry } from "./utils/sentry.js";
 import { errorHandler, notFoundHandler } from "./middleware/errorHandler.js";
@@ -67,6 +69,16 @@ setTimeout(async () => {
     logger.error("Error initializing settings", { error: error.message, stack: error.stack });
   }
 }, 2000);
+
+// Initialize OutgoingWebhookService
+setTimeout(async () => {
+  try {
+    await OutgoingWebhookService.initialize();
+    logger.info("OutgoingWebhookService initialized successfully");
+  } catch (error) {
+    logger.error("Error initializing OutgoingWebhookService", { error: error.message, stack: error.stack });
+  }
+}, 3000);
 
 // PAYTR
 const __filename = fileURLToPath(import.meta.url);
@@ -185,6 +197,7 @@ app.use('/api/settings', settingsRouter);
 app.use('/api/report', reportRouter);
 app.use('/api/admin', adminRouter);
 app.use('/api/admin/cache', cacheManagementRouter); // Cache management admin panel
+app.use('/api/admin/webhooks', outgoingWebhookRouter); // Outgoing webhook management
 app.use('/api/courier-management', courierManagementRouter);
 app.use('/api/branches', branchRouter);
 app.use('/api/webhook-config', webhookConfigRouter);
