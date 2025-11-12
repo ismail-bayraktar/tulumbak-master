@@ -13,7 +13,16 @@
       "Bash(npm install:*)",
       "WebFetch(domain:baymard.com)",
       "Bash(npm run dev:*)",
-      "Bash(npm start)"
+      "Bash(npm start)",
+      "mcp__sequential-thinking__sequentialthinking",
+      "WebFetch(domain:integration.muditakurye.com.tr)",
+      "WebSearch",
+      "Bash(taskkill:*)",
+      "Bash(nul)",
+      "Bash(pkill node:*)",
+      "Bash(netstat:*)",
+      "Bash(findstr:*)",
+      "Bash(timeout 5 npm run dev:*)"
     ],
     "deny": [],
     "ask": []

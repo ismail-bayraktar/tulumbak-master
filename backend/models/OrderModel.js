@@ -43,8 +43,47 @@ const orderSchema = new mongoose.Schema({
     // Order processing timestamps
     preparationStartedAt: { type: Number },
     sentToCourierAt: { type: Number },
-    // EsnafExpress integration
-    esnafExpressOrderId: { type: String }
+    // EsnafExpress integration (DEPRECATED - will be removed in v2.0)
+    esnafExpressOrderId: { type: String },
+
+    // Courier integration tracking - MuditaKurye and other platforms
+    courierIntegration: {
+        platform: {
+            type: String,
+            enum: ['muditakurye', 'aras', 'yurtici', null],
+            default: null
+        },
+        externalOrderId: {
+            type: String, // MuditaKurye's order ID
+            index: true
+        },
+        submittedAt: {
+            type: Number // Unix timestamp when submitted to courier
+        },
+        lastSyncAt: {
+            type: Number // Last status sync time
+        },
+        syncStatus: {
+            type: String,
+            enum: ['pending', 'synced', 'failed'],
+            default: 'pending'
+        },
+        failureReason: {
+            type: String
+        },
+        retryCount: {
+            type: Number,
+            default: 0
+        },
+        metadata: {
+            type: Object,
+            default: {}
+        }
+    },
+
+    // MuditaKurye specific fields
+    muditaRestaurantId: { type: String }, // Restaurant ID for MuditaKurye
+    scheduledDeliveryTime: { type: Date } // For scheduled deliveries
 });
 
 // Performance indexes
@@ -57,6 +96,11 @@ orderSchema.index({ payment: 1 });
 orderSchema.index({ 'delivery.zoneId': 1 });
 orderSchema.index({ branchId: 1 });
 orderSchema.index({ branchCode: 1 });
+
+// Courier integration indexes
+orderSchema.index({ 'courierIntegration.platform': 1 });
+// externalOrderId already has index: true in schema definition
+orderSchema.index({ 'courierIntegration.syncStatus': 1 });
 
 const orderModel = mongoose.models.order || mongoose.model("order", orderSchema);
 

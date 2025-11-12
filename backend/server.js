@@ -27,6 +27,8 @@ import courierManagementRouter from "./routes/CourierManagementRoute.js";
 import branchRouter from "./routes/BranchRoute.js";
 import webhookConfigRouter from "./routes/WebhookConfigRoute.js";
 import webhookRouter from "./routes/WebhookRoute.js";
+import courierIntegrationRouter from "./routes/CourierIntegrationRoute.js";
+import deadLetterQueueRouter from "./routes/DeadLetterQueueRoute.js";
 import RateLimiterService from "./services/RateLimiter.js";
 import logger, { logInfo } from "./utils/logger.js";
 import { initSentry } from "./utils/sentry.js";
@@ -185,6 +187,8 @@ app.use('/api/courier-management', courierManagementRouter);
 app.use('/api/branches', branchRouter);
 app.use('/api/webhook-config', webhookConfigRouter);
 app.use('/api/webhook', webhookRouter);
+app.use('/api/courier-integration', courierIntegrationRouter);
+app.use('/api/dlq', deadLetterQueueRouter);
 
 // Swagger Documentation
 swaggerDocs(app);

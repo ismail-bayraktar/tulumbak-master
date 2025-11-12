@@ -2,6 +2,7 @@ import crypto from 'crypto';
 import webhookConfigModel from '../models/WebhookConfigModel.js';
 import webhookLogModel from '../models/WebhookLogModel.js';
 import orderModel from '../models/OrderModel.js';
+import CourierIntegrationService from '../services/CourierIntegrationService.js';
 import logger from '../utils/logger.js';
 
 /**
@@ -36,31 +37,62 @@ export const receiveWebhook = async (req, res) => {
     let webhookLog = null;
 
     try {
-        // Extract headers
-        const signature = req.headers['x-webhook-signature'];
-        const platform = req.headers['x-webhook-platform'];
-        const webhookId = req.headers['x-webhook-id'];
-        const timestamp = req.headers['x-webhook-timestamp'];
+        // Extract headers (support both generic and MuditaKurye-specific headers)
+        const signature = req.headers['x-webhook-signature'] || req.headers['x-muditakurye-signature'];
+        let platform = req.headers['x-webhook-platform'] || req.headers['x-mudita-platform'];
+        const webhookId = req.headers['x-webhook-id'] || req.headers['x-mudita-webhook-id'] || crypto.randomBytes(16).toString('hex');
+        const timestamp = req.headers['x-webhook-timestamp'] || req.headers['x-mudita-timestamp'];
+
+        // Auto-detect MuditaKurye platform from URL path
+        if (!platform && req.path.includes('muditakurye')) {
+            platform = 'muditakurye';
+        }
 
         // Validate required headers
-        if (!signature || !platform || !webhookId || !timestamp) {
+        if (!signature || !timestamp) {
             return res.status(400).json({
                 success: false,
                 error: 'Missing required headers',
                 code: 'MISSING_HEADERS',
-                required: ['X-Webhook-Signature', 'X-Webhook-Platform', 'X-Webhook-Id', 'X-Webhook-Timestamp']
+                required: ['X-Webhook-Signature/X-MuditaKurye-Signature', 'X-Webhook-Timestamp/X-Mudita-Timestamp']
             });
         }
 
-        // Validate payload
+        // Default platform if not specified
+        if (!platform) {
+            platform = 'muditakurye'; // Default to MuditaKurye for now
+        }
+
+        // Validate payload (flexible for MuditaKurye format)
         const payload = req.body;
-        if (!payload || !payload.event || !payload.timestamp || !payload.orderId) {
+        if (!payload || (!payload.event && !payload.status)) {
             return res.status(400).json({
                 success: false,
                 error: 'Invalid payload',
                 code: 'INVALID_PAYLOAD',
-                required: ['event', 'timestamp', 'orderId']
+                required: ['event or status field']
             });
+        }
+
+        // Normalize MuditaKurye payload format
+        if (platform === 'muditakurye' && !payload.event) {
+            // Map MuditaKurye status to event
+            if (payload.status) {
+                const statusEventMap = {
+                    'VALIDATED': 'order.status.updated',
+                    'ASSIGNED': 'order.assigned',
+                    'PREPARED': 'order.status.updated',
+                    'ON_DELIVERY': 'order.status.updated',
+                    'DELIVERED': 'order.delivered',
+                    'CANCELED': 'order.cancelled',
+                    'FAILED': 'order.failed'
+                };
+                payload.event = statusEventMap[payload.status] || 'order.status.updated';
+            }
+            // Map MuditaKurye orderId format
+            if (payload.muditaOrderId) {
+                payload.orderId = payload.muditaOrderId;
+            }
         }
 
         // Check for duplicate webhook (idempotency)
@@ -157,8 +189,20 @@ export const receiveWebhook = async (req, res) => {
         });
         await webhookLog.save();
 
-        // Process webhook based on event type
-        const processingResult = await processWebhookEvent(payload, config);
+        // Process webhook based on platform and event type
+        let processingResult;
+
+        if (platform === 'muditakurye') {
+            // Use CourierIntegrationService for MuditaKurye webhooks
+            processingResult = await CourierIntegrationService.processWebhook(
+                platform,
+                payload,
+                req.headers
+            );
+        } else {
+            // Use legacy processing for other platforms
+            processingResult = await processWebhookEvent(payload, config);
+        }
 
         const processingTime = Date.now() - startTime;
 
@@ -483,7 +527,7 @@ const handleCourierLocationUpdate = async (order, { location, metadata }) => {
             note: 'Kurye konumu güncellendi',
             updatedBy: 'courier'
         };
-        
+
         if (!order.statusHistory) {
             order.statusHistory = [historyEntry];
         } else {
@@ -498,6 +542,47 @@ const handleCourierLocationUpdate = async (order, { location, metadata }) => {
     } catch (error) {
         logger.error('Error handling courier location update', { error: error.message });
         return { success: false, error: error.message, errorCode: 'UPDATE_ERROR' };
+    }
+};
+
+/**
+ * MuditaKurye-specific webhook endpoint
+ * POST /api/webhook/muditakurye
+ */
+export const receiveMuditaKuryeWebhook = async (req, res) => {
+    const startTime = Date.now();
+
+    try {
+        // Initialize CourierIntegrationService if not already done
+        await CourierIntegrationService.initialize();
+
+        // Log incoming webhook
+        logger.info('MuditaKurye webhook received', {
+            method: req.method,
+            path: req.path,
+            headers: Object.keys(req.headers),
+            bodyKeys: Object.keys(req.body || {}),
+            timestamp: Date.now()
+        });
+
+        // Set platform header for unified processing
+        req.headers['x-webhook-platform'] = 'muditakurye';
+
+        // Forward to main webhook receiver
+        return await receiveWebhook(req, res);
+
+    } catch (error) {
+        logger.error('MuditaKurye webhook processing error', {
+            error: error.message,
+            stack: error.stack,
+            duration: Date.now() - startTime
+        });
+
+        return res.status(500).json({
+            success: false,
+            error: 'Internal server error',
+            code: 'MUDITA_WEBHOOK_ERROR'
+        });
     }
 };
 

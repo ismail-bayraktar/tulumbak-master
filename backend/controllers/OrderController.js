@@ -4,6 +4,7 @@ import deliveryZoneModel from "../models/DeliveryZoneModel.js";
 import { reduceStock, checkLowStockAlert } from "../middleware/StockCheck.js";
 import AssignmentService, { assignBranch, suggestBranch } from "../services/AssignmentService.js";
 import settingsModel from "../models/SettingsModel.js";
+import CourierIntegrationService from "../services/CourierIntegrationService.js";
 import logger from "../utils/logger.js";
 
 // Generate unique tracking ID
@@ -538,26 +539,54 @@ const sendToCourier = async (req, res) => {
         order.status = 'Kuryeye Verildi';
         order.courierStatus = 'yolda';
         order.sentToCourierAt = Date.now();
-        
+
         // Generate courier tracking ID if not exists
         if (!order.courierTrackingId) {
             order.courierTrackingId = `CR-${Math.random().toString(36).slice(2,10).toUpperCase()}`;
         }
-        
-        // TODO: Send to EsnafExpress (placeholder)
-        // const esnafExpressResult = await EsnafExpressService.sendOrder(order);
-        // if (esnafExpressResult.success) {
-        //     order.esnafExpressOrderId = esnafExpressResult.orderId;
-        // }
-        
-        await addStatusHistory(orderId, 'Kuryeye Verildi', '', 'Sipariş kuryeye teslim edildi', 'admin');
+
+        // Initialize CourierIntegrationService if not done
+        await CourierIntegrationService.initialize();
+
+        // Submit order to courier platform (MuditaKurye)
+        const courierResult = await CourierIntegrationService.submitOrder(orderId);
+
+        if (courierResult.success) {
+            // Order successfully submitted to courier
+            order.courierIntegration = order.courierIntegration || {};
+            order.courierIntegration.externalOrderId = courierResult.externalOrderId;
+            order.courierIntegration.platform = courierResult.platform;
+            order.courierIntegration.submittedAt = Date.now();
+            order.courierIntegration.syncStatus = 'synced';
+
+            logger.info('Order successfully submitted to courier', {
+                orderId,
+                externalOrderId: courierResult.externalOrderId,
+                platform: courierResult.platform
+            });
+
+            await addStatusHistory(orderId, 'Kuryeye Verildi', '',
+                `Sipariş ${courierResult.platform} sistemine başarıyla gönderildi`, 'admin');
+        } else {
+            // Failed to submit to courier, but continue with local status update
+            logger.warn('Failed to submit order to courier platform', {
+                orderId,
+                error: courierResult.error,
+                retryable: courierResult.retryable
+            });
+
+            await addStatusHistory(orderId, 'Kuryeye Verildi', '',
+                'Sipariş kuryeye teslim edildi (manuel gönderim gerekebilir)', 'admin');
+        }
+
         await order.save();
-        
-        res.json({ 
-            success: true, 
-            message: 'Order sent to courier', 
+
+        res.json({
+            success: true,
+            message: 'Order sent to courier',
             order,
-            courierTrackingId: order.courierTrackingId
+            courierTrackingId: order.courierTrackingId,
+            courierIntegration: courierResult
         });
     } catch (error) {
         logger.error('Error sending order to courier', { error: error.message, stack: error.stack, orderId: req.body.orderId });
