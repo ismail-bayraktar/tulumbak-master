@@ -29,16 +29,17 @@ npm install express axios dotenv
 ### Ortam Değişkenleri (.env)
 
 ```env
-# API Bilgileri
+# API Bilgileri (MuditaKurye panelinden alınacak)
 MUDITAKURYE_BASE_URL=https://api.muditakurye.com.tr
-MUDITAKURYE_API_KEY=yk_24c584705e97492483bcb4264338aa14
-MUDITAKURYE_RESTAURANT_ID=rest_85b4ad47f35b45e893c9
-MUDITAKURYE_USERNAME=api_tal6xdlvmraytsys
+MUDITAKURYE_API_KEY=yk_YOUR_API_KEY_HERE
+MUDITAKURYE_RESTAURANT_ID=rest_YOUR_RESTAURANT_ID_HERE
+MUDITAKURYE_USERNAME=api_YOUR_USERNAME_HERE
 
-# Webhook Bilgileri
-MUDITAKURYE_WEBHOOK_SECRET=wh_0rC-rimL096iJALsxXui67-n0LrKWVNlpHknLHn12g4
-MUDITAKURYE_STATUS_WEBHOOK_URL=https://yourapi.com/webhook/status
-MUDITAKURYE_CANCEL_WEBHOOK_URL=https://yourapi.com/webhook/cancel
+# Webhook Bilgileri (MuditaKurye panelinden alınacak)
+# ⚠️ Bu secret'ı ASLA git'e commit etmeyin!
+MUDITAKURYE_WEBHOOK_SECRET=wh_YOUR_WEBHOOK_SECRET_FROM_MUDITA_PANEL
+MUDITAKURYE_STATUS_WEBHOOK_URL=https://yourapi.com/webhook/muditakurye/status
+MUDITAKURYE_CANCEL_WEBHOOK_URL=https://yourapi.com/webhook/muditakurye/cancel
 ```
 
 ## 📌 Temel Kavramlar

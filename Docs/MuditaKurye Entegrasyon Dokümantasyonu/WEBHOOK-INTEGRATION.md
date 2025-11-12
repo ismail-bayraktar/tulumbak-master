@@ -19,10 +19,16 @@ https://yourapi.com/webhook/muditakurye/cancel
 ## 🔐 Webhook Secret
 
 ```
-wh_0rC-rimL096iJALsxXui67-n0LrKWVNlpHknLHn12g4
+wh_YOUR_SECRET_KEY_FROM_MUDITA_PANEL
 ```
 
-Bu secret ile gelen isteklerin MuditaKurye'den geldiğini doğrulayabilirsiniz.
+⚠️ **Önemli:** Bu secret'ı MuditaKurye panelinden alacaksınız. Gelen isteklerin MuditaKurye'den geldiğini doğrulamak için kullanılır.
+
+**Güvenlik Notları:**
+- Secret'ı ASLA Git'e commit etmeyin
+- .env dosyasında saklayın
+- Production ve development için farklı secret'lar kullanın
+- Secret sızdıysa hemen rotate edin
 
 ## 📨 Webhook Payload Yapısı
 

@@ -135,16 +135,43 @@ export const receiveWebhook = async (req, res) => {
             });
         }
 
-        // Verify timestamp (prevent replay attacks - max 5 minutes old)
-        const timestampNum = parseInt(timestamp);
+        // Verify timestamp (prevent replay attacks)
+        const timestampNum = Number(timestamp);
+
+        // Validate timestamp format
+        if (isNaN(timestampNum) || timestampNum <= 0) {
+            return res.status(400).json({
+                success: false,
+                error: 'Invalid timestamp format',
+                code: 'INVALID_TIMESTAMP',
+                required: 'Unix timestamp in milliseconds'
+            });
+        }
+
         const now = Date.now();
-        const maxAge = 5 * 60 * 1000; // 5 minutes
-        if (Math.abs(now - timestampNum) > maxAge) {
+        const clockSkew = 30000; // 30 seconds clock skew tolerance
+        const maxAge = 5 * 60 * 1000; // 5 minutes max age
+
+        // Reject future timestamps (beyond clock skew)
+        if (timestampNum > now + clockSkew) {
+            return res.status(400).json({
+                success: false,
+                error: 'Timestamp is in the future',
+                code: 'FUTURE_TIMESTAMP',
+                serverTime: now,
+                requestTime: timestampNum,
+                difference: timestampNum - now
+            });
+        }
+
+        // Reject old timestamps (replay attack prevention)
+        if (now - timestampNum > maxAge) {
             return res.status(401).json({
                 success: false,
                 error: 'Request timestamp too old',
                 code: 'EXPIRED_TIMESTAMP',
-                maxAge
+                maxAge,
+                age: now - timestampNum
             });
         }
 

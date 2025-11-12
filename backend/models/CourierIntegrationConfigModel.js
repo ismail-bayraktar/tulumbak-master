@@ -1,10 +1,10 @@
 import mongoose from 'mongoose';
-import crypto from 'crypto';
+import encryptionService from '../utils/encryption.js';
 
 /**
  * CourierIntegrationConfig Model
  * Stores configuration for different courier platforms (MuditaKurye, Aras, Yurtici, etc.)
- * Credentials are encrypted before storage for security
+ * Credentials are encrypted before storage for security using AES-256-GCM
  */
 
 const courierIntegrationConfigSchema = new mongoose.Schema({
@@ -149,68 +149,45 @@ const courierIntegrationConfigSchema = new mongoose.Schema({
     }
 });
 
-// Helper function to encrypt field
-function encryptField(text) {
-    const encryptionKey = process.env.WEBHOOK_ENCRYPTION_KEY || process.env.JWT_SECRET || 'default_encryption_key_change_in_production';
-    const iv = crypto.randomBytes(16);
-    const cipher = crypto.createCipheriv('aes-256-cbc', Buffer.from(encryptionKey.substring(0, 32).padEnd(32, '0')), iv);
-    let encrypted = cipher.update(text, 'utf8', 'hex');
-    encrypted += cipher.final('hex');
-    return 'enc:' + iv.toString('hex') + ':' + encrypted;
-}
-
-// Helper function to decrypt field
-function decryptField(encryptedText) {
-    if (!encryptedText || !encryptedText.startsWith('enc:')) {
-        return encryptedText; // Not encrypted, return as is
-    }
-
-    try {
-        const parts = encryptedText.substring(4).split(':');
-        const iv = Buffer.from(parts[0], 'hex');
-        const encrypted = parts[1];
-        const encryptionKey = process.env.WEBHOOK_ENCRYPTION_KEY || process.env.JWT_SECRET || 'default_encryption_key_change_in_production';
-        const decipher = crypto.createDecipheriv('aes-256-cbc', Buffer.from(encryptionKey.substring(0, 32).padEnd(32, '0')), iv);
-        let decrypted = decipher.update(encrypted, 'hex', 'utf8');
-        decrypted += decipher.final('utf8');
-        return decrypted;
-    } catch (error) {
-        throw new Error('Failed to decrypt field');
-    }
-}
+// Encryption is now handled by EncryptionService utility
+// No need for local helper functions
 
 // Encrypt credentials before save
 courierIntegrationConfigSchema.pre('save', function(next) {
-    // Encrypt API key
-    if (this.isModified('apiKey') && this.apiKey && !this.apiKey.startsWith('enc:')) {
-        this.apiKey = encryptField(this.apiKey);
-    }
+    try {
+        // Encrypt API key
+        if (this.isModified('apiKey') && this.apiKey) {
+            this.apiKey = encryptionService.encrypt(this.apiKey);
+        }
 
-    // Encrypt API secret if exists
-    if (this.isModified('apiSecret') && this.apiSecret && !this.apiSecret.startsWith('enc:')) {
-        this.apiSecret = encryptField(this.apiSecret);
-    }
+        // Encrypt API secret if exists
+        if (this.isModified('apiSecret') && this.apiSecret) {
+            this.apiSecret = encryptionService.encrypt(this.apiSecret);
+        }
 
-    // Encrypt webhook secret key if exists
-    if (this.isModified('webhookConfig.secretKey') && this.webhookConfig?.secretKey && !this.webhookConfig.secretKey.startsWith('enc:')) {
-        this.webhookConfig.secretKey = encryptField(this.webhookConfig.secretKey);
-    }
+        // Encrypt webhook secret key if exists
+        if (this.isModified('webhookConfig.secretKey') && this.webhookConfig?.secretKey) {
+            this.webhookConfig.secretKey = encryptionService.encrypt(this.webhookConfig.secretKey);
+        }
 
-    this.updatedAt = Date.now();
-    next();
+        this.updatedAt = Date.now();
+        next();
+    } catch (error) {
+        next(error);
+    }
 });
 
 // Decrypt methods
 courierIntegrationConfigSchema.methods.getDecryptedApiKey = function() {
-    return decryptField(this.apiKey);
+    return encryptionService.decrypt(this.apiKey);
 };
 
 courierIntegrationConfigSchema.methods.getDecryptedApiSecret = function() {
-    return this.apiSecret ? decryptField(this.apiSecret) : null;
+    return this.apiSecret ? encryptionService.decrypt(this.apiSecret) : null;
 };
 
 courierIntegrationConfigSchema.methods.getDecryptedWebhookSecret = function() {
-    return this.webhookConfig?.secretKey ? decryptField(this.webhookConfig.secretKey) : null;
+    return this.webhookConfig?.secretKey ? encryptionService.decrypt(this.webhookConfig.secretKey) : null;
 };
 
 // Virtual for getting decrypted credentials
@@ -234,7 +211,7 @@ courierIntegrationConfigSchema.methods.testConnection = async function() {
 
 // Static method for encryption (for use in controllers)
 courierIntegrationConfigSchema.statics.encryptField = function(text) {
-    return encryptField(text);
+    return encryptionService.encrypt(text);
 };
 
 // Indexes

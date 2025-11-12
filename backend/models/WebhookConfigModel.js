@@ -1,10 +1,10 @@
 import mongoose from "mongoose";
-import crypto from "crypto";
+import encryptionService from '../utils/encryption.js';
 
 /**
  * WebhookConfig Model
  * Stores webhook configuration for different courier platforms
- * Secret keys are encrypted before storage
+ * Secret keys are encrypted before storage using AES-256-GCM
  */
 
 const webhookConfigSchema = new mongoose.Schema({
@@ -88,39 +88,20 @@ const webhookConfigSchema = new mongoose.Schema({
 
 // Encrypt secret key before saving
 webhookConfigSchema.pre('save', function(next) {
-    if (this.isModified('secretKey') && this.secretKey) {
-        // Only encrypt if not already encrypted (check if starts with 'enc:')
-        if (!this.secretKey.startsWith('enc:')) {
-            const encryptionKey = process.env.WEBHOOK_ENCRYPTION_KEY || process.env.JWT_SECRET;
-            const iv = crypto.randomBytes(16);
-            const cipher = crypto.createCipheriv('aes-256-cbc', Buffer.from(encryptionKey.substring(0, 32).padEnd(32, '0')), iv);
-            let encrypted = cipher.update(this.secretKey, 'utf8', 'hex');
-            encrypted += cipher.final('hex');
-            this.secretKey = 'enc:' + iv.toString('hex') + ':' + encrypted;
+    try {
+        if (this.isModified('secretKey') && this.secretKey) {
+            this.secretKey = encryptionService.encrypt(this.secretKey);
         }
+        this.updatedAt = Date.now();
+        next();
+    } catch (error) {
+        next(error);
     }
-    this.updatedAt = Date.now();
-    next();
 });
 
 // Method to decrypt secret key
 webhookConfigSchema.methods.getDecryptedSecretKey = function() {
-    if (!this.secretKey.startsWith('enc:')) {
-        return this.secretKey; // Not encrypted, return as is
-    }
-    
-    try {
-        const parts = this.secretKey.substring(4).split(':');
-        const iv = Buffer.from(parts[0], 'hex');
-        const encrypted = parts[1];
-        const encryptionKey = process.env.WEBHOOK_ENCRYPTION_KEY || process.env.JWT_SECRET;
-        const decipher = crypto.createDecipheriv('aes-256-cbc', Buffer.from(encryptionKey.substring(0, 32).padEnd(32, '0')), iv);
-        let decrypted = decipher.update(encrypted, 'hex', 'utf8');
-        decrypted += decipher.final('utf8');
-        return decrypted;
-    } catch (error) {
-        throw new Error('Failed to decrypt secret key');
-    }
+    return encryptionService.decrypt(this.secretKey);
 };
 
 // Indexes
