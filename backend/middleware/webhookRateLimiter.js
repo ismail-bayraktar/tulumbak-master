@@ -64,18 +64,6 @@ export const webhookRateLimiter = rateLimit({
         }
 
         return false;
-    },
-
-    // Store rate limit info in request object
-    onLimitReached: (req) => {
-        logger.error('Rate limit reached', {
-            ip: req.ip,
-            path: req.path,
-            headers: {
-                platform: req.headers['x-webhook-platform'],
-                webhookId: req.headers['x-webhook-id']
-            }
-        });
     }
 });
 
