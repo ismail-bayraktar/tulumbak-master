@@ -8,7 +8,7 @@ import {
     deleteKey,
     getCacheStatistics
 } from '../controllers/CacheManagementController.js';
-import { authenticateToken, authorizeAdmin } from '../middleware/authMiddleware.js';
+import adminAuth from '../middleware/AdminAuth.js';
 
 const router = express.Router();
 
@@ -20,8 +20,7 @@ const router = express.Router();
  */
 
 // All cache management routes require admin authentication
-router.use(authenticateToken);
-router.use(authorizeAdmin);
+router.use(adminAuth);
 
 /**
  * GET /api/admin/cache
