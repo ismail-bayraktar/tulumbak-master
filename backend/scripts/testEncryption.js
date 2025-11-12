@@ -10,7 +10,9 @@
  *   node scripts/testEncryption.js
  */
 
+import 'dotenv/config'; // Load environment variables FIRST
 import encryptionService from '../utils/encryption.js';
+import crypto from 'crypto';
 
 console.log('\n🔐 ENCRYPTION SERVICE TEST\n');
 console.log('═'.repeat(60));

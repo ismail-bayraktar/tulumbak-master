@@ -14,6 +14,7 @@
  */
 
 import crypto from 'crypto';
+import 'dotenv/config'; // Load environment variables (optional for this script)
 
 console.log('\n🔐 WEBHOOK ENCRYPTION KEY GENERATOR\n');
 console.log('═'.repeat(60));

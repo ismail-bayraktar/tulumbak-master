@@ -1,4 +1,5 @@
 import crypto from 'crypto';
+import 'dotenv/config'; // Load environment variables
 import logger from './logger.js';
 
 /**
