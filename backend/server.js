@@ -29,6 +29,7 @@ import webhookConfigRouter from "./routes/WebhookConfigRoute.js";
 import webhookRouter from "./routes/WebhookRoute.js";
 import courierIntegrationRouter from "./routes/CourierIntegrationRoute.js";
 import deadLetterQueueRouter from "./routes/DeadLetterQueueRoute.js";
+import cacheManagementRouter from "./routes/CacheManagementRoute.js";
 import RateLimiterService from "./services/RateLimiter.js";
 import logger, { logInfo } from "./utils/logger.js";
 import { initSentry } from "./utils/sentry.js";
@@ -183,6 +184,7 @@ app.use('/api/corporate', corporateRouter);
 app.use('/api/settings', settingsRouter);
 app.use('/api/report', reportRouter);
 app.use('/api/admin', adminRouter);
+app.use('/api/admin/cache', cacheManagementRouter); // Cache management admin panel
 app.use('/api/courier-management', courierManagementRouter);
 app.use('/api/branches', branchRouter);
 app.use('/api/webhook-config', webhookConfigRouter);

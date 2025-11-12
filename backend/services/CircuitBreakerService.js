@@ -1,15 +1,21 @@
 import CourierIntegrationConfigModel from '../models/CourierIntegrationConfigModel.js';
 import logger from '../utils/logger.js';
+import { setInNamespace, getFromNamespace, deleteFromNamespace, isRedisAvailable } from '../config/redis.js';
 
 /**
  * Circuit Breaker Service
  * Implements circuit breaker pattern to prevent cascading failures
  * States: CLOSED (normal), OPEN (failing), HALF_OPEN (testing)
+ *
+ * Now uses Redis for distributed state management to support horizontal scaling
  */
 
 class CircuitBreaker {
     constructor(platform, config = {}) {
         this.platform = platform;
+        this.useRedis = isRedisAvailable();
+
+        // In-memory state (fallback when Redis unavailable)
         this.state = 'CLOSED'; // CLOSED, OPEN, HALF_OPEN
         this.failureCount = 0;
         this.successCount = 0;
@@ -41,6 +47,81 @@ class CircuitBreaker {
             totalTimeOpen: 0,
             totalTimeClosed: 0
         };
+
+        // Redis key namespace
+        this.redisNamespace = 'circuitbreaker';
+
+        // Load state from Redis on initialization
+        if (this.useRedis) {
+            this.loadFromRedis().catch(err => {
+                logger.warn('Failed to load circuit breaker state from Redis, using defaults', {
+                    platform: this.platform,
+                    error: err.message
+                });
+            });
+        }
+    }
+
+    /**
+     * Load circuit breaker state from Redis
+     */
+    async loadFromRedis() {
+        try {
+            const stateData = await getFromNamespace(this.redisNamespace, `${this.platform}:state`);
+
+            if (stateData) {
+                this.state = stateData.state || 'CLOSED';
+                this.failureCount = stateData.failureCount || 0;
+                this.successCount = stateData.successCount || 0;
+                this.lastFailureTime = stateData.lastFailureTime || null;
+                this.lastStateChange = stateData.lastStateChange || Date.now();
+                this.failureTimestamps = stateData.failureTimestamps || [];
+                this.metrics = stateData.metrics || this.metrics;
+
+                logger.debug('Circuit breaker state loaded from Redis', {
+                    platform: this.platform,
+                    state: this.state
+                });
+            }
+        } catch (error) {
+            logger.error('Error loading circuit breaker state from Redis', {
+                platform: this.platform,
+                error: error.message
+            });
+        }
+    }
+
+    /**
+     * Save circuit breaker state to Redis
+     */
+    async saveToRedis() {
+        if (!this.useRedis) return;
+
+        try {
+            const stateData = {
+                state: this.state,
+                failureCount: this.failureCount,
+                successCount: this.successCount,
+                lastFailureTime: this.lastFailureTime,
+                lastStateChange: this.lastStateChange,
+                failureTimestamps: this.failureTimestamps,
+                metrics: this.metrics,
+                updatedAt: Date.now()
+            };
+
+            // Save with TTL of 24 hours
+            await setInNamespace(this.redisNamespace, `${this.platform}:state`, stateData, 86400);
+
+            logger.debug('Circuit breaker state saved to Redis', {
+                platform: this.platform,
+                state: this.state
+            });
+        } catch (error) {
+            logger.error('Error saving circuit breaker state to Redis', {
+                platform: this.platform,
+                error: error.message
+            });
+        }
     }
 
     /**
@@ -133,6 +214,14 @@ class CircuitBreaker {
             failureCount: this.failureCount,
             duration
         });
+
+        // Persist to Redis (async, non-blocking)
+        this.saveToRedis().catch(err => {
+            logger.warn('Failed to save circuit breaker state after success', {
+                platform: this.platform,
+                error: err.message
+            });
+        });
     }
 
     /**
@@ -186,6 +275,14 @@ class CircuitBreaker {
                 this.sendAlert('opened', error);
             }
         }
+
+        // Persist to Redis (async, non-blocking)
+        this.saveToRedis().catch(err => {
+            logger.warn('Failed to save circuit breaker state after failure', {
+                platform: this.platform,
+                error: err.message
+            });
+        });
     }
 
     /**
@@ -221,6 +318,16 @@ class CircuitBreaker {
             from: oldState,
             to: newState,
             requestCount: this.requestCount
+        });
+
+        // Persist state change to Redis immediately (sync for critical state changes)
+        this.saveToRedis().catch(err => {
+            logger.error('Failed to save circuit breaker state after transition', {
+                platform: this.platform,
+                from: oldState,
+                to: newState,
+                error: err.message
+            });
         });
     }
 
@@ -300,6 +407,14 @@ class CircuitBreaker {
         });
 
         this.sendAlert('reset', { manual: true });
+
+        // Persist reset to Redis
+        this.saveToRedis().catch(err => {
+            logger.error('Failed to save circuit breaker state after reset', {
+                platform: this.platform,
+                error: err.message
+            });
+        });
     }
 
     /**

@@ -157,12 +157,178 @@ export const getCacheStats = async () => {
   }
 
   try {
-    const info = await redisClient.info('stats');
-    return info;
+    const info = await redisClient.info();
+    const dbSize = await redisClient.dbSize();
+    const memory = await redisClient.info('memory');
+
+    return {
+      connected: isConnected,
+      dbSize,
+      info,
+      memory
+    };
   } catch (error) {
     logger.error('Redis stats error', { error: error.message });
     return null;
   }
+};
+
+/**
+ * Get detailed cache information for admin panel
+ */
+export const getCacheInfo = async () => {
+  if (!redisClient || !isConnected) {
+    return {
+      enabled: false,
+      connected: false,
+      message: 'Redis is not connected'
+    };
+  }
+
+  try {
+    const dbSize = await redisClient.dbSize();
+    const info = await redisClient.info('server');
+    const memory = await redisClient.info('memory');
+    const stats = await redisClient.info('stats');
+
+    return {
+      enabled: true,
+      connected: isConnected,
+      keys: dbSize,
+      info: {
+        server: parseRedisInfo(info),
+        memory: parseRedisInfo(memory),
+        stats: parseRedisInfo(stats)
+      }
+    };
+  } catch (error) {
+    logger.error('Redis cache info error', { error: error.message });
+    return {
+      enabled: true,
+      connected: false,
+      error: error.message
+    };
+  }
+};
+
+/**
+ * Get all keys matching a pattern
+ */
+export const getKeys = async (pattern = '*', limit = 100) => {
+  if (!redisClient || !isConnected) {
+    return [];
+  }
+
+  try {
+    const keys = await redisClient.keys(pattern);
+    return keys.slice(0, limit);
+  } catch (error) {
+    logger.error('Redis get keys error', { pattern, error: error.message });
+    return [];
+  }
+};
+
+/**
+ * Get key with TTL information
+ */
+export const getKeyInfo = async (key) => {
+  if (!redisClient || !isConnected) {
+    return null;
+  }
+
+  try {
+    const value = await redisClient.get(key);
+    const ttl = await redisClient.ttl(key);
+    const type = await redisClient.type(key);
+
+    return {
+      key,
+      value: value ? JSON.parse(value) : null,
+      ttl,
+      type
+    };
+  } catch (error) {
+    logger.error('Redis key info error', { key, error: error.message });
+    return null;
+  }
+};
+
+/**
+ * Clear cache by namespace (pattern)
+ */
+export const clearCacheByNamespace = async (namespace) => {
+  if (!redisClient || !isConnected) {
+    return { success: false, message: 'Redis not connected' };
+  }
+
+  try {
+    const pattern = `${namespace}:*`;
+    const keys = await redisClient.keys(pattern);
+
+    if (keys.length > 0) {
+      await redisClient.del(keys);
+      logger.info(`Cleared ${keys.length} keys from namespace: ${namespace}`);
+      return { success: true, deletedCount: keys.length };
+    }
+
+    return { success: true, deletedCount: 0 };
+  } catch (error) {
+    logger.error('Redis clear namespace error', { namespace, error: error.message });
+    return { success: false, message: error.message };
+  }
+};
+
+/**
+ * Get Redis client instance
+ */
+export const getRedisClient = () => redisClient;
+
+/**
+ * Check if Redis is available
+ */
+export const isRedisAvailable = () => isConnected;
+
+/**
+ * Parse Redis INFO output to object
+ */
+function parseRedisInfo(infoString) {
+  const lines = infoString.split('\r\n');
+  const info = {};
+
+  for (const line of lines) {
+    if (line && !line.startsWith('#')) {
+      const [key, value] = line.split(':');
+      if (key && value) {
+        info[key] = value;
+      }
+    }
+  }
+
+  return info;
+}
+
+/**
+ * Set value with namespace
+ */
+export const setInNamespace = async (namespace, key, value, expirySeconds = 3600) => {
+  const namespacedKey = `${namespace}:${key}`;
+  return await setInCache(namespacedKey, value, expirySeconds);
+};
+
+/**
+ * Get value from namespace
+ */
+export const getFromNamespace = async (namespace, key) => {
+  const namespacedKey = `${namespace}:${key}`;
+  return await getFromCache(namespacedKey);
+};
+
+/**
+ * Delete from namespace
+ */
+export const deleteFromNamespace = async (namespace, key) => {
+  const namespacedKey = `${namespace}:${key}`;
+  return await deleteFromCache(namespacedKey);
 };
 
 export default redisClient;

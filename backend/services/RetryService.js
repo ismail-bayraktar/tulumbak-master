@@ -2,20 +2,38 @@ import DeadLetterQueueModel from '../models/DeadLetterQueueModel.js';
 import orderModel from '../models/OrderModel.js';
 import CourierIntegrationConfigModel from '../models/CourierIntegrationConfigModel.js';
 import logger from '../utils/logger.js';
+import { setInNamespace, getFromNamespace, deleteFromNamespace, isRedisAvailable, redisClient } from '../config/redis.js';
 
 /**
  * RetryService
  * Manages retry logic with exponential backoff for failed operations
  * Handles moving to Dead Letter Queue after max retries
+ *
+ * Now uses Redis for distributed retry queue management:
+ * - retry:queue (sorted set): retryId -> score (timestamp when to retry)
+ * - retry:{retryId} (hash): full retry entry details
+ * - retry:active (set): currently processing retry IDs
  */
 
 class RetryService {
     constructor() {
-        // In-memory retry queue for performance
-        // In production, consider using Redis for distributed systems
+        this.useRedis = isRedisAvailable();
+
+        // In-memory retry queue (fallback when Redis unavailable)
         this.retryQueue = new Map();
         this.activeRetries = new Map();
         this.initialized = false;
+
+        // Redis keys
+        this.redisNamespace = 'retry';
+        this.queueKey = 'queue'; // Sorted set for scheduled retries
+        this.activeKey = 'active'; // Set for active retries
+
+        if (this.useRedis) {
+            logger.info('RetryService will use Redis for distributed queue management');
+        } else {
+            logger.warn('RetryService will use in-memory queue (Redis unavailable)');
+        }
     }
 
     /**
@@ -25,6 +43,11 @@ class RetryService {
         if (this.initialized) return;
 
         try {
+            // Load existing retry queue from Redis (if available)
+            if (this.useRedis) {
+                await this.loadRetryQueueFromRedis();
+            }
+
             // Start background processor for retries
             this.startRetryProcessor();
 
@@ -32,13 +55,203 @@ class RetryService {
             this.startDLQCleanup();
 
             this.initialized = true;
-            logger.info('RetryService initialized successfully');
+            logger.info('RetryService initialized successfully', {
+                useRedis: this.useRedis
+            });
         } catch (error) {
             logger.error('Failed to initialize RetryService', {
                 error: error.message,
                 stack: error.stack
             });
             throw error;
+        }
+    }
+
+    /**
+     * Load retry queue from Redis on startup
+     */
+    async loadRetryQueueFromRedis() {
+        try {
+            const queueSize = await redisClient.zCard(`${this.redisNamespace}:${this.queueKey}`);
+            logger.info('Loaded retry queue from Redis', { queueSize });
+        } catch (error) {
+            logger.error('Failed to load retry queue from Redis', {
+                error: error.message
+            });
+        }
+    }
+
+    /**
+     * Add retry entry to Redis queue
+     */
+    async addToQueue(retryId, retryEntry) {
+        if (!this.useRedis) {
+            this.retryQueue.set(retryId, retryEntry);
+            return;
+        }
+
+        try {
+            // Store retry entry details as hash
+            await setInNamespace(this.redisNamespace, retryId, retryEntry, 604800); // 7 days TTL
+
+            // Add to sorted set with retryAt as score for time-based retrieval
+            await redisClient.zAdd(`${this.redisNamespace}:${this.queueKey}`, {
+                score: retryEntry.retryAt,
+                value: retryId
+            });
+
+            logger.debug('Retry added to Redis queue', {
+                retryId,
+                retryAt: new Date(retryEntry.retryAt).toISOString()
+            });
+        } catch (error) {
+            logger.error('Failed to add retry to Redis queue', {
+                retryId,
+                error: error.message
+            });
+            // Fallback to in-memory
+            this.retryQueue.set(retryId, retryEntry);
+        }
+    }
+
+    /**
+     * Get retry entry from queue
+     */
+    async getFromQueue(retryId) {
+        if (!this.useRedis) {
+            return this.retryQueue.get(retryId);
+        }
+
+        try {
+            return await getFromNamespace(this.redisNamespace, retryId);
+        } catch (error) {
+            logger.error('Failed to get retry from Redis queue', {
+                retryId,
+                error: error.message
+            });
+            return this.retryQueue.get(retryId);
+        }
+    }
+
+    /**
+     * Remove retry entry from queue
+     */
+    async removeFromQueue(retryId) {
+        if (!this.useRedis) {
+            this.retryQueue.delete(retryId);
+            return;
+        }
+
+        try {
+            // Remove from sorted set
+            await redisClient.zRem(`${this.redisNamespace}:${this.queueKey}`, retryId);
+
+            // Remove details
+            await deleteFromNamespace(this.redisNamespace, retryId);
+
+            logger.debug('Retry removed from Redis queue', { retryId });
+        } catch (error) {
+            logger.error('Failed to remove retry from Redis queue', {
+                retryId,
+                error: error.message
+            });
+            // Fallback to in-memory
+            this.retryQueue.delete(retryId);
+        }
+    }
+
+    /**
+     * Mark retry as active (being processed)
+     */
+    async markAsActive(retryId) {
+        if (!this.useRedis) {
+            this.activeRetries.set(retryId, Date.now());
+            return;
+        }
+
+        try {
+            await redisClient.sAdd(`${this.redisNamespace}:${this.activeKey}`, retryId);
+            logger.debug('Retry marked as active', { retryId });
+        } catch (error) {
+            logger.error('Failed to mark retry as active', {
+                retryId,
+                error: error.message
+            });
+            this.activeRetries.set(retryId, Date.now());
+        }
+    }
+
+    /**
+     * Check if retry is active
+     */
+    async isActive(retryId) {
+        if (!this.useRedis) {
+            return this.activeRetries.has(retryId);
+        }
+
+        try {
+            return await redisClient.sIsMember(`${this.redisNamespace}:${this.activeKey}`, retryId);
+        } catch (error) {
+            logger.error('Failed to check if retry is active', {
+                retryId,
+                error: error.message
+            });
+            return this.activeRetries.has(retryId);
+        }
+    }
+
+    /**
+     * Mark retry as no longer active
+     */
+    async markAsInactive(retryId) {
+        if (!this.useRedis) {
+            this.activeRetries.delete(retryId);
+            return;
+        }
+
+        try {
+            await redisClient.sRem(`${this.redisNamespace}:${this.activeKey}`, retryId);
+            logger.debug('Retry marked as inactive', { retryId });
+        } catch (error) {
+            logger.error('Failed to mark retry as inactive', {
+                retryId,
+                error: error.message
+            });
+            this.activeRetries.delete(retryId);
+        }
+    }
+
+    /**
+     * Get retries ready to be executed (score <= current timestamp)
+     */
+    async getReadyRetries(limit = 10) {
+        if (!this.useRedis) {
+            const now = Date.now();
+            const ready = [];
+            for (const [retryId, entry] of this.retryQueue.entries()) {
+                if (entry.retryAt <= now && entry.status !== 'processing' && ready.length < limit) {
+                    ready.push(retryId);
+                }
+            }
+            return ready;
+        }
+
+        try {
+            const now = Date.now();
+            // Get all retries with score (retryAt) <= now
+            const retryIds = await redisClient.zRangeByScore(
+                `${this.redisNamespace}:${this.queueKey}`,
+                0,
+                now,
+                { LIMIT: { offset: 0, count: limit } }
+            );
+
+            return retryIds;
+        } catch (error) {
+            logger.error('Failed to get ready retries from Redis', {
+                error: error.message
+            });
+            return [];
         }
     }
 
@@ -120,8 +333,8 @@ class RetryService {
                 status: 'scheduled'
             };
 
-            // Add to retry queue
-            this.retryQueue.set(retryId, retryEntry);
+            // Add to retry queue (Redis or in-memory)
+            await this.addToQueue(retryId, retryEntry);
 
             // Update order with retry info
             await orderModel.findByIdAndUpdate(orderId, {
@@ -161,21 +374,22 @@ class RetryService {
      * Execute a retry
      */
     async executeRetry(retryId) {
-        const retryEntry = this.retryQueue.get(retryId);
+        const retryEntry = await this.getFromQueue(retryId);
         if (!retryEntry) {
             logger.warn('Retry entry not found', { retryId });
             return null;
         }
 
         // Check if already being processed
-        if (this.activeRetries.has(retryId)) {
+        const isCurrentlyActive = await this.isActive(retryId);
+        if (isCurrentlyActive) {
             logger.warn('Retry already in progress', { retryId });
             return null;
         }
 
         try {
             // Mark as active
-            this.activeRetries.set(retryId, Date.now());
+            await this.markAsActive(retryId);
             retryEntry.status = 'processing';
 
             const { orderId, platform, operation, payload, retryCount } = retryEntry;
@@ -232,8 +446,8 @@ class RetryService {
             // Check if operation succeeded
             if (result.success) {
                 // Success! Clean up and update order
-                this.retryQueue.delete(retryId);
-                this.activeRetries.delete(retryId);
+                await this.removeFromQueue(retryId);
+                await this.markAsInactive(retryId);
 
                 await orderModel.findByIdAndUpdate(orderId, {
                     'courierIntegration.syncStatus': 'synced',
@@ -254,8 +468,8 @@ class RetryService {
 
             } else {
                 // Failed again
-                this.activeRetries.delete(retryId);
-                this.retryQueue.delete(retryId);
+                await this.markAsInactive(retryId);
+                await this.removeFromQueue(retryId);
 
                 // Check if error is retryable
                 if (result.error?.retryable) {
@@ -286,8 +500,8 @@ class RetryService {
 
         } catch (error) {
             // Execution error
-            this.activeRetries.delete(retryId);
-            this.retryQueue.delete(retryId);
+            await this.markAsInactive(retryId);
+            await this.removeFromQueue(retryId);
 
             logger.error('Retry execution failed', {
                 retryId,
@@ -440,21 +654,30 @@ class RetryService {
      * Start background processor for retries
      */
     startRetryProcessor() {
-        setInterval(() => {
-            const now = Date.now();
+        setInterval(async () => {
+            try {
+                // Get retries ready for execution
+                const readyRetries = await this.getReadyRetries(10); // Process up to 10 at a time
 
-            for (const [retryId, entry] of this.retryQueue.entries()) {
-                // Skip if not ready or already processing
-                if (entry.retryAt > now || entry.status === 'processing') {
-                    continue;
+                for (const retryId of readyRetries) {
+                    // Execute retry asynchronously
+                    this.executeRetry(retryId).catch(error => {
+                        logger.error('Background retry execution failed', {
+                            retryId,
+                            error: error.message
+                        });
+                    });
                 }
 
-                // Execute retry asynchronously
-                this.executeRetry(retryId).catch(error => {
-                    logger.error('Background retry execution failed', {
-                        retryId,
-                        error: error.message
+                if (readyRetries.length > 0) {
+                    logger.debug('Retry processor batch completed', {
+                        processed: readyRetries.length
                     });
+                }
+            } catch (error) {
+                logger.error('Retry processor error', {
+                    error: error.message,
+                    stack: error.stack
                 });
             }
         }, 5000); // Check every 5 seconds
@@ -482,34 +705,74 @@ class RetryService {
     /**
      * Get retry queue statistics
      */
-    getStats() {
+    async getStats() {
         const stats = {
-            queueSize: this.retryQueue.size,
-            activeRetries: this.activeRetries.size,
+            queueSize: 0,
+            activeRetries: 0,
             queuedItems: [],
-            activeItems: []
+            activeItems: [],
+            useRedis: this.useRedis
         };
 
-        // Add queue details
-        for (const [retryId, entry] of this.retryQueue.entries()) {
-            stats.queuedItems.push({
-                retryId,
-                orderId: entry.orderId,
-                platform: entry.platform,
-                operation: entry.operation,
-                retryCount: entry.retryCount,
-                retryAt: entry.retryAt,
-                status: entry.status
-            });
-        }
+        if (!this.useRedis) {
+            // In-memory stats
+            stats.queueSize = this.retryQueue.size;
+            stats.activeRetries = this.activeRetries.size;
 
-        // Add active retry details
-        for (const [retryId, startTime] of this.activeRetries.entries()) {
-            stats.activeItems.push({
-                retryId,
-                startTime,
-                duration: Date.now() - startTime
-            });
+            for (const [retryId, entry] of this.retryQueue.entries()) {
+                stats.queuedItems.push({
+                    retryId,
+                    orderId: entry.orderId,
+                    platform: entry.platform,
+                    operation: entry.operation,
+                    retryCount: entry.retryCount,
+                    retryAt: entry.retryAt,
+                    status: entry.status
+                });
+            }
+
+            for (const [retryId, startTime] of this.activeRetries.entries()) {
+                stats.activeItems.push({
+                    retryId,
+                    startTime,
+                    duration: Date.now() - startTime
+                });
+            }
+        } else {
+            // Redis stats
+            try {
+                stats.queueSize = await redisClient.zCard(`${this.redisNamespace}:${this.queueKey}`);
+                stats.activeRetries = await redisClient.sCard(`${this.redisNamespace}:${this.activeKey}`);
+
+                // Get sample of queued items (up to 50)
+                const retryIds = await redisClient.zRange(`${this.redisNamespace}:${this.queueKey}`, 0, 49);
+                for (const retryId of retryIds) {
+                    const entry = await this.getFromQueue(retryId);
+                    if (entry) {
+                        stats.queuedItems.push({
+                            retryId,
+                            orderId: entry.orderId,
+                            platform: entry.platform,
+                            operation: entry.operation,
+                            retryCount: entry.retryCount,
+                            retryAt: entry.retryAt,
+                            status: entry.status
+                        });
+                    }
+                }
+
+                // Get active retries
+                const activeRetries = await redisClient.sMembers(`${this.redisNamespace}:${this.activeKey}`);
+                for (const retryId of activeRetries) {
+                    stats.activeItems.push({
+                        retryId
+                    });
+                }
+            } catch (error) {
+                logger.error('Failed to get Redis stats', {
+                    error: error.message
+                });
+            }
         }
 
         return stats;
