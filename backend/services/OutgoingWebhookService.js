@@ -1,9 +1,9 @@
 import axios from 'axios';
+import crypto from 'crypto';
 import WebhookEventModel from '../models/WebhookEventModel.js';
 import WebhookConfigModel from '../models/WebhookConfigModel.js';
 import logger from '../utils/logger.js';
 import WebhookSecurity from '../utils/webhookSecurity.js';
-import { v4 as uuidv4 } from 'uuid';
 import os from 'os';
 
 /**
@@ -104,7 +104,7 @@ class OutgoingWebhookService {
                 entityId,
                 subscriptionId,
                 metadata = {},
-                idempotencyKey = uuidv4(),
+                idempotencyKey = crypto.randomUUID(),
                 priority = 'normal'
             } = options;
 
@@ -209,7 +209,7 @@ class OutgoingWebhookService {
                 metadata: {
                     ...metadata,
                     platform: subscription.platform || 'tulumbak',
-                    correlationId: metadata.correlationId || uuidv4()
+                    correlationId: metadata.correlationId || crypto.randomUUID()
                 }
             };
 
