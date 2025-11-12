@@ -138,6 +138,12 @@ const Sidebar = () => {
           icon: Navigation,
           label: 'Entegrasyon Ayarları',
           description: 'Kurye paneli webhook entegrasyonları'
+        },
+        {
+          to: '/courier-test',
+          icon: Activity,
+          label: 'Entegrasyon Test Paneli',
+          description: 'MuditaKurye entegrasyon testleri'
         }
       ]
     },

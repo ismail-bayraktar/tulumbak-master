@@ -15,6 +15,7 @@ import BackendStatus from "./pages/BackendStatus.jsx";
 import Reports from "./pages/Reports.jsx";
 import CourierManagement from "./pages/CourierManagement.jsx";
 import CourierIntegrationSettings from "./pages/CourierIntegrationSettings.jsx";
+import CourierTestPanel from "./pages/CourierTestPanel.jsx";
 import Dashboard from "./pages/Dashboard.jsx";
 import EmailLogs from "./pages/EmailLogs.jsx";
 import SmsLogs from "./pages/SmsLogs.jsx";
@@ -98,6 +99,7 @@ const App = () => {
                                         <Route path="/reports" element={<Reports token={token} />}/>
                                         <Route path="/courier-management" element={<CourierManagement token={token} />}/>
                                         <Route path="/courier-integration" element={<CourierIntegrationSettings token={token} />}/>
+                                        <Route path="/courier-test" element={<CourierTestPanel token={token} />}/>
                                         <Route path="/branches" element={<Branches token={token} />}/>
                                         <Route path="/media-library" element={<MediaLibrary token={token} />}/>
                                     </Routes>
