@@ -284,11 +284,6 @@ export const clearCacheByNamespace = async (namespace) => {
 export const getRedisClient = () => redisClient;
 
 /**
- * Check if Redis is available
- */
-export const isRedisAvailable = () => isConnected;
-
-/**
  * Parse Redis INFO output to object
  */
 function parseRedisInfo(infoString) {
@@ -330,6 +325,16 @@ export const deleteFromNamespace = async (namespace, key) => {
   const namespacedKey = `${namespace}:${key}`;
   return await deleteFromCache(namespacedKey);
 };
+
+/**
+ * Check if Redis is available
+ */
+export const isRedisAvailable = () => {
+  return isConnected && redisClient !== null;
+};
+
+// Export redisClient for direct access
+export { redisClient };
 
 export default redisClient;
 

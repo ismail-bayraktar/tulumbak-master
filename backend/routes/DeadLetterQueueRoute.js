@@ -1,5 +1,5 @@
 import express from 'express';
-import adminAuth from '../middleware/adminAuth.js';
+import adminAuth from '../middleware/AdminAuth.js';
 import {
     getDLQEntries,
     getDLQEntry,
