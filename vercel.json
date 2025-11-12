@@ -1,0 +1,8 @@
+{
+  "version": 2,
+  "buildCommand": "echo 'Monorepo build - deploy individual projects separately'",
+  "outputDirectory": ".",
+  "ignoreCommand": "git diff --quiet HEAD^ HEAD ./",
+  "installCommand": "echo 'Install handled by individual projects'"
+}
+

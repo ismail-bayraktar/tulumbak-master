@@ -219,6 +219,13 @@ app.get('/', (req, res) => {
 app.use(notFoundHandler);
 app.use(errorHandler);
 
-app.listen(port, () => {
-    logInfo(`Server running on PORT: ${port}`, { port, environment: process.env.NODE_ENV });
-})
+// Vercel serverless functions için app export et
+// Normal ortamda (development/production server) app.listen kullan
+if (process.env.VERCEL !== '1') {
+    app.listen(port, () => {
+        logInfo(`Server running on PORT: ${port}`, { port, environment: process.env.NODE_ENV });
+    });
+}
+
+// Vercel için export
+export default app;

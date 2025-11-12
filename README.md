@@ -201,12 +201,34 @@ cd backend && npm test
 cd frontend && npm test
 ```
 
+## 🚀 Vercel Deployment
+
+Proje Vercel'e deploy edilmeye hazırdır. Detaylı rehberler için:
+
+- [Hızlı Başlangıç](./VERCEL_QUICK_START.md) - 5 dakikada deployment
+- [Deployment Rehberi](./VERCEL_DEPLOYMENT_GUIDE.md) - Kapsamlı rehber
+- [Environment Variables](./VERCEL_ENV_VARIABLES.md) - Tüm environment variables
+
+### Hızlı Deployment
+
+```bash
+# Backend
+cd backend && vercel --prod
+
+# Frontend
+cd frontend && vercel --prod
+
+# Admin
+cd admin && vercel --prod
+```
+
 ## 📝 Notlar
 
 - MongoDB verileri `tulumbak-mongo_data` volume'ünde saklanır
 - Docker konteynerleri yeniden başlatıldığında veriler korunur
 - Tüm API endpoint'leri RESTful standartlara uygundur
 - Admin panel JWT token bazlı authentication kullanır
+- Vercel deployment için backend `server.js` dosyası serverless functions için optimize edilmiştir
 
 ## 🤝 Katkıda Bulunma
 
