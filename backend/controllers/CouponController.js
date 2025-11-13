@@ -25,6 +25,7 @@ const validateCoupon = async (req, res) => {
 // CRUD
 const createCoupon = async (req, res) => {
     try {
+        req.body.code = req.body.code.toUpperCase();
         const coupon = new couponModel(req.body);
         await coupon.save();
         logger.info('Coupon created', { couponId: coupon._id, code: coupon.code });

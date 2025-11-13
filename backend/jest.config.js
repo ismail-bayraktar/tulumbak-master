@@ -15,17 +15,12 @@ export default {
   ],
   coverageDirectory: 'coverage',
   verbose: true,
-  extensionsToTreatAsEsm: ['.js'],
-  globals: {
-    'ts-jest': {
-      useESM: true
-    }
-  },
   transformIgnorePatterns: [
     'node_modules/(?!(.*\\.mjs$))'
   ],
   moduleNameMapper: {
-    '^(\\.{1,2}/.*)\\.js$': '$1'
+    '^(\\.{1,2}/.*)\\.js$': '$1',
+    '^#(.*)$': '<rootDir>/$1',
   }
 };
 
