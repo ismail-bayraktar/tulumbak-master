@@ -26,9 +26,11 @@ import {
   CheckCircle,
   AlertCircle,
   Send,
+  Palette,
 } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import api from "@/lib/api"
+import DesignTab from "./DesignTab"
 
 export default function EmailSettings() {
   const { toast } = useToast()
@@ -213,6 +215,10 @@ export default function EmailSettings() {
                 <Server className="h-4 w-4 mr-2" />
                 SMTP Ayarları
               </TabsTrigger>
+              <TabsTrigger value="design">
+                <Palette className="h-4 w-4 mr-2" />
+                Tasarım
+              </TabsTrigger>
               <TabsTrigger value="triggers">
                 <Bell className="h-4 w-4 mr-2" />
                 Email Tetikleyicileri
@@ -326,6 +332,11 @@ export default function EmailSettings() {
                   </Button>
                 </CardContent>
               </Card>
+            </TabsContent>
+
+            {/* Design Tab */}
+            <TabsContent value="design">
+              <DesignTab settings={settings} updateSetting={updateSetting} />
             </TabsContent>
 
             {/* Triggers Tab */}
