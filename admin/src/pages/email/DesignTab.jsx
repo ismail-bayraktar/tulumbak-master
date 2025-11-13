@@ -69,7 +69,7 @@ export default function DesignTab({ settings, updateSetting }) {
       formData.append("file", file)
 
       // Upload to Cloudinary via backend
-      const response = await api.post("/api/upload", formData, {
+      const response = await api.post("/api/media/upload", formData, {
         headers: {
           "Content-Type": "multipart/form-data",
         },
