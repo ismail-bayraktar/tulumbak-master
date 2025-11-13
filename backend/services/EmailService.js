@@ -1,8 +1,10 @@
 import nodemailer from 'nodemailer';
 import logger from '../utils/logger.js';
+import EmailRenderer from './EmailRenderer.js';
 
 /**
  * Email Service for sending transactional emails
+ * Supports both legacy template methods and modern React Email templates
  */
 class EmailService {
   constructor() {
@@ -200,7 +202,79 @@ class EmailService {
   }
 
   /**
-   * Send order confirmation email
+   * Send email using React Email templates (Modern Approach)
+   * @param {string} templateType - Template identifier (e.g., 'orderConfirmation')
+   * @param {Object} data - Template data
+   * @param {string} to - Recipient email address
+   * @param {Object} options - Additional email options
+   * @returns {Promise<Object>}
+   */
+  async sendReactEmail(templateType, data, to, options = {}) {
+    try {
+      // Validate template data
+      const validation = EmailRenderer.validateTemplateData(templateType, data);
+      if (!validation.isValid) {
+        logger.error('Invalid template data', {
+          templateType,
+          errors: validation.errors
+        });
+        return {
+          success: false,
+          message: 'Invalid template data',
+          errors: validation.errors
+        };
+      }
+
+      // Render template
+      logger.info('Rendering React Email template', { templateType, to });
+      const { subject, html } = await EmailRenderer.renderTemplate(templateType, data);
+
+      // Prepare mail options
+      const mailOptions = {
+        from: options.from || `"Tulumbak Baklava" <${process.env.SMTP_USER}>`,
+        to,
+        subject: options.subject || subject,
+        html,
+        ...options, // Allow override of any option
+      };
+
+      // Send email
+      const result = await this.sendEmail(mailOptions);
+
+      if (result.success) {
+        logger.info('React Email sent successfully', {
+          templateType,
+          to,
+          messageId: result.messageId
+        });
+      }
+
+      return result;
+    } catch (error) {
+      logger.error('Error sending React Email', {
+        templateType,
+        to,
+        error: error.message,
+        stack: error.stack
+      });
+
+      return {
+        success: false,
+        message: `Failed to send email: ${error.message}`
+      };
+    }
+  }
+
+  /**
+   * Get available React Email templates
+   * @returns {Array<string>}
+   */
+  getAvailableTemplates() {
+    return EmailRenderer.getAvailableTemplates();
+  }
+
+  /**
+   * Send order confirmation email (Legacy - uses old template)
    * @param {Object} orderData - Order details
    * @param {String} to - Recipient email
    * @returns {Promise<Object>}
