@@ -44,7 +44,11 @@
       "Bash(cp:*)",
       "Bash(.gitignore)",
       "Bash(rm:*)",
-      "Bash(powershell -Command \"Remove-Item -Recurse -Force frontend\")"
+      "Bash(powershell -Command \"Remove-Item -Recurse -Force frontend\")",
+      "Bash(lsof:*)",
+      "Bash(xargs kill:*)",
+      "Bash(mkdir:*)",
+      "Bash(powershell -Command \"Remove-Item -Recurse -Force frontend-new\")"
     ],
     "deny": [],
     "ask": []
