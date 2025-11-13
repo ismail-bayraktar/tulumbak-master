@@ -23,9 +23,9 @@ export const useProductStore = create<ProductState>((set) => ({
         API_ENDPOINTS.PRODUCTS.LIST
       );
 
-      if (response.data.success && response.data.data) {
+      if (response.data.success && response.data.products) {
         set({
-          products: response.data.data.products,
+          products: response.data.products,
           loading: false
         });
       } else {

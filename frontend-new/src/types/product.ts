@@ -1,5 +1,5 @@
 export interface SizePrice {
-  size: string;
+  size: number | string;
   price: number;
   _id?: string;
 }
@@ -10,20 +10,25 @@ export interface Product {
   description: string;
   basePrice: number;
   sizePrices: SizePrice[];
+  sizes?: string[];
+  weights?: number[];
   category: string;
   subCategory?: string;
   bestseller?: boolean;
   image: string[];
-  date?: string;
+  date?: string | number;
   stock?: number;
+  freshType?: string;
+  packaging?: string;
+  giftWrap?: boolean;
+  labels?: string[];
+  personCounts?: string[];
 }
 
 export interface ProductListResponse {
   success: boolean;
-  data?: {
-    products: Product[];
-    total?: number;
-  };
+  products?: Product[];
+  total?: number;
   message?: string;
 }
 

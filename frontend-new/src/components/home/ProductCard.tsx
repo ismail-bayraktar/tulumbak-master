@@ -14,6 +14,7 @@ interface ProductCardProps {
 
 export function ProductCard({ product }: ProductCardProps) {
   const displayPrice = product.sizePrices[0]?.price || product.basePrice;
+  const priceInTL = displayPrice / 100;
   const imageUrl = product.image[0] || '/images/placeholder-product.jpg';
 
   return (
@@ -42,11 +43,11 @@ export function ProductCard({ product }: ProductCardProps) {
         </p>
         <div className="flex items-baseline gap-2">
           <span className="text-xl font-bold">
-            {displayPrice.toFixed(2)} ₺
+            {priceInTL.toFixed(2)} ₺
           </span>
           {product.sizePrices.length > 1 && (
             <span className="text-xs text-neutral-500">
-              ({product.sizePrices[0].size})
+              ({product.sizePrices[0].size}g)
             </span>
           )}
         </div>
