@@ -1,5 +1,0 @@
-pKPX5tW4VVvXlf4s
-bayraktarworking_db_user
-
-webhook secret
-wh_0rC-rimL096iJALsxXui67-n0LrKWVNlpHknLHn12g4

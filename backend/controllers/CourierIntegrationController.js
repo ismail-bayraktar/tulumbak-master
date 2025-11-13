@@ -212,14 +212,14 @@ export const updateConfiguration = async (req, res) => {
 
         // Handle sensitive fields (will be encrypted by pre-save hook)
         for (const field of sensitiveFields) {
-            if (updates[field] && !updates[field].includes('***')) {
-                // Only update if not masked value (pre-save hook will encrypt)
+            if (updates[field] && !updates[field].includes('***') && !updates[field].startsWith('enc:')) {
+                // Only update if not masked or already encrypted (pre-save hook will encrypt)
                 config[field] = updates[field];
             }
         }
 
         // Handle webhook secret separately (nested in webhookConfig)
-        if (updates.webhookSecret && !updates.webhookSecret.includes('***')) {
+        if (updates.webhookSecret && !updates.webhookSecret.includes('***') && !updates.webhookSecret.startsWith('enc:')) {
             // Update webhookConfig.secretKey
             if (!config.webhookConfig) {
                 config.webhookConfig = {};

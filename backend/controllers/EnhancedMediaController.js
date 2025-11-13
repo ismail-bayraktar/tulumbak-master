@@ -1,8 +1,9 @@
 import Media from '../models/MediaModel.js';
-import { getCloudinaryStorage, generateResponsiveImages, getOptimizedUrl, cloudinary } from '../config/cloudinary.js';
+import { getOptimizedUrl } from '../config/cloudinary.js';
 import logger from '../utils/logger.js';
+import MediaService from '../services/MediaService.js';
 
-// Upload media to Cloudinary
+// Upload media using unified MediaService
 const uploadMedia = async (req, res) => {
     try {
         if (!req.file) {
@@ -12,63 +13,28 @@ const uploadMedia = async (req, res) => {
             });
         }
 
-        // Get folder from request or use default
-        const folder = req.body.folder || 'general';
-        const category = req.body.category || 'general';
-
-        // Use Cloudinary storage
-        const storage = getCloudinaryStorage(folder);
-
-        // Process the file through Cloudinary
-        const result = await new Promise((resolve, reject) => {
-            storage._handleFile(req, req.file, (error, info) => {
-                if (error) reject(error);
-                else resolve(info);
-            });
-        });
-
-        // Generate responsive image URLs
-        const responsiveImages = generateResponsiveImages(result.publicId);
-
-        // Create media document
-        const media = new Media({
-            filename: result.originalname,
-            originalName: req.file.originalname,
-            mimetype: req.file.mimetype,
-            size: result.bytes || req.file.size,
-            publicId: result.publicId,
-            url: result.url,
-            secureUrl: result.secure_url,
-            resourceType: result.resource_type || 'image',
-            format: result.format,
-            width: result.width,
-            height: result.height,
-            aspectRatio: result.aspectRatio || (result.width / result.height),
-            bytes: result.bytes,
-            responsive: {
-                thumbnail: responsiveImages.find(img => img.name === 'thumbnail')?.url,
-                small: responsiveImages.find(img => img.name === 'small')?.url,
-                medium: responsiveImages.find(img => img.name === 'medium')?.url,
-                large: responsiveImages.find(img => img.name === 'large')?.url
-            },
-            alt: req.body.alt || req.file.originalname,
-            title: req.body.title || req.file.originalname,
-            description: req.body.description || '',
-            folder: folder,
-            category: category,
+        // Prepare upload options
+        const options = {
+            folder: req.body.folder || 'general',
+            category: req.body.category || 'general',
+            alt: req.body.alt,
+            title: req.body.title,
+            description: req.body.description,
             tags: req.body.tags ? req.body.tags.split(',').map(tag => tag.trim()) : [],
-            uploadedBy: req.body.uploadedBy || 'admin',
+            uploadedBy: req.body.uploadedBy || 'admin'
+        };
+
+        // Upload through MediaService (handles Cloudinary or Local based on settings)
+        const media = await MediaService.uploadMedia(req.file, options);
+
+        // Add tracking metadata
+        await Media.findByIdAndUpdate(media._id, {
             uploadIP: req.ip,
             deviceInfo: {
                 userAgent: req.get('User-Agent'),
                 platform: req.get('Sec-Ch-UA-Platform')
-            },
-            processing: {
-                status: 'completed'
             }
         });
-
-        await media.save();
 
         res.json({
             success: true,
@@ -78,7 +44,7 @@ const uploadMedia = async (req, res) => {
                 filename: media.filename,
                 originalName: media.originalName,
                 publicId: media.publicId,
-                url: media.secureUrl,
+                url: media.secureUrl || media.url,
                 mimetype: media.mimetype,
                 size: media.size,
                 width: media.width,
@@ -151,7 +117,7 @@ const listMedia = async (req, res) => {
                 filename: item.filename,
                 originalName: item.originalName,
                 publicId: item.publicId,
-                url: item.secureUrl,
+                url: item.secureUrl || item.url,
                 mimetype: item.mimetype,
                 size: item.size,
                 width: item.width,
@@ -213,7 +179,7 @@ const getMediaById = async (req, res) => {
                 filename: media.filename,
                 originalName: media.originalName,
                 publicId: media.publicId,
-                url: media.secureUrl,
+                url: media.secureUrl || media.url,
                 mimetype: media.mimetype,
                 size: media.size,
                 width: media.width,
@@ -298,7 +264,7 @@ const updateMedia = async (req, res) => {
     }
 };
 
-// Delete media from Cloudinary and database
+// Delete media using unified MediaService
 const deleteMedia = async (req, res) => {
     try {
         const media = await Media.findById(req.params.id);
@@ -310,10 +276,7 @@ const deleteMedia = async (req, res) => {
             });
         }
 
-        // Delete from Cloudinary
-        await cloudinary.uploader.destroy(media.publicId);
-
-        // Check usage before deleting from database
+        // Check usage before deleting
         if (media.usedIn && media.usedIn.length > 0) {
             return res.status(400).json({
                 success: false,
@@ -322,8 +285,8 @@ const deleteMedia = async (req, res) => {
             });
         }
 
-        // Delete from database
-        await Media.findByIdAndDelete(req.params.id);
+        // Delete through MediaService (handles Cloudinary or Local)
+        await MediaService.deleteMedia(req.params.id);
 
         res.json({
             success: true,

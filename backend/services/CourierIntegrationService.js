@@ -2,6 +2,7 @@ import MuditaKuryeService from './MuditaKuryeService.js';
 import RetryService from './RetryService.js';
 import CircuitBreakerService from './CircuitBreakerService.js';
 import CourierIntegrationConfigModel from '../models/CourierIntegrationConfigModel.js';
+import DeadLetterQueueModel from '../models/DeadLetterQueueModel.js';
 import orderModel from '../models/OrderModel.js';
 import logger from '../utils/logger.js';
 

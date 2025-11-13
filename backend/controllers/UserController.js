@@ -1,4 +1,5 @@
 import userModel from "../models/UserModel.js";
+import orderModel from "../models/OrderModel.js";
 import validator from "validator";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
@@ -112,4 +113,113 @@ const adminLogin = async (req, res) => {
     }
 }
 
-export { loginUser, registerUser, adminLogin };
+/**
+ * Get all customers with order statistics
+ */
+const getCustomers = async (req, res) => {
+  try {
+    const { page = 1, limit = 20, search = '', sortBy = 'createdAt', sortOrder = 'desc' } = req.query;
+
+    // Build search query
+    let query = {};
+    if (search) {
+      query.$or = [
+        { name: { $regex: search, $options: 'i' } },
+        { email: { $regex: search, $options: 'i' } }
+      ];
+    }
+
+    // Get paginated users
+    const skip = (page - 1) * limit;
+    const users = await userModel
+      .find(query)
+      .select('-password')
+      .sort({ [sortBy]: sortOrder === 'asc' ? 1 : -1 })
+      .skip(skip)
+      .limit(parseInt(limit));
+
+    const total = await userModel.countDocuments(query);
+
+    // Get order statistics for each user
+    const customersWithStats = await Promise.all(
+      users.map(async (user) => {
+        const orders = await orderModel.find({ userId: user._id.toString() });
+        const totalOrders = orders.length;
+        const totalSpent = orders
+          .filter(order => order.payment)
+          .reduce((sum, order) => sum + order.amount, 0);
+        const lastOrder = orders.length > 0
+          ? orders.sort((a, b) => b.date - a.date)[0].date
+          : null;
+
+        return {
+          _id: user._id,
+          name: user.name,
+          email: user.email,
+          phone: user.phone || '',
+          createdAt: user.createdAt,
+          totalOrders,
+          totalSpent,
+          lastOrder,
+        };
+      })
+    );
+
+    res.json({
+      success: true,
+      customers: customersWithStats,
+      pagination: {
+        page: parseInt(page),
+        limit: parseInt(limit),
+        total,
+        pages: Math.ceil(total / limit)
+      }
+    });
+  } catch (error) {
+    logger.error('Error fetching customers', { error: error.message, stack: error.stack });
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+/**
+ * Get customer details with full order history
+ */
+const getCustomerDetails = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const user = await userModel.findById(id).select('-password');
+    if (!user) {
+      return res.status(404).json({ success: false, message: 'Müşteri bulunamadı' });
+    }
+
+    const orders = await orderModel.find({ userId: id }).sort({ date: -1 });
+
+    const stats = {
+      totalOrders: orders.length,
+      totalSpent: orders.filter(o => o.payment).reduce((sum, o) => sum + o.amount, 0),
+      averageOrderValue: orders.length > 0
+        ? orders.filter(o => o.payment).reduce((sum, o) => sum + o.amount, 0) / orders.filter(o => o.payment).length
+        : 0,
+      lastOrder: orders.length > 0 ? orders[0].date : null,
+    };
+
+    res.json({
+      success: true,
+      customer: {
+        _id: user._id,
+        name: user.name,
+        email: user.email,
+        phone: user.phone,
+        createdAt: user.createdAt,
+      },
+      stats,
+      orders,
+    });
+  } catch (error) {
+    logger.error('Error fetching customer details', { error: error.message, stack: error.stack, customerId: req.params.id });
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export { loginUser, registerUser, adminLogin, getCustomers, getCustomerDetails };

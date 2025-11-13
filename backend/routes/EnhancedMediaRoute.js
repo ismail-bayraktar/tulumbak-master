@@ -9,14 +9,11 @@ import {
     trackUsage,
     getOptimizedImage
 } from '../controllers/EnhancedMediaController.js';
-import { getCloudinaryStorage } from '../config/cloudinary.js';
 
 const router = express.Router();
 
-// Enhanced Upload Configuration for Cloudinary
-const getStorageForFolder = (folder) => {
-    return getCloudinaryStorage(folder);
-};
+// Memory storage for MediaService processing
+const storage = multer.memoryStorage();
 
 // File filter for media uploads
 const fileFilter = (req, file, cb) => {
@@ -32,51 +29,21 @@ const fileFilter = (req, file, cb) => {
     }
 };
 
-// Dynamic upload middleware based on folder
-const getUploadMiddleware = (folder = 'general') => {
-    const storage = getStorageForFolder(folder);
-    return multer({
-        storage: storage,
-        fileFilter: fileFilter,
-        limits: {
-            fileSize: 50 * 1024 * 1024, // 50MB
-            files: 10 // Maximum 10 files at once
-        }
-    });
-};
+// Upload middleware with memory storage
+const upload = multer({
+    storage: storage,
+    fileFilter: fileFilter,
+    limits: {
+        fileSize: 50 * 1024 * 1024, // 50MB
+        files: 10 // Maximum 10 files at once
+    }
+});
 
 // Routes
-router.post('/upload',
-    getUploadMiddleware('general'),
-    uploadMedia
-);
+router.post('/upload', upload.single('file'), uploadMedia);
 
 // Upload with specific folder
-router.post('/upload/:folder',
-    (req, res, next) => {
-        const folder = req.params.folder || 'general';
-        const storage = getStorageForFolder(folder);
-        const upload = multer({
-            storage: storage,
-            fileFilter: fileFilter,
-            limits: {
-                fileSize: 50 * 1024 * 1024,
-                files: 10
-            }
-        }).single('file');
-
-        upload(req, res, (err) => {
-            if (err) {
-                return res.status(400).json({
-                    success: false,
-                    message: err.message
-                });
-            }
-            next();
-        });
-    },
-    uploadMedia
-);
+router.post('/upload/:folder', upload.single('file'), uploadMedia);
 
 // Media listing with pagination and filtering
 router.get('/list', listMedia);
@@ -97,9 +64,6 @@ router.post('/:id/usage', trackUsage);
 router.delete('/:id', deleteMedia);
 
 // Bulk operations
-router.post('/bulk-upload',
-    getUploadMiddleware('bulk'),
-    uploadMedia
-);
+router.post('/bulk-upload', upload.array('files', 10), uploadMedia);
 
 export default router;
