@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar"
 import { AppSidebar } from "@/components/app-sidebar"
 import {
@@ -28,11 +28,15 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { useToast } from "@/hooks/use-toast"
 import { productAPI } from "@/lib/api"
 import { Upload, X, Plus, Package } from "lucide-react"
+import useCategories from "@/hooks/useCategories"
 
 export default function ProductAdd() {
   const { toast } = useToast()
   const [loading, setLoading] = useState(false)
   const [images, setImages] = useState([null, null, null, null])
+
+  // Fetch active categories from backend
+  const { categories, loading: categoriesLoading, fetchActiveCategories } = useCategories()
 
   // Form state
   const [formData, setFormData] = useState({
@@ -57,13 +61,10 @@ export default function ProductAdd() {
     sizePrices: [],
   })
 
-  const categories = [
-    "Taze Meyve",
-    "Kuruyemiş",
-    "Çikolata",
-    "Atıştırmalık",
-    "Özel Paketler",
-  ]
+  // Fetch active categories on component mount
+  useEffect(() => {
+    fetchActiveCategories()
+  }, [fetchActiveCategories])
 
   const sizeOptions = [250, 500, 1000, 2000]
   const personCountOptions = ["2-3", "5-6", "8-10", "12+"]
@@ -266,16 +267,22 @@ export default function ProductAdd() {
                     <Select
                       value={formData.category}
                       onValueChange={(value) => setFormData({ ...formData, category: value })}
+                      disabled={categoriesLoading}
                     >
                       <SelectTrigger id="category">
-                        <SelectValue placeholder="Kategori seçin" />
+                        <SelectValue placeholder={categoriesLoading ? "Kategoriler yükleniyor..." : "Kategori seçin"} />
                       </SelectTrigger>
                       <SelectContent>
                         {categories.map((cat) => (
-                          <SelectItem key={cat} value={cat}>
-                            {cat}
+                          <SelectItem key={cat._id} value={cat.name}>
+                            {cat.name}
                           </SelectItem>
                         ))}
+                        {categories.length === 0 && !categoriesLoading && (
+                          <div className="px-2 py-4 text-center text-sm text-muted-foreground">
+                            Kategori bulunamadı. Önce kategori ekleyin.
+                          </div>
+                        )}
                       </SelectContent>
                     </Select>
                   </div>

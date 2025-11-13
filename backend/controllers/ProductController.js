@@ -2,23 +2,30 @@ import productModel from "../models/ProductModel.js";
 import Media from "../models/MediaModel.js";
 import logger from "../utils/logger.js";
 
+// Helper function to parse JSON string or return array
+const parseJSONArray = (value) => {
+    if (!value) return [];
+    if (Array.isArray(value)) return value;
+    if (typeof value === 'string') {
+        try {
+            const parsed = JSON.parse(value);
+            return Array.isArray(parsed) ? parsed : [parsed];
+        } catch (e) {
+            // Not JSON, try comma-separated
+            return value.split(',').map(v => v.trim()).filter(v => v);
+        }
+    }
+    return [value];
+};
 
 const parseSizes = (sizes) => {
-    if (!sizes) return [];
-    if (Array.isArray(sizes)) return sizes;
-    return [sizes];
+    const parsed = parseJSONArray(sizes);
+    return parsed.map(s => Number(s)).filter(s => !isNaN(s));
 }
 
 const addProduct = async (req, res) => {
     try {
-        const { name, description, basePrice, category, subCategory, sizes, personCounts, bestseller, stock, allergens, ingredients, shelfLife, storageInfo, weights, freshType, packaging, giftWrap, labels } = req.body;
-        
-        const parsePersonCounts = (personCounts) => {
-            if (!personCounts) return [];
-            if (Array.isArray(personCounts)) return personCounts;
-            if (typeof personCounts === 'string') return personCounts.split(',').map(p => p.trim());
-            return [];
-        };
+        const { name, description, basePrice, category, subCategory, sizes, personCounts, bestseller, stock, allergens, ingredients, shelfLife, storageInfo, weights, freshType, packaging, giftWrap, labels, metaTitle, metaDescription, keywords } = req.body;
         const image1 = req.files.image1 && req.files.image1[0];
         const image2 = req.files.image2 && req.files.image2[0];
         const image3 = req.files.image3 && req.files.image3[0];
@@ -26,8 +33,8 @@ const addProduct = async (req, res) => {
 
         const images = [image1, image2, image3, image4].filter((item) => item !== undefined);
 
-        // Upload images with multer (backward compatibility)
-        const imagesUrl = images.map(item => `/assets/${item.filename}`);
+        // Upload images with multer (saved to backend/uploads, served via /uploads)
+        const imagesUrl = images.map(item => `/uploads/${item.filename}`);
 
         // Save images to Media model for better management
         const baseUrl = `${req.protocol}://${req.get('host')}`;
@@ -43,8 +50,8 @@ const addProduct = async (req, res) => {
                             mimetype: file.mimetype,
                             size: file.size,
                             path: file.path,
-                            url: `/assets/${file.filename}`,
-                            secureUrl: `${baseUrl}/assets/${file.filename}`,
+                            url: `/uploads/${file.filename}`,
+                            secureUrl: `${baseUrl}/uploads/${file.filename}`,
                             category: 'product',
                             folder: 'products',
                             alt: `${name} - Ürün görseli ${index + 1}`,
@@ -73,14 +80,9 @@ const addProduct = async (req, res) => {
         logger.info('Adding product', { name, category, basePrice, imageCount: imagesUrl.length });
 
         const parsedSizes = parseSizes(sizes);
-        const parseNumberArray = (val) => {
-            if (!val) return [];
-            if (Array.isArray(val)) return val.map((v) => Number(v));
-            if (typeof val === 'string') return val.split(',').map((v) => Number(v.trim())).filter((n) => !Number.isNaN(n));
-            return [];
-        }
-        const parsedWeights = parseNumberArray(weights);
-        const parsedLabels = Array.isArray(labels) ? labels : (typeof labels === 'string' ? labels.split(',').map((s)=>s.trim()) : []);
+        const parsedWeights = parseJSONArray(weights).map(w => Number(w)).filter(w => !isNaN(w));
+        const parsedLabels = parseJSONArray(labels);
+        const parsedPersonCounts = parseJSONArray(personCounts);
 
         const sizePrices = parsedSizes.map(size => ({
             size,
@@ -100,7 +102,7 @@ const addProduct = async (req, res) => {
             packaging: packaging === 'özel' ? 'özel' : 'standart',
             giftWrap: giftWrap === 'true' || giftWrap === true,
             labels: parsedLabels,
-            personCounts: parsePersonCounts(personCounts),
+            personCounts: parsedPersonCounts,
             image: imagesUrl,
             date: Date.now(),
             sizePrices,
@@ -108,7 +110,11 @@ const addProduct = async (req, res) => {
             allergens: allergens || "",
             ingredients: ingredients || "",
             shelfLife: shelfLife || "",
-            storageInfo: storageInfo || ""
+            storageInfo: storageInfo || "",
+            // SEO Fields (will be auto-generated if not provided)
+            metaTitle: metaTitle || undefined,
+            metaDescription: metaDescription || undefined,
+            keywords: keywords ? parseJSONArray(keywords) : undefined
         }
         const product = new productModel(productData);
         await product.save();
@@ -144,14 +150,7 @@ const addProduct = async (req, res) => {
 
     const updateProduct = async (req, res) => {
     try {
-        const { id, name, description, basePrice, category, subCategory, sizes, personCounts, bestseller, stock, allergens, ingredients, shelfLife, storageInfo, weights, freshType, packaging, giftWrap, labels } = req.body;
-
-        const parsePersonCounts = (personCounts) => {
-            if (!personCounts) return [];
-            if (Array.isArray(personCounts)) return personCounts;
-            if (typeof personCounts === 'string') return personCounts.split(',').map(p => p.trim());
-            return [];
-        };
+        const { id, name, description, basePrice, category, subCategory, sizes, personCounts, bestseller, stock, allergens, ingredients, shelfLife, storageInfo, weights, freshType, packaging, giftWrap, labels, metaTitle, metaDescription, keywords } = req.body;
 
         if (!id) {
             return res.status(400).json({ success: false, message: "Product id is required" });
@@ -172,26 +171,25 @@ const addProduct = async (req, res) => {
         if (basePrice !== undefined) updatePayload.basePrice = Number(basePrice);
         if (bestseller !== undefined) updatePayload.bestseller = bestseller === "true" || bestseller === true;
         if (stock !== undefined) updatePayload.stock = Number(stock);
-        
+
         // Yeni alanlar
-        if (personCounts !== undefined) updatePayload.personCounts = parsePersonCounts(personCounts);
+        if (personCounts !== undefined) updatePayload.personCounts = parseJSONArray(personCounts);
         if (allergens !== undefined) updatePayload.allergens = allergens;
         if (ingredients !== undefined) updatePayload.ingredients = ingredients;
         if (shelfLife !== undefined) updatePayload.shelfLife = shelfLife;
         if (storageInfo !== undefined) updatePayload.storageInfo = storageInfo;
         if (weights !== undefined) {
-            const parseNumberArray = (val) => {
-                if (!val) return [];
-                if (Array.isArray(val)) return val.map((v) => Number(v));
-                if (typeof val === 'string') return val.split(',').map((v) => Number(v.trim())).filter((n) => !Number.isNaN(n));
-                return [];
-            }
-            updatePayload.weights = parseNumberArray(weights);
+            updatePayload.weights = parseJSONArray(weights).map(w => Number(w)).filter(w => !isNaN(w));
         }
         if (freshType !== undefined) updatePayload.freshType = freshType === 'kuru' ? 'kuru' : 'taze';
         if (packaging !== undefined) updatePayload.packaging = packaging === 'özel' ? 'özel' : 'standart';
         if (giftWrap !== undefined) updatePayload.giftWrap = giftWrap === 'true' || giftWrap === true;
-        if (labels !== undefined) updatePayload.labels = Array.isArray(labels) ? labels : (typeof labels === 'string' ? labels.split(',').map((s)=>s.trim()) : []);
+        if (labels !== undefined) updatePayload.labels = parseJSONArray(labels);
+
+        // SEO Fields
+        if (metaTitle !== undefined) updatePayload.metaTitle = metaTitle;
+        if (metaDescription !== undefined) updatePayload.metaDescription = metaDescription;
+        if (keywords !== undefined) updatePayload.keywords = parseJSONArray(keywords);
 
         const parsedSizes = parseSizes(sizes);
         if (parsedSizes.length) {
@@ -203,7 +201,7 @@ const addProduct = async (req, res) => {
         }
 
         if (images.length) {
-            const imagesUrl = images.map(item => `/assets/${item.filename}`);
+            const imagesUrl = images.map(item => `/uploads/${item.filename}`);
             updatePayload.image = imagesUrl;
 
             // Save new images to Media model
@@ -219,8 +217,8 @@ const addProduct = async (req, res) => {
                             mimetype: file.mimetype,
                             size: file.size,
                             path: file.path,
-                            url: `/assets/${file.filename}`,
-                            secureUrl: `${baseUrl}/assets/${file.filename}`,
+                            url: `/uploads/${file.filename}`,
+                            secureUrl: `${baseUrl}/uploads/${file.filename}`,
                             category: 'product',
                             folder: 'products',
                             alt: `${name || 'Ürün'} - Ürün görseli ${index + 1}`,
@@ -258,16 +256,21 @@ const addProduct = async (req, res) => {
 // List product
 const listProducts = async (req, res) => {
     try {
-        const { inStockOnly = false } = req.query; // Optional filter for stock availability
-        
-        let products;
-        if (inStockOnly === 'true') {
-            // Only return products with stock > 0
-            products = await productModel.find({ stock: { $gt: 0 } });
-        } else {
-            products = await productModel.find({});
+        const { inStockOnly = false, includeDeleted = false } = req.query;
+
+        let query = {};
+
+        // Default: only show active products (including those without 'active' field for backward compatibility)
+        if (includeDeleted !== 'true') {
+            query.active = { $ne: false }; // Not equal to false (includes true and undefined/null)
         }
-        
+
+        // Optional stock filter
+        if (inStockOnly === 'true') {
+            query.stock = { $gt: 0 };
+        }
+
+        const products = await productModel.find(query).populate('category', 'name slug active').sort({ date: -1 });
         res.json({success: true, products});
     } catch (error) {
         logger.error('Error listing products', { error: error.message, stack: error.stack });
@@ -292,7 +295,7 @@ const removeProduct = async (req, res) => {
 const singleProduct = async (req, res) => {
     try {
         const { productId } = req.body;
-        const product = await productModel.findById(productId);
+        const product = await productModel.findById(productId).populate('category', 'name slug active');
         if (!product) {
             return res.json({success: false, message: "Product not found"});
         }
@@ -303,4 +306,142 @@ const singleProduct = async (req, res) => {
     }
 }
 
-export { listProducts, addProduct, removeProduct, singleProduct, updateProduct };
+// Soft Delete - Set active: false
+const softDeleteProduct = async (req, res) => {
+    try {
+        const { id } = req.body;
+        const adminId = req.userId || 'system'; // From auth middleware
+
+        const product = await productModel.findByIdAndUpdate(
+            id,
+            {
+                active: false,
+                deletedAt: new Date(),
+                deletedBy: adminId
+            },
+            { new: true }
+        );
+
+        if (!product) {
+            return res.json({ success: false, message: "Ürün bulunamadı" });
+        }
+
+        logger.info('Product soft deleted', { productId: id, adminId });
+        res.json({ success: true, message: "Ürün pasife alındı" });
+    } catch (error) {
+        logger.error('Error soft deleting product', { error: error.message, stack: error.stack, productId: req.body.id });
+        res.json({ success: false, message: error.message });
+    }
+};
+
+// Restore Deleted Product
+const restoreProduct = async (req, res) => {
+    try {
+        const { id } = req.body;
+
+        const product = await productModel.findByIdAndUpdate(
+            id,
+            {
+                active: true,
+                deletedAt: null,
+                deletedBy: null
+            },
+            { new: true }
+        );
+
+        if (!product) {
+            return res.json({ success: false, message: "Ürün bulunamadı" });
+        }
+
+        logger.info('Product restored', { productId: id });
+        res.json({ success: true, message: "Ürün geri yüklendi" });
+    } catch (error) {
+        logger.error('Error restoring product', { error: error.message, stack: error.stack, productId: req.body.id });
+        res.json({ success: false, message: error.message });
+    }
+};
+
+// Permanent Delete - Used by cleanup job and admin
+const permanentDeleteProduct = async (req, res) => {
+    try {
+        const { id } = req.body;
+
+        // Get product first to delete associated media
+        const product = await productModel.findById(id);
+
+        if (!product) {
+            return res.json({ success: false, message: "Ürün bulunamadı" });
+        }
+
+        // Delete associated media files from Media model
+        if (product.image && product.image.length > 0) {
+            try {
+                await Media.deleteMany({
+                    'usedIn.type': 'product',
+                    'usedIn.id': id
+                });
+                logger.info('Media files deleted for product', { productId: id, imageCount: product.image.length });
+            } catch (mediaError) {
+                logger.error('Error deleting media files', { error: mediaError.message, productId: id });
+                // Continue with product deletion even if media deletion fails
+            }
+        }
+
+        // Permanent delete from database
+        await productModel.findByIdAndDelete(id);
+
+        logger.info('Product permanently deleted', { productId: id, productName: product.name });
+        res.json({ success: true, message: "Ürün kalıcı olarak silindi" });
+    } catch (error) {
+        logger.error('Error permanently deleting product', { error: error.message, stack: error.stack, productId: req.body.id });
+        res.json({ success: false, message: error.message });
+    }
+};
+
+// Quick update single field (for inline editing)
+const quickUpdateProduct = async (req, res) => {
+    try {
+        const { id, field, value } = req.body;
+
+        if (!id || !field) {
+            return res.json({ success: false, message: "ID ve alan adı gereklidir" });
+        }
+
+        // Whitelist of allowed fields for quick update
+        const allowedFields = ['stock', 'basePrice', 'category', 'bestseller', 'active'];
+
+        if (!allowedFields.includes(field)) {
+            return res.json({ success: false, message: "Bu alan hızlı güncellenemez" });
+        }
+
+        const updateData = { [field]: value };
+
+        const product = await productModel.findByIdAndUpdate(
+            id,
+            updateData,
+            { new: true, runValidators: true }
+        );
+
+        if (!product) {
+            return res.json({ success: false, message: "Ürün bulunamadı" });
+        }
+
+        logger.info('Product quick updated', { productId: id, field, value });
+        res.json({ success: true, message: "Ürün güncellendi", product });
+    } catch (error) {
+        logger.error('Error quick updating product', { error: error.message, stack: error.stack, productId: req.body.id });
+        res.json({ success: false, message: error.message });
+    }
+};
+
+export {
+    listProducts,
+    addProduct,
+    removeProduct,
+    singleProduct,
+    updateProduct,
+    softDeleteProduct,
+    restoreProduct,
+    permanentDeleteProduct,
+    quickUpdateProduct
+};

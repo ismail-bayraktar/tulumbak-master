@@ -1,5 +1,15 @@
 import express from 'express';
-import {listProducts, addProduct, removeProduct, singleProduct, updateProduct} from '../controllers/ProductController.js';
+import {
+    listProducts,
+    addProduct,
+    removeProduct,
+    singleProduct,
+    updateProduct,
+    softDeleteProduct,
+    restoreProduct,
+    permanentDeleteProduct,
+    quickUpdateProduct
+} from '../controllers/ProductController.js';
 import adminAuth from "../middleware/AdminAuth.js";
 import uploadImagesWithMulter from "../config/uploadImagesWithMulter.js";
 import RateLimiterService from "../services/RateLimiter.js";
@@ -49,6 +59,14 @@ const imageUploadMiddleware = uploadImagesWithMulter.fields([
 productRouter.post('/add', adminAuth, RateLimiterService.createUploadLimiter(), imageUploadMiddleware, invalidateCache('products:*'), addProduct);
 productRouter.post('/update', adminAuth, RateLimiterService.createUploadLimiter(), imageUploadMiddleware, invalidateCache('products:*'), updateProduct);
 productRouter.post('/remove', adminAuth, invalidateCache('products:*'), removeProduct);
+
+// Soft delete and restore routes
+productRouter.post('/soft-delete', adminAuth, invalidateCache('products:*'), softDeleteProduct);
+productRouter.post('/restore', adminAuth, invalidateCache('products:*'), restoreProduct);
+productRouter.post('/permanent-delete', adminAuth, invalidateCache('products:*'), permanentDeleteProduct);
+
+// Quick update route for inline editing
+productRouter.post('/quick-update', adminAuth, invalidateCache('products:*'), quickUpdateProduct);
 
 /**
  * @swagger

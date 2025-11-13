@@ -44,94 +44,173 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
 import { useToast } from "@/hooks/use-toast"
-import { Plus, Edit, Trash2, FolderTree } from "lucide-react"
-
-// Default categories for Tulumbak
-const DEFAULT_CATEGORIES = [
-  { id: 1, name: "Taze Meyve", description: "Taze meyve tabakları ve paketleri", active: true },
-  { id: 2, name: "Kuruyemiş", description: "Premium kuruyemiş çeşitleri", active: true },
-  { id: 3, name: "Çikolata", description: "El yapımı çikolata ürünleri", active: true },
-  { id: 4, name: "Atıştırmalık", description: "Sağlıklı atıştırmalıklar", active: true },
-  { id: 5, name: "Özel Paketler", description: "Özel günler için hazırlanmış paketler", active: true },
-]
+import { Plus, Edit, Trash2, FolderTree, Loader2, Upload, X } from "lucide-react"
+import useCategories from "@/hooks/useCategories"
+import { Textarea } from "@/components/ui/textarea"
 
 export default function Categories() {
   const { toast } = useToast()
-  const [categories, setCategories] = useState(() => {
-    // Load from localStorage or use defaults
-    const saved = localStorage.getItem("tulumbak_categories")
-    return saved ? JSON.parse(saved) : DEFAULT_CATEGORIES
-  })
+  const {
+    categories,
+    loading,
+    error,
+    addCategory,
+    updateCategory,
+    removeCategory,
+    toggleActive: toggleCategoryActive,
+    refresh,
+  } = useCategories()
+
   const [dialogOpen, setDialogOpen] = useState(false)
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [editingCategory, setEditingCategory] = useState(null)
   const [categoryToDelete, setCategoryToDelete] = useState(null)
-  const [formData, setFormData] = useState({ name: "", description: "", active: true })
+  const [formData, setFormData] = useState({
+    name: "",
+    description: "",
+    image: null,
+    metaTitle: "",
+    metaDescription: "",
+    keywords: "",
+    active: true
+  })
+  const [imageFile, setImageFile] = useState(null)
+  const [imagePreview, setImagePreview] = useState(null)
+  const [submitting, setSubmitting] = useState(false)
 
-  const saveCategories = (newCategories) => {
-    setCategories(newCategories)
-    localStorage.setItem("tulumbak_categories", JSON.stringify(newCategories))
-  }
-
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
 
-    if (!formData.name) {
+    if (!formData.name || formData.name.trim().length < 2) {
       toast({
         variant: "destructive",
         title: "Eksik Bilgi",
-        description: "Kategori adı gereklidir",
+        description: "Kategori adı en az 2 karakter olmalıdır",
       })
       return
     }
 
-    if (editingCategory) {
-      // Update existing
-      const updated = categories.map((cat) =>
-        cat.id === editingCategory.id ? { ...cat, ...formData } : cat
-      )
-      saveCategories(updated)
-      toast({
-        title: "Başarılı",
-        description: "Kategori güncellendi",
-      })
-    } else {
-      // Add new
-      const newCategory = {
-        id: Math.max(...categories.map((c) => c.id), 0) + 1,
-        ...formData,
-      }
-      saveCategories([...categories, newCategory])
-      toast({
-        title: "Başarılı",
-        description: "Kategori eklendi",
-      })
-    }
+    setSubmitting(true)
 
-    setDialogOpen(false)
-    setEditingCategory(null)
-    setFormData({ name: "", description: "", active: true })
+    try {
+      if (editingCategory) {
+        // Update existing
+        const result = await updateCategory({
+          id: editingCategory._id,
+          ...formData,
+        })
+
+        if (result.success) {
+          toast({
+            title: "Başarılı",
+            description: result.message || "Kategori güncellendi",
+          })
+          setDialogOpen(false)
+          setEditingCategory(null)
+          setFormData({ name: "", description: "", image: null, metaTitle: "", metaDescription: "", keywords: "", active: true })
+          setImageFile(null)
+          setImagePreview(null)
+        } else {
+          toast({
+            variant: "destructive",
+            title: "Hata",
+            description: result.message || "Kategori güncellenemedi",
+          })
+        }
+      } else {
+        // Add new
+        const result = await addCategory(formData)
+
+        if (result.success) {
+          toast({
+            title: "Başarılı",
+            description: "Kategori eklendi",
+          })
+          setDialogOpen(false)
+          setFormData({ name: "", description: "", image: null, metaTitle: "", metaDescription: "", keywords: "", active: true })
+          setImageFile(null)
+          setImagePreview(null)
+        } else {
+          toast({
+            variant: "destructive",
+            title: "Hata",
+            description: result.message || "Kategori eklenemedi",
+          })
+        }
+      }
+    } catch (err) {
+      toast({
+        variant: "destructive",
+        title: "Hata",
+        description: "Beklenmeyen bir hata oluştu",
+      })
+    } finally {
+      setSubmitting(false)
+    }
   }
 
   const handleEdit = (category) => {
     setEditingCategory(category)
     setFormData({
       name: category.name,
-      description: category.description,
+      description: category.description || "",
+      image: category.image || null,
+      metaTitle: category.metaTitle || "",
+      metaDescription: category.metaDescription || "",
+      keywords: category.keywords ? category.keywords.join(", ") : "",
       active: category.active,
     })
+    setImagePreview(category.image)
+    setImageFile(null)
     setDialogOpen(true)
   }
 
-  const handleDelete = () => {
-    const updated = categories.filter((cat) => cat.id !== categoryToDelete.id)
-    saveCategories(updated)
-    toast({
-      title: "Başarılı",
-      description: "Kategori silindi",
-    })
-    setDeleteDialogOpen(false)
-    setCategoryToDelete(null)
+  const handleImageUpload = (file) => {
+    if (file) {
+      setImageFile(file)
+      const reader = new FileReader()
+      reader.onloadend = () => {
+        setImagePreview(reader.result)
+      }
+      reader.readAsDataURL(file)
+    }
+  }
+
+  const removeImage = () => {
+    setImageFile(null)
+    setImagePreview(null)
+    setFormData({ ...formData, image: null })
+  }
+
+  const handleDelete = async () => {
+    setSubmitting(true)
+
+    try {
+      const result = await removeCategory(categoryToDelete._id)
+
+      if (result.success) {
+        toast({
+          title: "Başarılı",
+          description: result.message || "Kategori silindi",
+        })
+        setDeleteDialogOpen(false)
+        setCategoryToDelete(null)
+      } else {
+        toast({
+          variant: "destructive",
+          title: "Hata",
+          description: result.message || "Kategori silinemedi",
+        })
+      }
+    } catch (err) {
+      toast({
+        variant: "destructive",
+        title: "Hata",
+        description: "Beklenmeyen bir hata oluştu",
+      })
+    } finally {
+      setSubmitting(false)
+    }
   }
 
   const openDeleteDialog = (category) => {
@@ -139,23 +218,29 @@ export default function Categories() {
     setDeleteDialogOpen(true)
   }
 
-  const toggleActive = (category) => {
-    const updated = categories.map((cat) =>
-      cat.id === category.id ? { ...cat, active: !cat.active } : cat
-    )
-    saveCategories(updated)
-    toast({
-      title: "Güncellendi",
-      description: `Kategori ${category.active ? "pasif" : "aktif"} yapıldı`,
-    })
-  }
+  const handleToggleActive = async (category) => {
+    try {
+      const result = await toggleCategoryActive(category._id)
 
-  const resetToDefaults = () => {
-    saveCategories(DEFAULT_CATEGORIES)
-    toast({
-      title: "Sıfırlandı",
-      description: "Kategoriler varsayılan ayarlara döndürüldü",
-    })
+      if (result.success) {
+        toast({
+          title: "Güncellendi",
+          description: result.message || `Kategori ${category.active ? "pasif" : "aktif"} yapıldı`,
+        })
+      } else {
+        toast({
+          variant: "destructive",
+          title: "Hata",
+          description: result.message || "Durum değiştirilemedi",
+        })
+      }
+    } catch (err) {
+      toast({
+        variant: "destructive",
+        title: "Hata",
+        description: "Beklenmeyen bir hata oluştu",
+      })
+    }
   }
 
   return (
@@ -196,15 +281,19 @@ export default function Categories() {
               <Button
                 variant="outline"
                 size="sm"
-                onClick={resetToDefaults}
+                onClick={refresh}
+                disabled={loading}
               >
-                Varsayılana Döndür
+                {loading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+                Yenile
               </Button>
               <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
                 <DialogTrigger asChild>
                   <Button size="sm" onClick={() => {
                     setEditingCategory(null)
-                    setFormData({ name: "", description: "", active: true })
+                    setFormData({ name: "", description: "", image: null, metaTitle: "", metaDescription: "", keywords: "", active: true })
+                    setImageFile(null)
+                    setImagePreview(null)
                   }}>
                     <Plus className="h-4 w-4 mr-2" />
                     Yeni Kategori
@@ -220,32 +309,127 @@ export default function Categories() {
                         Kategori bilgilerini girin
                       </DialogDescription>
                     </DialogHeader>
-                    <div className="space-y-4 py-4">
+                    <div className="space-y-4 py-4 max-h-[60vh] overflow-y-auto">
                       <div className="space-y-2">
                         <Label htmlFor="name">Kategori Adı *</Label>
                         <Input
                           id="name"
-                          placeholder="Örn: Premium Kuruyemiş"
+                          placeholder="Örn: Tulumbalar"
                           value={formData.name}
                           onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                          disabled={submitting}
                           required
                         />
                       </div>
                       <div className="space-y-2">
                         <Label htmlFor="description">Açıklama</Label>
-                        <Input
+                        <Textarea
                           id="description"
-                          placeholder="Kategori açıklaması (opsiyonel)"
+                          placeholder="Kategori açıklaması..."
                           value={formData.description}
                           onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                          disabled={submitting}
+                          rows={2}
                         />
+                      </div>
+
+                      {/* Image Upload */}
+                      <div className="space-y-2">
+                        <Label>Kategori Görseli</Label>
+                        {imagePreview ? (
+                          <div className="relative inline-block">
+                            <img
+                              src={imagePreview}
+                              alt="Preview"
+                              className="w-32 h-32 object-cover rounded border"
+                            />
+                            <Button
+                              type="button"
+                              variant="destructive"
+                              size="icon"
+                              className="absolute top-0 right-0"
+                              onClick={removeImage}
+                              disabled={submitting}
+                            >
+                              <X className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        ) : (
+                          <div className="border-2 border-dashed rounded-lg p-4 hover:border-primary transition-colors">
+                            <Input
+                              type="file"
+                              accept="image/*"
+                              onChange={(e) => e.target.files?.[0] && handleImageUpload(e.target.files[0])}
+                              disabled={submitting}
+                              className="hidden"
+                              id="category-image"
+                            />
+                            <label
+                              htmlFor="category-image"
+                              className="flex flex-col items-center gap-2 cursor-pointer"
+                            >
+                              <Upload className="h-8 w-8 text-muted-foreground" />
+                              <span className="text-sm text-muted-foreground">Görsel Yükle</span>
+                            </label>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* SEO Fields */}
+                      <div className="border-t pt-4">
+                        <h4 className="font-medium mb-3">SEO Ayarları</h4>
+                        <div className="space-y-3">
+                          <div className="space-y-2">
+                            <Label htmlFor="metaTitle">Meta Title</Label>
+                            <Input
+                              id="metaTitle"
+                              placeholder="SEO başlığı (max 60 karakter)"
+                              value={formData.metaTitle}
+                              onChange={(e) => setFormData({ ...formData, metaTitle: e.target.value })}
+                              disabled={submitting}
+                              maxLength={60}
+                            />
+                            <p className="text-xs text-muted-foreground">
+                              {formData.metaTitle.length}/60
+                            </p>
+                          </div>
+                          <div className="space-y-2">
+                            <Label htmlFor="metaDescription">Meta Description</Label>
+                            <Textarea
+                              id="metaDescription"
+                              placeholder="SEO açıklaması (max 160 karakter)"
+                              value={formData.metaDescription}
+                              onChange={(e) => setFormData({ ...formData, metaDescription: e.target.value })}
+                              disabled={submitting}
+                              maxLength={160}
+                              rows={2}
+                            />
+                            <p className="text-xs text-muted-foreground">
+                              {formData.metaDescription.length}/160
+                            </p>
+                          </div>
+                          <div className="space-y-2">
+                            <Label htmlFor="keywords">Anahtar Kelimeler</Label>
+                            <Input
+                              id="keywords"
+                              placeholder="kelime1, kelime2, kelime3"
+                              value={formData.keywords}
+                              onChange={(e) => setFormData({ ...formData, keywords: e.target.value })}
+                              disabled={submitting}
+                            />
+                            <p className="text-xs text-muted-foreground">
+                              Virgülle ayırarak girin
+                            </p>
+                          </div>
+                        </div>
                       </div>
                     </div>
                     <DialogFooter>
-                      <Button type="button" variant="outline" onClick={() => setDialogOpen(false)}>
+                      <Button type="button" variant="outline" onClick={() => setDialogOpen(false)} disabled={submitting}>
                         İptal
                       </Button>
-                      <Button type="submit">
+                      <Button type="submit" disabled={submitting}>
+                        {submitting ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
                         {editingCategory ? "Güncelle" : "Ekle"}
                       </Button>
                     </DialogFooter>
@@ -255,25 +439,33 @@ export default function Categories() {
             </div>
           </div>
 
-          {/* Info Card */}
-          <Card className="bg-blue-50 border-blue-200">
-            <CardContent className="pt-6">
-              <p className="text-sm text-blue-900">
-                <strong>Not:</strong> Kategoriler şu an lokal olarak yönetilmektedir. Değişiklikler
-                tarayıcınızda saklanır. Backend entegrasyonu tamamlandığında kategoriler veritabanında
-                tutulacaktır.
-              </p>
-            </CardContent>
-          </Card>
+          {/* Error Display */}
+          {error && (
+            <Card className="bg-red-50 border-red-200">
+              <CardContent className="pt-6">
+                <p className="text-sm text-red-900">
+                  <strong>Hata:</strong> {error}
+                </p>
+              </CardContent>
+            </Card>
+          )}
 
           {/* Categories Table */}
           <Card>
             <CardHeader>
               <CardTitle>Kategoriler ({categories.length})</CardTitle>
-              <CardDescription>Tüm ürün kategorileri</CardDescription>
+              <CardDescription>Veritabanındaki tüm ürün kategorileri</CardDescription>
             </CardHeader>
             <CardContent>
-              {categories.length === 0 ? (
+              {loading ? (
+                <div className="text-center py-12">
+                  <Loader2 className="h-12 w-12 text-muted-foreground mx-auto mb-4 animate-spin" />
+                  <h3 className="text-lg font-semibold">Yükleniyor...</h3>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Kategoriler getiriliyor
+                  </p>
+                </div>
+              ) : categories.length === 0 ? (
                 <div className="text-center py-12">
                   <FolderTree className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
                   <h3 className="text-lg font-semibold">Kategori bulunamadı</h3>
@@ -285,24 +477,56 @@ export default function Categories() {
                 <Table>
                   <TableHeader>
                     <TableRow>
+                      <TableHead>Görsel</TableHead>
                       <TableHead>Kategori Adı</TableHead>
+                      <TableHead>Slug</TableHead>
                       <TableHead>Açıklama</TableHead>
+                      <TableHead>SEO</TableHead>
+                      <TableHead>Ürün Sayısı</TableHead>
                       <TableHead>Durum</TableHead>
                       <TableHead className="text-right">İşlemler</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {categories.map((category) => (
-                      <TableRow key={category.id}>
+                      <TableRow key={category._id}>
+                        <TableCell>
+                          {category.image ? (
+                            <img
+                              src={category.image}
+                              alt={category.name}
+                              className="w-12 h-12 object-cover rounded"
+                            />
+                          ) : (
+                            <div className="w-12 h-12 bg-gray-100 rounded flex items-center justify-center text-gray-400">
+                              <FolderTree className="h-6 w-6" />
+                            </div>
+                          )}
+                        </TableCell>
                         <TableCell className="font-medium">{category.name}</TableCell>
+                        <TableCell className="text-muted-foreground text-sm font-mono">
+                          {category.slug}
+                        </TableCell>
                         <TableCell className="text-muted-foreground">
                           {category.description || "-"}
+                        </TableCell>
+                        <TableCell>
+                          {category.metaTitle || category.metaDescription ? (
+                            <Badge variant="outline" className="bg-green-50">✓ SEO</Badge>
+                          ) : (
+                            <Badge variant="secondary">- SEO</Badge>
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant="outline">
+                            {category.productCount || 0} ürün
+                          </Badge>
                         </TableCell>
                         <TableCell>
                           <Badge
                             variant={category.active ? "default" : "secondary"}
                             className="cursor-pointer"
-                            onClick={() => toggleActive(category)}
+                            onClick={() => handleToggleActive(category)}
                           >
                             {category.active ? "Aktif" : "Pasif"}
                           </Badge>
@@ -320,6 +544,8 @@ export default function Categories() {
                               variant="ghost"
                               size="icon"
                               onClick={() => openDeleteDialog(category)}
+                              disabled={category.productCount > 0}
+                              title={category.productCount > 0 ? "Bu kategoriye ait ürünler var" : "Kategoriyi sil"}
                             >
                               <Trash2 className="h-4 w-4 text-destructive" />
                             </Button>
@@ -341,16 +567,22 @@ export default function Categories() {
           <AlertDialogHeader>
             <AlertDialogTitle>Kategoriyi silmek istediğinizden emin misiniz?</AlertDialogTitle>
             <AlertDialogDescription>
-              <strong>{categoryToDelete?.name}</strong> kategorisi silinecektir. Bu kategori altındaki
-              ürünler etkilenmeyecektir.
+              <strong>{categoryToDelete?.name}</strong> kategorisi kalıcı olarak silinecektir.
+              {categoryToDelete?.productCount > 0 && (
+                <span className="text-destructive font-medium">
+                  {" "}Bu kategoriye ait {categoryToDelete.productCount} ürün var. Önce ürünleri başka kategoriye taşıyın.
+                </span>
+              )}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>İptal</AlertDialogCancel>
+            <AlertDialogCancel disabled={submitting}>İptal</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleDelete}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              disabled={submitting || (categoryToDelete?.productCount > 0)}
             >
+              {submitting ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
               Sil
             </AlertDialogAction>
           </AlertDialogFooter>

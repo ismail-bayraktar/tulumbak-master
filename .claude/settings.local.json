@@ -38,7 +38,21 @@
       "Bash(python -m json.tool:*)",
       "Bash(git rm:*)",
       "Bash(backend/.gitignore)",
-      "Bash(find:*)"
+      "Bash(find:*)",
+      "WebFetch(domain:ui.stackzero.co)",
+      "Bash(mv:*)",
+      "Bash(cp:*)",
+      "Bash(.gitignore)",
+      "Bash(rm:*)",
+      "Bash(powershell -Command \"Remove-Item -Recurse -Force frontend\")",
+      "Bash(lsof:*)",
+      "Bash(xargs kill:*)",
+      "Bash(mkdir:*)",
+      "Bash(powershell -Command \"Remove-Item -Recurse -Force frontend-new\")",
+      "Bash(npm run kill-port:*)",
+      "Bash(npm run server:*)",
+      "Bash(npm run start:clean:*)",
+      "Bash(mongosh:*)"
     ],
     "deny": [],
     "ask": []
