@@ -1,0 +1,6 @@
+{
+  "version": 3,
+  "sources": [],
+  "sections": [
+    {"offset": {"line": 1, "column": 0}, "map": {"version":3,"sources":["file:///F:/NEXTJS/tulumbak-master/frontend-new/src/app/globals.css"],"sourcesContent":["/*! tailwindcss v4.1.17 | MIT License | https://tailwindcss.com */\n.fixed {\n  position: fixed;\n}\n.mx-auto {\n  margin-inline: auto;\n}\n.min-h-screen {\n  min-height: 100vh;\n}\n.text-center {\n  text-align: center;\n}\n.text-left {\n  text-align: left;\n}\n:root {\n  --background: #ffffff;\n  --foreground: #171717;\n}\n@media (prefers-color-scheme: dark) {\n  :root {\n    --background: #0a0a0a;\n    --foreground: #ededed;\n  }\n}\nbody {\n  color: var(--foreground);\n  background: var(--background);\n  font-family: Arial, Helvetica, sans-serif;\n}\n@layer utilities {\n  .text-balance {\n    text-wrap: balance;\n  }\n}\r\n"],"names":[],"mappings":"AACA;;;;AAGA;;;;AAGA;;;;AAGA;;;;AAGA;;;;AAGA;;;;;AAIA;EACE;;;;;;AAKF;;;;;;AAKA;EACE"}}]
+}

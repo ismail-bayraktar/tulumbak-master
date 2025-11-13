@@ -38,7 +38,13 @@
       "Bash(python -m json.tool:*)",
       "Bash(git rm:*)",
       "Bash(backend/.gitignore)",
-      "Bash(find:*)"
+      "Bash(find:*)",
+      "WebFetch(domain:ui.stackzero.co)",
+      "Bash(mv:*)",
+      "Bash(cp:*)",
+      "Bash(.gitignore)",
+      "Bash(rm:*)",
+      "Bash(powershell -Command \"Remove-Item -Recurse -Force frontend\")"
     ],
     "deny": [],
     "ask": []
