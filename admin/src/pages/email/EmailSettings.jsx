@@ -336,7 +336,7 @@ export default function EmailSettings() {
 
             {/* Design Tab */}
             <TabsContent value="design">
-              <DesignTab settings={settings} updateSetting={updateSetting} />
+              <DesignTab settings={settings} updateSetting={updateSetting} onSave={handleSave} />
             </TabsContent>
 
             {/* Triggers Tab */}

@@ -13,7 +13,7 @@ import api from "@/lib/api"
  * Design Tab Component for Email Template Customization
  * Clean, modular component following SRP
  */
-export default function DesignTab({ settings, updateSetting }) {
+export default function DesignTab({ settings, updateSetting, onSave }) {
   const { toast } = useToast()
   const [testingTemplate, setTestingTemplate] = useState(false)
   const [availableTemplates, setAvailableTemplates] = useState([])
@@ -78,9 +78,15 @@ export default function DesignTab({ settings, updateSetting }) {
       if (response.data.success) {
         const imageUrl = response.data.fileUrl
         updateSetting("design.logoUrl", imageUrl)
+
+        // Auto-save to database
+        if (onSave) {
+          await onSave()
+        }
+
         toast({
           title: "Başarılı",
-          description: "Logo başarıyla yüklendi",
+          description: "Logo başarıyla yüklendi ve kaydedildi",
         })
       } else {
         throw new Error(response.data.message)
