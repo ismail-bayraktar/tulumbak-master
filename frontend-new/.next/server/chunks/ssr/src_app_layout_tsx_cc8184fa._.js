@@ -1,0 +1,3 @@
+module.exports=[27572,a=>{"use strict";var b=a.i(7997);function c({children:a}){return(0,b.jsx)("html",{lang:"tr",children:(0,b.jsx)("body",{children:a})})}a.s(["default",()=>c,"metadata",0,{title:"Tulumbak İzmir Baklava - Geleneksel Lezzetler",description:"İzmir'in en kaliteli baklavası ve tatlıları kapınızda! Taze ve kuru baklava çeşitleri, özel ambalaj seçenekleriyle.",keywords:["baklava","İzmir baklavası","tatlı","tulumbak","online baklava"]}])}];
+
+//# sourceMappingURL=src_app_layout_tsx_cc8184fa._.js.map
