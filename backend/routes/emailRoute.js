@@ -126,6 +126,81 @@ emailRouter.post('/settings/test', async (req, res) => {
   }
 });
 
+// Test React Email template rendering
+emailRouter.post('/settings/test-template', async (req, res) => {
+  try {
+    const { templateType, testEmail } = req.body;
+
+    // Validate required fields
+    if (!templateType || !testEmail) {
+      return res.status(400).json({
+        success: false,
+        message: 'Missing required fields: templateType, testEmail'
+      });
+    }
+
+    // Sample order data for testing
+    const sampleData = {
+      customerName: 'Test Müşteri',
+      customerEmail: testEmail,
+      orderId: 'TEST-' + Date.now(),
+      orderDate: new Date().toLocaleDateString('tr-TR'),
+      items: [
+        {
+          name: 'Fıstıklı Baklava',
+          size: 500,
+          quantity: 2,
+          price: 125.00
+        },
+        {
+          name: 'Cevizli Baklava',
+          size: 250,
+          quantity: 1,
+          price: 75.00
+        }
+      ],
+      subtotal: 325.00,
+      shipping: 25.00,
+      discount: 0,
+      total: 350.00,
+      shippingAddress: 'Test Mahallesi, Test Sokak No:1, İzmir',
+      deliveryDate: new Date(Date.now() + 86400000).toLocaleDateString('tr-TR'),
+      paymentMethod: 'Kredi Kartı'
+    };
+
+    logger.info('Sending test React Email template', { templateType, testEmail });
+
+    // Send email using React Email renderer
+    const result = await emailService.sendReactEmail(templateType, sampleData, testEmail);
+
+    if (result.success) {
+      logger.info('Test React Email sent successfully', { templateType, to: testEmail });
+      res.json({ success: true, message: 'Test email sent successfully' });
+    } else {
+      logger.error('Test React Email failed', { error: result.message, errors: result.errors });
+      res.status(500).json({
+        success: false,
+        message: result.message || 'Failed to send test email',
+        errors: result.errors
+      });
+    }
+  } catch (error) {
+    logger.error('Error testing React Email template', { error: error.message, stack: error.stack });
+    res.status(500).json({ success: false, message: error.message || 'Template test failed' });
+  }
+});
+
+// Get available React Email templates
+emailRouter.get('/settings/available-templates', async (req, res) => {
+  try {
+    const templates = emailService.getAvailableTemplates();
+    res.json({ success: true, templates });
+  } catch (error) {
+    logger.error('Error fetching available templates', { error: error.message });
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
 // ==================== EMAIL TEMPLATES ====================
 
 // Get all templates

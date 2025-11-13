@@ -42,6 +42,20 @@ const emailSettingsSchema = new mongoose.Schema(
       bccAdmin: { type: Boolean, default: false }, // BCC admin on all emails
       adminEmail: { type: String, default: '' },
     },
+
+    // Design Settings for Email Templates
+    design: {
+      logoUrl: { type: String, default: 'https://tulumbak.com/logo.png' },
+      brandColor: { type: String, default: '#d4af37' },
+      storeName: { type: String, default: 'Tulumbak İzmir Baklava' },
+      storeEmail: { type: String, default: 'info@tulumbak.com' },
+      storePhone: { type: String, default: '0232 XXX XXXX' },
+      fontFamily: { type: String, default: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif' },
+      // KVKK compliance links
+      privacyPolicyUrl: { type: String, default: 'https://tulumbak.com/privacy' },
+      emailPreferencesUrl: { type: String, default: 'https://tulumbak.com/email-preferences' },
+      unsubscribeUrl: { type: String, default: 'https://tulumbak.com/unsubscribe' },
+    },
   },
   {
     timestamps: true,

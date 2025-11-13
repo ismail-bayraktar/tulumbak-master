@@ -27,23 +27,34 @@ class EmailRenderer {
     try {
       const settings = await EmailSettings.findOne();
 
-      if (!settings) {
-        // Return default settings if none configured
-        return {
-          brandColor: '#d4af37',
-          logoUrl: 'https://tulumbak.com/logo.png',
-          storeName: 'Tulumbak İzmir Baklava',
-          storeEmail: 'info@tulumbak.com',
-          storePhone: '0232 XXX XXXX',
-        };
+      // Default settings fallback
+      const defaults = {
+        brandColor: '#d4af37',
+        logoUrl: 'https://tulumbak.com/logo.png',
+        storeName: 'Tulumbak İzmir Baklava',
+        storeEmail: 'info@tulumbak.com',
+        storePhone: '0232 XXX XXXX',
+        fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
+        privacyPolicyUrl: 'https://tulumbak.com/privacy',
+        emailPreferencesUrl: 'https://tulumbak.com/email-preferences',
+        unsubscribeUrl: 'https://tulumbak.com/unsubscribe',
+      };
+
+      if (!settings || !settings.design) {
+        return defaults;
       }
 
+      // Merge database settings with defaults
       return {
-        brandColor: settings.brandColor || '#d4af37',
-        logoUrl: settings.logoUrl || 'https://tulumbak.com/logo.png',
-        storeName: settings.storeName || 'Tulumbak İzmir Baklava',
-        storeEmail: settings.storeEmail || 'info@tulumbak.com',
-        storePhone: settings.storePhone || '0232 XXX XXXX',
+        brandColor: settings.design.brandColor || defaults.brandColor,
+        logoUrl: settings.design.logoUrl || defaults.logoUrl,
+        storeName: settings.design.storeName || defaults.storeName,
+        storeEmail: settings.design.storeEmail || defaults.storeEmail,
+        storePhone: settings.design.storePhone || defaults.storePhone,
+        fontFamily: settings.design.fontFamily || defaults.fontFamily,
+        privacyPolicyUrl: settings.design.privacyPolicyUrl || defaults.privacyPolicyUrl,
+        emailPreferencesUrl: settings.design.emailPreferencesUrl || defaults.emailPreferencesUrl,
+        unsubscribeUrl: settings.design.unsubscribeUrl || defaults.unsubscribeUrl,
       };
     } catch (error) {
       console.error('Error fetching email design settings:', error);
@@ -54,6 +65,10 @@ class EmailRenderer {
         storeName: 'Tulumbak İzmir Baklava',
         storeEmail: 'info@tulumbak.com',
         storePhone: '0232 XXX XXXX',
+        fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
+        privacyPolicyUrl: 'https://tulumbak.com/privacy',
+        emailPreferencesUrl: 'https://tulumbak.com/email-preferences',
+        unsubscribeUrl: 'https://tulumbak.com/unsubscribe',
       };
     }
   }
