@@ -1,6 +1,7 @@
 import nodemailer from 'nodemailer';
 import logger from '../utils/logger.js';
 import EmailRenderer from './EmailRenderer.js';
+import EmailLog from '../models/EmailLogModel.js';
 
 /**
  * Email Service for sending transactional emails
@@ -21,17 +22,30 @@ class EmailService {
       return;
     }
 
+    const smtpPort = parseInt(process.env.SMTP_PORT) || 587;
+
     this.transporter = nodemailer.createTransport({
       host: process.env.SMTP_HOST,
-      port: parseInt(process.env.SMTP_PORT) || 587,
-      secure: false,
+      port: smtpPort,
+      secure: smtpPort === 465, // true for port 465 (SSL), false for others (TLS)
+      connectionTimeout: 60000, // 60 seconds
+      greetingTimeout: 30000,   // 30 seconds
+      socketTimeout: 60000,     // 60 seconds
       auth: {
         user: process.env.SMTP_USER,
         pass: process.env.SMTP_PASSWORD,
       },
+      tls: {
+        rejectUnauthorized: false // Allow self-signed certificates in development
+      },
+      pool: false // Disable connection pooling for better error detection
     });
 
-    logger.info('Email service initialized', { host: process.env.SMTP_HOST, port: process.env.SMTP_PORT });
+    logger.info('Email service initialized', {
+      host: process.env.SMTP_HOST,
+      port: smtpPort,
+      secure: smtpPort === 465
+    });
   }
 
   /**
@@ -143,12 +157,25 @@ class EmailService {
   /**
    * Send email with confirmation
    * @param {Object} mailOptions - Email options
+   * @param {String} trigger - Email trigger type (e.g., 'orderCreated', 'orderStatusUpdate')
    * @returns {Promise<Object>}
    */
-  async sendEmail(mailOptions) {
+  async sendEmail(mailOptions, trigger = 'manual') {
     if (!this.transporter) {
       const errorMsg = 'Email service not configured. Please update SMTP settings.';
       logger.warn(errorMsg, { to: mailOptions.to });
+
+      // Log failed attempt
+      await this.createEmailLog({
+        to: mailOptions.to,
+        from: mailOptions.from,
+        subject: mailOptions.subject,
+        htmlContent: mailOptions.html,
+        trigger,
+        status: 'failed',
+        error: errorMsg
+      });
+
       return { success: false, message: errorMsg };
     }
 
@@ -165,6 +192,18 @@ class EmailService {
         messageId: info.messageId,
         to: mailOptions.to,
         subject: mailOptions.subject,
+        response: info.response
+      });
+
+      // Log successful email
+      await this.createEmailLog({
+        to: mailOptions.to,
+        from: mailOptions.from,
+        subject: mailOptions.subject,
+        htmlContent: mailOptions.html,
+        trigger,
+        status: 'sent',
+        messageId: info.messageId,
         response: info.response
       });
 
@@ -192,6 +231,18 @@ class EmailService {
       } else if (error.code === 'ETIMEDOUT') {
         userMessage = 'Connection timed out. Please check your network and SMTP settings.';
       }
+
+      // Log failed email
+      await this.createEmailLog({
+        to: mailOptions.to,
+        from: mailOptions.from,
+        subject: mailOptions.subject,
+        htmlContent: mailOptions.html,
+        trigger,
+        status: 'failed',
+        error: userMessage,
+        errorCode: error.code
+      });
 
       return {
         success: false,
@@ -238,12 +289,16 @@ class EmailService {
         ...options, // Allow override of any option
       };
 
-      // Send email
-      const result = await this.sendEmail(mailOptions);
+      // Determine trigger type from templateType or options
+      const trigger = options.trigger || this.mapTemplateTrigger(templateType);
+
+      // Send email with trigger information for logging
+      const result = await this.sendEmail(mailOptions, trigger);
 
       if (result.success) {
         logger.info('React Email sent successfully', {
           templateType,
+          trigger,
           to,
           messageId: result.messageId
         });
@@ -262,6 +317,42 @@ class EmailService {
         success: false,
         message: `Failed to send email: ${error.message}`
       };
+    }
+  }
+
+  /**
+   * Map template type to trigger name for logging
+   * @param {string} templateType - Template identifier
+   * @returns {string} - Trigger name
+   */
+  mapTemplateTrigger(templateType) {
+    const triggerMap = {
+      'orderConfirmation': 'orderCreated',
+      'orderStatusUpdate': 'orderStatusUpdate',
+      'courierAssignment': 'courierAssigned',
+      'deliveryCompleted': 'orderDelivered',
+      'paymentReceived': 'paymentReceived'
+    };
+
+    return triggerMap[templateType] || 'reactEmailTemplate';
+  }
+
+  /**
+   * Create email log entry
+   * @param {Object} logData - Log data
+   * @returns {Promise<void>}
+   */
+  async createEmailLog(logData) {
+    try {
+      const emailLog = new EmailLog(logData);
+      await emailLog.save();
+      logger.debug('Email log created', { to: logData.to, status: logData.status });
+    } catch (error) {
+      // Log but don't fail email sending if logging fails
+      logger.error('Failed to create email log', {
+        error: error.message,
+        to: logData.to
+      });
     }
   }
 
@@ -287,7 +378,7 @@ class EmailService {
       html: this.getOrderConfirmationTemplate(orderData),
     };
 
-    return await this.sendEmail(mailOptions);
+    return await this.sendEmail(mailOptions, 'orderCreated');
   }
 
   /**
@@ -305,7 +396,7 @@ class EmailService {
       html: this.getOrderStatusUpdateTemplate(orderData, status),
     };
 
-    return await this.sendEmail(mailOptions);
+    return await this.sendEmail(mailOptions, 'orderStatusUpdate');
   }
 
   /**
@@ -322,7 +413,7 @@ class EmailService {
       html: this.getCourierAssignmentTemplate(orderData),
     };
 
-    return await this.sendEmail(mailOptions);
+    return await this.sendEmail(mailOptions, 'courierAssigned');
   }
 
   /**
@@ -339,7 +430,7 @@ class EmailService {
       html: this.getDeliveryCompletedTemplate(orderData),
     };
 
-    return await this.sendEmail(mailOptions);
+    return await this.sendEmail(mailOptions, 'orderDelivered');
   }
 
   /**
