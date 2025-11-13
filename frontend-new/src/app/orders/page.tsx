@@ -9,7 +9,8 @@ import { Separator } from '@/components/ui/separator';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Package, ChevronRight, ShoppingBag } from 'lucide-react';
 import { Order, OrderListResponse } from '@/types/order';
-import { apiClient, API_ENDPOINTS } from '@/lib/api';
+import apiClient from '@/lib/api/client';
+import { API_ENDPOINTS } from '@/lib/api/endpoints';
 
 export default function OrdersPage() {
   const router = useRouter();

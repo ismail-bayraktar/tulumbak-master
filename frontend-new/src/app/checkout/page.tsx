@@ -13,7 +13,8 @@ import { Separator } from '@/components/ui/separator';
 import { CreditCard, Building2, Wallet, ArrowLeft } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { DeliveryInfo, OrderItem } from '@/types/order';
-import { apiClient, API_ENDPOINTS } from '@/lib/api';
+import apiClient from '@/lib/api/client';
+import { API_ENDPOINTS } from '@/lib/api/endpoints';
 
 export default function CheckoutPage() {
   const router = useRouter();
