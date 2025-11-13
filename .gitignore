@@ -12,3 +12,7 @@ nul
 # Temporary files
 *.tmp
 plan.plan.md
+
+# Local settings and IDE files
+.claude/settings.local.json
+*.local.json

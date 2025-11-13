@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Tulumbak - Authentic Turkish Desserts</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet"/>
+<script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#F08223", // Updated accent color per user context
+                        "background-light": "#F5F5F5", // Updated primary background per user context
+                        "background-dark": "#221810",
+                        "card-background": "#FFFFFF", // Added card background per user context
+                        "text-main": "#333333", // Added text color per user context
+                    },
+                    fontFamily: {
+                        "display": ["Manrope", "sans-serif"] // Added sans-serif fallback
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.25rem",
+                        "lg": "8px", // Updated to 8px per user context
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    boxShadow: {
+                        'card': '0 4px 6px -1px rgb(0 0 0 / 0.05), 0 2px 4px -2px rgb(0 0 0 / 0.05)', // Added light box-shadow
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings:
+                'FILL' 0,
+                'wght' 400,
+                'GRAD' 0,
+                'opsz' 24
+        }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark font-display text-text-main dark:text-background-light">
+<div class="relative flex h-auto min-h-screen w-full flex-col group/design-root overflow-x-hidden">
+<div class="layout-container flex h-full grow flex-col">
+<div class="px-4 md:px-10 lg:px-40 flex flex-1 justify-center py-5">
+<div class="layout-content-container flex flex-col max-w-[90%] flex-1">
+<header class="flex items-center justify-between whitespace-nowrap border-b border-solid border-b-[#E0E0E0] dark:border-b-background-dark px-4 sm:px-10 py-3">
+<div class="flex items-center gap-4 text-primary">
+<div class="size-6">
+<svg fill="none" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+<path d="M4 4H17.3334V17.3334H30.6666V30.6666H44V44H4V4Z" fill="currentColor"></path>
+</svg>
+</div>
+<h2 class="text-text-main dark:text-background-light text-xl font-bold leading-tight tracking-[-0.015em]">
+                                Tulumbak</h2>
+</div>
+<nav class="hidden md:flex items-center gap-6">
+<a class="text-text-main dark:text-background-light font-medium hover:text-primary transition-colors" href="#">Home</a>
+<a class="text-text-main dark:text-background-light font-medium hover:text-primary transition-colors" href="#">Shop</a>
+<a class="text-text-main dark:text-background-light font-medium hover:text-primary transition-colors" href="#">About Us</a>
+<a class="text-text-main dark:text-background-light font-medium hover:text-primary transition-colors" href="#">Contact</a>
+</nav>
+<div class="flex items-center gap-4">
+<button class="flex max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-full h-10 w-10 bg-transparent text-text-main dark:text-background-light hover:bg-gray-200 dark:hover:bg-white/10 transition-colors">
+<span class="material-symbols-outlined">search</span>
+</button>
+<button class="flex max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-full h-10 w-10 bg-transparent text-text-main dark:text-background-light hover:bg-gray-200 dark:hover:bg-white/10 transition-colors">
+<span class="material-symbols-outlined">shopping_cart</span>
+</button>
+<div class="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-10" data-alt="User profile picture" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuA7lHm_R0CbX7igS2lIaTw5LLVTDmpuWs88EG1J_kA2Px07m0SuYgGPtYHobqYZbB67Z6jKu_vmNE59gKT5SU7q-cjulTuGfZVLnytuy88jUZU_LaIEWQb8c-oWbpsVALCM8g6cDVA5o6zHIY85-00WyIn0lQS6RGbeTLpUZ7L8Quf44zrmFMRca22Ur1yPw3Ta8iwz_aZ8fvmvxrfRPm744oJ3l_m6WYKJ3iFXtLyezNUmBoMmp9YeJJurprI2yXamKDNuMRIYY7A");'></div>
+</div>
+</header>
+<div class="py-10">
+<div class="@[480px]:p-4">
+<div class="flex min-h-[480px] flex-col gap-6 bg-cover bg-center bg-no-repeat @[480px]:gap-8 rounded-lg items-center justify-center p-4" data-alt="A spread of Turkish desserts on a rustic wooden table" style='background-image: linear-gradient(rgba(0, 0, 0, 0.2) 0%, rgba(0, 0, 0, 0.5) 100%), url("https://lh3.googleusercontent.com/aida-public/AB6AXuAudOdHTxDKLRRNfD_Rkl0AOCpOPpAEY5hKnmg27jaq5VNJGd0DMEsHW-5tDBrOmOWL35N_BLxOMW_XxDj-gvG-AKuNW01E2MCsinZtKrk4vz2S28QzyGtS4vM3i52gnmpsw3z-uLCJoxv9vvYgkLfKyHKojNiOSSO5NFG5yMBgHuHt26ANw7TOMT0FQaYVWFMx1ZYOl-74a0KMA3ijXWIcKYf8P9SmYrFAJy_HAjgMx7H1fF5-cilJQzpGK9Mp1wXqdd0aOXxHn7w");'>
+<div class="flex flex-col gap-2 text-center max-w-xl">
+<h1 class="text-white text-4xl font-black leading-tight tracking-[-0.033em] @[480px]:text-5xl @[480px]:font-black @[480px]:leading-tight @[480px]:tracking-[-0.033em]">
+                                        Experience the Authentic Taste of Turkish Desserts
+                                    </h1>
+<h2 class="text-white text-sm font-normal leading-normal @[480px]:text-base @[480px]:font-normal @[480px]:leading-normal">
+                                        Handcrafted with love, delivered to your door.
+                                    </h2>
+</div>
+<button class="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-10 px-4 @[480px]:h-12 @[480px]:px-5 bg-primary text-white text-sm font-bold leading-normal tracking-[0.015em] @[480px]:text-base @[480px]:font-bold @[480px]:leading-normal @[480px]:tracking-[0.015em] hover:bg-opacity-90 transition-colors">
+<span class="truncate">Explore Our Collection</span>
+</button>
+</div>
+</div>
+</div>
+<h2 class="text-text-main dark:text-background-light text-3xl font-bold leading-tight tracking-[-0.015em] px-4 pb-3 pt-5 text-center">
+                        Featured Desserts</h2>
+<div class="flex overflow-x-auto [-ms-scrollbar-style:none] [scrollbar-width:none] [&amp;::-webkit-scrollbar]:hidden py-5">
+<div class="flex items-stretch p-4 gap-4">
+<div class="flex h-full flex-1 flex-col gap-4 rounded-lg bg-card-background dark:bg-background-dark shadow-card min-w-64">
+<div class="w-full bg-center bg-no-repeat aspect-square bg-cover rounded-t-lg flex flex-col" data-alt="A close-up of golden brown baklava" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuCwx-NqgN9y9CCu7WI7FRc4WqSDEmSOs0cKME2BYOxEbBaQI5dXjkCETgU9NvWp072WznHxJaVYGXcC2qWIBKRODiSBoepyPL1ZCZsZ-I_2FeNZVveTL5KwrHcNsA6vypr9yGYbRt6a8CI_TcZwTWxVgO3dKp8S_7TjgfpfoikorNF8s2q8M36aAieg0rbQgzwbf_Yk1awG6IjIocveI8VROJtO7C9159mQb02kGfhO1RqYReI6Vdqn6ZSErac3deOCdH5B9aNt4_Y");'></div>
+<div class="flex flex-col flex-1 justify-between p-4 pt-0 gap-4">
+<div>
+<p class="text-text-main dark:text-background-light text-lg font-bold leading-normal">
+                                            Baklava</p>
+<p class="text-gray-500 dark:text-gray-400 text-sm font-normal leading-normal">
+                                            Layers of flaky phyllo dough filled with nuts and sweetened with honey.</p>
+<p class="text-primary font-bold mt-2">$12.99</p>
+</div>
+<button class="flex min-w-[84px] w-full cursor-pointer items-center justify-center overflow-hidden rounded-lg h-10 px-4 bg-primary/10 dark:bg-primary/20 text-primary dark:text-background-light text-sm font-bold leading-normal tracking-[0.015em] hover:bg-primary/20 dark:hover:bg-primary/30 transition-colors">
+<span class="truncate">View Product</span>
+</button>
+</div>
+</div>
+<div class="flex h-full flex-1 flex-col gap-4 rounded-lg bg-card-background dark:bg-background-dark shadow-card min-w-64">
+<div class="w-full bg-center bg-no-repeat aspect-square bg-cover rounded-t-lg flex flex-col" data-alt="Colorful Turkish Delight cubes dusted with powdered sugar" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuB4getcJWg4nfWbx5Kw5c3XzIGgrumcRUz9j41Cct3Ga5y9CZkVYuGK3lmXWfEw2pXdKJlWh8iXP1PUNv0mvR3atlCFQWBGE71Od58fy0XBQcgxvygxoxcFVJy7L_NTNpAy_qV2mJHILL739ZG2v7ultGHr6WkjfIhqbD64Fx4P2DsWM30o-qyMzxQDxS94cHIUXstOeipFlCoMl03p2fSTThPPZlzypa9cV00ywEVgykDN5awRpPxzx5MIB_98TVqhKU6lPx5tB_E");'></div>
+<div class="flex flex-col flex-1 justify-between p-4 pt-0 gap-4">
+<div>
+<p class="text-text-main dark:text-background-light text-lg font-bold leading-normal">
+                                            Lokum (Turkish Delight)</p>
+<p class="text-gray-500 dark:text-gray-400 text-sm font-normal leading-normal">
+                                            A sweet and chewy confection available in various flavors.</p>
+<p class="text-primary font-bold mt-2">$9.99</p>
+</div>
+<button class="flex min-w-[84px] w-full cursor-pointer items-center justify-center overflow-hidden rounded-lg h-10 px-4 bg-primary/10 dark:bg-primary/20 text-primary dark:text-background-light text-sm font-bold leading-normal tracking-[0.015em] hover:bg-primary/20 dark:hover:bg-primary/30 transition-colors">
+<span class="truncate">View Product</span>
+</button>
+</div>
+</div>
+<div class="flex h-full flex-1 flex-col gap-4 rounded-lg bg-card-background dark:bg-background-dark shadow-card min-w-64">
+<div class="w-full bg-center bg-no-repeat aspect-square bg-cover rounded-t-lg flex flex-col" data-alt="A slice of Künefe with melted cheese and syrup" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuC1Z1GtrpS1AIM5q08osr_jqzT5LAPz3f7bitypTs1R0HVMu6LJfQmmjDuafi6M6gkrGRsWPLzNwsz7FFGWZGCuCbsChDY_ZwZdqPEqN7XVrd-d00QzxBqsx_0zwJCw6NiJpOqDgQLi6BgEDvb2eQkoN9_uDZ9qGR--FchxoRHp0pPky1twMXrYYIXWQ5OZj4TsVV2ekgskwEa4WzaMqpz4f1jKZG-GDfflIf76FsqNLF-LtnO5CQY-GXgjtoInc0J-Vj9pOS81QUE");'></div>
+<div class="flex flex-col flex-1 justify-between p-4 pt-0 gap-4">
+<div>
+<p class="text-text-main dark:text-background-light text-lg font-bold leading-normal">
+                                            Künefe</p>
+<p class="text-gray-500 dark:text-gray-400 text-sm font-normal leading-normal">
+                                            A sweet cheese pastry soaked in sweet, sugar-based syrup.</p>
+<p class="text-primary font-bold mt-2">$14.50</p>
+</div>
+<button class="flex min-w-[84px] w-full cursor-pointer items-center justify-center overflow-hidden rounded-lg h-10 px-4 bg-primary/10 dark:bg-primary/20 text-primary dark:text-background-light text-sm font-bold leading-normal tracking-[0.015em] hover:bg-primary/20 dark:hover:bg-primary/30 transition-colors">
+<span class="truncate">View Product</span>
+</button>
+</div>
+</div>
+<div class="flex h-full flex-1 flex-col gap-4 rounded-lg bg-card-background dark:bg-background-dark shadow-card min-w-64">
+<div class="w-full bg-center bg-no-repeat aspect-square bg-cover rounded-t-lg flex flex-col" data-alt="Golden brown Tulumba pastries drizzled with syrup" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuBJOF6PY29bGv_kSluH1O5PZKssg8JHVdX7V0AKyK4ONEnBNfB1kDUPNMecGi_4an4wtvDa2C1igxi05wm8d7i8Oie_DuiWYMzmasAkBDv4MlwOpNhTcnhXGgwz_LGukLmiPdZ06DQRkH7w9HqnbcMFCXUqSGjc-o6z074DjcUJ0D2N2Xuv4WoeceeCKHInCFJf28PPPuthOTkRyhkmP20nCcnaRZqGbZeyh_da7EB2WRf9aKbMl8i6kor1_zGCaZTgceGpXD6MQbg");'></div>
+<div class="flex flex-col flex-1 justify-between p-4 pt-0 gap-4">
+<div>
+<p class="text-text-main dark:text-background-light text-lg font-bold leading-normal">
+                                            Tulumba</p>
+<p class="text-gray-500 dark:text-gray-400 text-sm font-normal leading-normal">
+                                            Deep-fried batter soaked in syrup, with a crispy exterior.</p>
+<p class="text-primary font-bold mt-2">$8.50</p>
+</div>
+<button class="flex min-w-[84px] w-full cursor-pointer items-center justify-center overflow-hidden rounded-lg h-10 px-4 bg-primary/10 dark:bg-primary/20 text-primary dark:text-background-light text-sm font-bold leading-normal tracking-[0.015em] hover:bg-primary/20 dark:hover:bg-primary/30 transition-colors">
+<span class="truncate">View Product</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+<div class="py-16 px-4">
+<div class="grid md:grid-cols-2 gap-8 md:gap-12 items-center bg-card-background dark:bg-background-dark shadow-card rounded-lg p-6 md:p-10">
+<div class="flex flex-col gap-4 order-2 md:order-1">
+<h2 class="text-text-main dark:text-background-light text-3xl font-bold leading-tight tracking-[-0.015em]">The Art of Baklava</h2>
+<p class="text-gray-600 dark:text-gray-400 text-base font-normal leading-relaxed">A dessert with a rich history, baklava is a symbol of celebration and craftsmanship. Its origins trace back to the Ottoman Empire, where it was perfected in the imperial kitchens. At Tulumbak, we honor this legacy by meticulously layering 40 sheets of paper-thin phyllo dough with the finest pistachios and walnuts, then bathing it in a delicate, house-made syrup for a taste that is both timeless and unforgettable.</p>
+<button class="flex mt-2 min-w-[84px] max-w-fit cursor-pointer items-center justify-center overflow-hidden rounded-lg h-10 px-4 bg-primary text-white text-sm font-bold leading-normal tracking-[0.015em] hover:bg-opacity-90 transition-colors">
+<span class="truncate">Discover Our Baklava</span>
+</button>
+</div>
+<div class="rounded-lg overflow-hidden aspect-square order-1 md:order-2">
+<img class="w-full h-full object-cover" data-alt="A beautifully arranged platter of different types of baklava" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCDT8NiNAyCHnZ2U6xWhGUPEpilOA7JeUrFLm1Bf86nHsoUdG1Mr6JrCVHptNcck2tdK1B64scDkTOztG-AoS-RL2hqaPecTd0O3zVTOeIdX6BRF_5RQSFG2Ek92UQsgJfB60sm_4RYEyt9MW4Gki18nGCJjzfR5kUmuCkkKLo_-cLVsFyL0ELmui_fgP5yaeqGg2QlmV4-WUej7rGL5yovXzy7382ppj0R5wr8smFxcJDBVymeRUloudZig87WhJejpkkalR5UNmE"/>
+</div>
+</div>
+</div>
+<h2 class="text-text-main dark:text-background-light text-3xl font-bold leading-tight tracking-[-0.015em] px-4 pb-3 pt-10 text-center">
+                        What Our Customers Say</h2>
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 p-4">
+<div class="flex flex-col gap-4 rounded-lg bg-card-background dark:bg-background-dark shadow-card p-6">
+<div class="flex items-center gap-1 text-primary">
+<span class="material-symbols-outlined !text-xl">star</span><span class="material-symbols-outlined !text-xl">star</span><span class="material-symbols-outlined !text-xl">star</span><span class="material-symbols-outlined !text-xl">star</span><span class="material-symbols-outlined !text-xl">star</span>
+</div>
+<p class="text-text-main dark:text-background-light text-base font-normal leading-normal">
+                                "Absolutely divine! The baklava was the best I've ever had outside of Turkey. So fresh
+                                and authentic."</p>
+<p class="text-gray-500 dark:text-gray-400 text-sm font-bold leading-normal">- Sarah L.</p>
+</div>
+<div class="flex flex-col gap-4 rounded-lg bg-card-background dark:bg-background-dark shadow-card p-6">
+<div class="flex items-center gap-1 text-primary">
+<span class="material-symbols-outlined !text-xl">star</span><span class="material-symbols-outlined !text-xl">star</span><span class="material-symbols-outlined !text-xl">star</span><span class="material-symbols-outlined !text-xl">star</span><span class="material-symbols-outlined !text-xl">star</span>
+</div>
+<p class="text-text-main dark:text-background-light text-base font-normal leading-normal">"The
+                                Turkish Delight was a dream. So many wonderful flavors and the texture was perfect.
+                                Highly recommend!"</p>
+<p class="text-gray-500 dark:text-gray-400 text-sm font-bold leading-normal">- Michael B.
+                            </p>
+</div>
+<div class="flex flex-col gap-4 rounded-lg bg-card-background dark:bg-background-dark shadow-card p-6">
+<div class="flex items-center gap-1 text-primary">
+<span class="material-symbols-outlined !text-xl">star</span><span class="material-symbols-outlined !text-xl">star</span><span class="material-symbols-outlined !text-xl">star</span><span class="material-symbols-outlined !text-xl">star</span><span class="material-symbols-outlined !text-xl">star_half</span>
+</div>
+<p class="text-text-main dark:text-background-light text-base font-normal leading-normal">
+                                "Fast delivery and incredible desserts. The künefe was a warm, cheesy, sweet delight.
+                                Will order again!"</p>
+<p class="text-gray-500 dark:text-gray-400 text-sm font-bold leading-normal">- Aisha K.</p>
+</div>
+</div>
+<div class="py-16 px-4">
+<div class="bg-card-background dark:bg-background-dark shadow-card rounded-lg p-6 md:p-10 text-center flex flex-col items-center">
+<div class="flex items-center gap-2 text-primary">
+<svg class="h-8 w-8" fill="none" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg"><path d="M4 4H17.3334V17.3334H30.6666V30.6666H44V44H4V4Z" fill="currentColor"></path></svg>
+<h2 class="text-text-main dark:text-background-light text-3xl font-bold leading-tight tracking-[-0.015em]">The Tulumbak Promise</h2>
+</div>
+<p class="text-gray-600 dark:text-gray-400 text-base font-normal leading-relaxed mt-4 max-w-3xl">
+At Tulumbak, our mission is to share the joy of authentic Turkish desserts with the world. We are committed to upholding the traditions of our heritage by using only the finest, all-natural ingredients and time-honored recipes passed down through generations. Our values are rooted in quality, authenticity, and a passion for creating moments of pure delight for our customers.
+</p>
+<div class="mt-8 grid grid-cols-1 sm:grid-cols-3 gap-8 max-w-4xl w-full">
+<div class="flex flex-col items-center gap-2">
+<div class="flex items-center justify-center h-12 w-12 rounded-full bg-primary/10 text-primary">
+<span class="material-symbols-outlined">verified</span>
+</div>
+<h3 class="font-bold text-text-main dark:text-background-light mt-2">Authenticity</h3>
+<p class="text-sm text-gray-500 dark:text-gray-400">Generations-old recipes for a true taste of Turkey.</p>
+</div>
+<div class="flex flex-col items-center gap-2">
+<div class="flex items-center justify-center h-12 w-12 rounded-full bg-primary/10 text-primary">
+<span class="material-symbols-outlined">eco</span>
+</div>
+<h3 class="font-bold text-text-main dark:text-background-light mt-2">Quality Ingredients</h3>
+<p class="text-sm text-gray-500 dark:text-gray-400">Only the finest, all-natural components in every bite.</p>
+</div>
+<div class="flex flex-col items-center gap-2">
+<div class="flex items-center justify-center h-12 w-12 rounded-full bg-primary/10 text-primary">
+<span class="material-symbols-outlined">favorite</span>
+</div>
+<h3 class="font-bold text-text-main dark:text-background-light mt-2">Handcrafted with Love</h3>
+<p class="text-sm text-gray-500 dark:text-gray-400">Each dessert is made with passion and meticulous care.</p>
+</div>
+</div>
+</div>
+</div>
+<footer class="border-t border-solid border-[#E0E0E0] dark:border-b-background-dark/50 mt-10 py-8 px-4">
+<div class="grid grid-cols-2 md:grid-cols-4 gap-8">
+<div class="flex flex-col gap-4">
+<h3 class="font-bold text-text-main dark:text-background-light">Tulumbak</h3>
+<p class="text-sm text-gray-500 dark:text-gray-400">Authentic Turkish Desserts,
+                                    handcrafted with love.</p>
+</div>
+<div class="flex flex-col gap-4">
+<h3 class="font-bold text-text-main dark:text-background-light">Shop</h3>
+<a class="text-sm text-gray-500 dark:text-gray-400 hover:text-primary" href="#">All
+                                    Products</a>
+<a class="text-sm text-gray-500 dark:text-gray-400 hover:text-primary" href="#">Baklava</a>
+<a class="text-sm text-gray-500 dark:text-gray-400 hover:text-primary" href="#">Lokum</a>
+</div>
+<div class="flex flex-col gap-4">
+<h3 class="font-bold text-text-main dark:text-background-light">About</h3>
+<a class="text-sm text-gray-500 dark:text-gray-400 hover:text-primary" href="#">Our
+                                    Story</a>
+<a class="text-sm text-gray-500 dark:text-gray-400 hover:text-primary" href="#">Contact
+                                    Us</a>
+</div>
+<div class="flex flex-col gap-4">
+<h3 class="font-bold text-text-main dark:text-background-light">Follow Us</h3>
+<div class="flex gap-4">
+<a class="text-sm text-gray-500 dark:text-gray-400 hover:text-primary" href="#">Facebook</a>
+<a class="text-sm text-gray-500 dark:text-gray-400 hover:text-primary" href="#">Instagram</a>
+<a class="text-sm text-gray-500 dark:text-gray-400 hover:text-primary" href="#">Twitter</a>
+</div>
+</div>
+</div>
+<div class="text-center text-xs text-gray-500 dark:text-gray-500 mt-10">
+                            © 2023 Tulumbak. All rights reserved.
+                        </div>
+</footer>
+</div>
+</div>
+</div>
+</div>
+</body></html>

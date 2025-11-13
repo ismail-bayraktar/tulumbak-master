@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Tulumbak - My Orders</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#F08223",
+                        "background-light": "#F5F5F5",
+                        "background-dark": "#1a1a1a",
+                        "content-light": "#FFFFFF",
+                        "content-dark": "#2d2d2d",
+                        "text-light": "#333333",
+                        "text-dark": "#e0e0e0",
+                    },
+                    fontFamily: {
+                        "display": ["Manrope", "sans-serif"]
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.5rem",
+                        "lg": "0.75rem",
+                        "xl": "1rem",
+                        "full": "9999px"
+                    },
+                    boxShadow: {
+                        'light': '0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.05)',
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings:
+            'FILL' 0,
+            'wght' 400,
+            'GRAD' 0,
+            'opsz' 24
+        }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark font-display text-text-light dark:text-text-dark">
+<div class="relative flex h-auto min-h-screen w-full flex-col group/design-root overflow-x-hidden">
+<div class="layout-container flex h-full grow flex-col">
+<header class="bg-content-light dark:bg-content-dark shadow-light">
+<div class="px-4 lg:px-10 mx-auto max-w-7xl">
+<div class="flex items-center justify-between h-20">
+<div class="flex items-center gap-4">
+<div class="text-primary size-7">
+<svg fill="none" viewbox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+<path d="M4 4H17.3334V17.3334H30.6666V30.6666H44V44H4V4Z" fill="currentColor"></path>
+</svg>
+</div>
+<h2 class="text-2xl font-bold tracking-tight">Tulumbak</h2>
+</div>
+<nav class="hidden md:flex items-center gap-8">
+<a class="text-sm font-medium hover:text-primary transition-colors" href="#">Home</a>
+<a class="text-sm font-medium hover:text-primary transition-colors" href="#">Products</a>
+<a class="text-sm font-medium hover:text-primary transition-colors" href="#">About</a>
+</nav>
+<div class="flex items-center gap-3">
+<button class="flex items-center justify-center rounded-full h-10 w-10 bg-background-light dark:bg-background-dark text-text-light dark:text-text-dark hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
+<span class="material-symbols-outlined">shopping_cart</span>
+</button>
+<button class="flex items-center justify-center rounded-full h-10 w-10 bg-background-light dark:bg-background-dark text-text-light dark:text-text-dark hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
+<span class="material-symbols-outlined">account_circle</span>
+</button>
+</div>
+</div>
+</div>
+</header>
+<main class="flex-1 px-4 lg:px-10 py-8 mx-auto max-w-7xl w-full">
+<div class="space-y-8">
+<div class="flex flex-wrap items-center justify-between gap-4">
+<h1 class="text-4xl font-extrabold tracking-tight">My Orders</h1>
+</div>
+<div class="flex flex-col md:flex-row gap-4">
+<div class="flex-1">
+<label class="flex flex-col w-full">
+<div class="flex w-full flex-1 items-stretch rounded-lg h-12">
+<div class="flex items-center justify-center pl-4 bg-content-light dark:bg-content-dark rounded-l-lg shadow-light">
+<span class="material-symbols-outlined text-gray-500">search</span>
+</div>
+<input class="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-r-lg text-text-light dark:text-text-dark focus:outline-0 focus:ring-2 focus:ring-primary focus:ring-inset border-none bg-content-light dark:bg-content-dark h-full placeholder:text-gray-500 px-4 text-base font-normal leading-normal shadow-light" placeholder="Search by order number or product" value=""/>
+</div>
+</label>
+</div>
+<div class="flex gap-4">
+<button class="flex-1 md:flex-none flex min-w-[84px] items-center justify-center overflow-hidden rounded-lg h-12 px-4 bg-content-light dark:bg-content-dark text-text-light dark:text-text-dark text-sm font-medium shadow-light hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
+<span>Sort by: Newest</span>
+</button>
+<button class="flex-1 md:flex-none flex min-w-[84px] items-center justify-center overflow-hidden rounded-lg h-12 px-4 bg-content-light dark:bg-content-dark text-text-light dark:text-text-dark text-sm font-medium shadow-light hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
+<span>Status: All</span>
+</button>
+</div>
+</div>
+<div class="space-y-6">
+<!-- Order Card 1 -->
+<div class="bg-content-light dark:bg-content-dark rounded-lg shadow-light p-6">
+<div class="flex flex-col md:flex-row items-start gap-6">
+<div class="flex-shrink-0 flex -space-x-4">
+<div class="w-24 h-24 bg-center bg-no-repeat aspect-square bg-cover rounded-lg border-2 border-white dark:border-gray-700" data-alt="Image of Baklava" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuDwdE75F5W5n0J0xkW_3-uDEqdj-sqW10JEcpXOIfRxQxMkSaL24pP7zYJr2PBuVPBmwbitMihU4hwxbCT8_wbdHhZaAR1CiTyUttS1VC4u5BksUT0VEmxXImF76aWUNVaZUgHsHQ-tDQxI4xpoRFj7ssMEg7hdAl3CYJ840u6pnsg-1-O5I0VOofP8whQhphJCuc_aVHGZ_ldPyBOfuoOLW1lu-kywiQrTknymroJ1VIHb9IqWESoRCL5MMDBNYTRNZWz87nGh6M8");'></div>
+<div class="w-24 h-24 bg-center bg-no-repeat aspect-square bg-cover rounded-lg border-2 border-white dark:border-gray-700" data-alt="Image of Turkish Delight" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuDiU6IcQaIb4ZrM5LDYWJiegbabX7SVD-1yAgG5MMhvJIiRFI95RYmg6o9Pc_h7ez0Tbs32Nl09F5wGVV_d7pAK95LtqWToOBvjdEO14BoG54IuqijFgfsQoWW0ve-T73UFE-0H6sbARmaqeVYpbbbV2t8uGILXXclgFCpzeA0cCl8oCbf-NiQjC6jZG2fa_amT-BHRjayiJyCJuwkALfdoB8Pb4IVpDPMJuyZFRuC6da4VqW47kSci7pTdUkspdzS9XixwSFN4bCc");'></div>
+</div>
+<div class="flex-1 grid grid-cols-1 md:grid-cols-3 gap-6 items-center">
+<div>
+<p class="text-sm text-gray-500 dark:text-gray-400">Order Number</p>
+<p class="font-bold">#TR88451</p>
+<p class="text-sm text-gray-500 dark:text-gray-400 mt-2">Placed October 26, 2023</p>
+</div>
+<div>
+<p class="text-sm text-gray-500 dark:text-gray-400">Total Price</p>
+<p class="font-bold text-lg">$72.00</p>
+</div>
+<div>
+<span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-yellow-100 text-yellow-800">Shipped</span>
+</div>
+</div>
+<div class="w-full md:w-auto flex justify-end">
+<button class="flex items-center justify-center rounded-lg h-10 px-5 bg-primary text-white text-sm font-bold leading-normal tracking-wide hover:bg-primary/90 transition-colors w-full md:w-auto">
+<span>View Details</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Order Card 2 -->
+<div class="bg-content-light dark:bg-content-dark rounded-lg shadow-light p-6">
+<div class="flex flex-col md:flex-row items-start gap-6">
+<div class="flex-shrink-0 flex -space-x-4">
+<div class="w-24 h-24 bg-center bg-no-repeat aspect-square bg-cover rounded-lg border-2 border-white dark:border-gray-700" data-alt="Image of Pistachio Rolls" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuARElPzhmIogC0RlF4XRuUK_TUQ5HFlGcOAQcTUoySqC6s-leR_BxN5wIkto6m11LkiXqfRPHSr0G5zyqkCDQKp78Z07ak_PM1_q0qD3Sc6AGBG5bqKu06aPDJ2680LuvfgEHF-d8dxADgoX46WTXBZUXc7el9tSRwHrBqOcyMPzpM7q5g7cxQRzL2ADACAe0Lp9ebM3450VZgY7TPZjBd6tpx4IuAcXXX4ncwse1O_xvjlM01Ez6kKkKu_kkR5CiqhfOW3Ku2QoyM");'></div>
+</div>
+<div class="flex-1 grid grid-cols-1 md:grid-cols-3 gap-6 items-center">
+<div>
+<p class="text-sm text-gray-500 dark:text-gray-400">Order Number</p>
+<p class="font-bold">#TR88450</p>
+<p class="text-sm text-gray-500 dark:text-gray-400 mt-2">Placed October 24, 2023</p>
+</div>
+<div>
+<p class="text-sm text-gray-500 dark:text-gray-400">Total Price</p>
+<p class="font-bold text-lg">$45.50</p>
+</div>
+<div>
+<span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">Delivered</span>
+</div>
+</div>
+<div class="w-full md:w-auto flex justify-end">
+<button class="flex items-center justify-center rounded-lg h-10 px-5 bg-primary text-white text-sm font-bold leading-normal tracking-wide hover:bg-primary/90 transition-colors w-full md:w-auto">
+<span>View Details</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Order Card 3 -->
+<div class="bg-content-light dark:bg-content-dark rounded-lg shadow-light p-6">
+<div class="flex flex-col md:flex-row items-start gap-6">
+<div class="flex-shrink-0 flex -space-x-4">
+<div class="w-24 h-24 bg-center bg-no-repeat aspect-square bg-cover rounded-lg border-2 border-white dark:border-gray-700" data-alt="Image of mixed desserts" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuCR-ssMtynBpGgiIsnshR4mt5sjhPzO8P9HCRtIKRzV4zfTkB9QTh0sJKCOkk-ePe7ejQ2RpY5Blndz2GT3feRmsRWow4BqJtkPEMz-N-Fa-qB9GYDYlS91Tq5dGe_MQQVHu1twx5nJyczRaTDZQLkE7FLBfaxIu2_TvHq8UG6vEFKzNg7x7XmDxr1XAsoRc4BOwqiH5RSm0V67Ky3K-pWDp6cuiv2mZ7U1ufvYDxMtiDP0obSBVVki7riMlMgy1kiBMlCmWCzIq74");'></div>
+</div>
+<div class="flex-1 grid grid-cols-1 md:grid-cols-3 gap-6 items-center">
+<div>
+<p class="text-sm text-gray-500 dark:text-gray-400">Order Number</p>
+<p class="font-bold">#TR88449</p>
+<p class="text-sm text-gray-500 dark:text-gray-400 mt-2">Placed September 15, 2023</p>
+</div>
+<div>
+<p class="text-sm text-gray-500 dark:text-gray-400">Total Price</p>
+<p class="font-bold text-lg">$112.00</p>
+</div>
+<div>
+<span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-gray-100 text-gray-800">Cancelled</span>
+</div>
+</div>
+<div class="w-full md:w-auto flex justify-end">
+<button class="flex items-center justify-center rounded-lg h-10 px-5 bg-primary text-white text-sm font-bold leading-normal tracking-wide hover:bg-primary/90 transition-colors w-full md:w-auto">
+<span>View Details</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+<!-- Pagination -->
+<div class="flex justify-center pt-8">
+<nav class="flex items-center gap-2">
+<button class="flex items-center justify-center h-10 w-10 rounded-lg bg-content-light dark:bg-content-dark shadow-light hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors text-gray-500">
+<span class="material-symbols-outlined text-base">chevron_left</span>
+</button>
+<button class="flex items-center justify-center h-10 w-10 rounded-lg bg-primary text-white shadow-light">1</button>
+<button class="flex items-center justify-center h-10 w-10 rounded-lg bg-content-light dark:bg-content-dark shadow-light hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">2</button>
+<button class="flex items-center justify-center h-10 w-10 rounded-lg bg-content-light dark:bg-content-dark shadow-light hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">3</button>
+<button class="flex items-center justify-center h-10 w-10 rounded-lg bg-content-light dark:bg-content-dark shadow-light hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors text-gray-500">
+<span class="material-symbols-outlined text-base">chevron_right</span>
+</button>
+</nav>
+</div>
+</div>
+</main>
+</div>
+</div>
+</body></html>
