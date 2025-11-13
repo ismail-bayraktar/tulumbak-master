@@ -11,7 +11,7 @@ import {
     CheckCircle,
     XCircle,
     Settings,
-    TestTube,
+    Beaker,
     Send,
     Zap,
     Database,
@@ -293,7 +293,7 @@ const CourierTestPanel = ({ token }) => {
                                 : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
                         }`}
                     >
-                        <TestTube size={18} />
+                        <Beaker size={18} />
                         <span className="hidden sm:inline">Test İşlemleri</span>
                     </button>
                     <button
