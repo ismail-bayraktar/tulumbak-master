@@ -2,99 +2,100 @@ import React from 'react';
 import { Section, Row, Column, Text } from '@react-email/components';
 
 /**
- * Order Items Table Component
- * Professional table for displaying order items in emails
+ * Order Items Component - Modern Card Layout
+ * Clean, modern card design for displaying order items
  */
 export const OrderItemsTable = ({ items = [], brandColor = '#d4af37' }) => {
   return (
-    <Section style={tableContainerStyle}>
-      {/* Table Header */}
-      <Row style={{ ...headerRowStyle, backgroundColor: brandColor }}>
-        <Column style={{ width: '40%', ...headerCellStyle }}>
-          <Text style={headerTextStyle}>Ürün</Text>
-        </Column>
-        <Column style={{ width: '20%', ...headerCellStyle, textAlign: 'center' }}>
-          <Text style={headerTextStyle}>Adet</Text>
-        </Column>
-        <Column style={{ width: '20%', ...headerCellStyle, textAlign: 'right' }}>
-          <Text style={headerTextStyle}>Birim Fiyat</Text>
-        </Column>
-        <Column style={{ width: '20%', ...headerCellStyle, textAlign: 'right' }}>
-          <Text style={headerTextStyle}>Toplam</Text>
-        </Column>
-      </Row>
+    <Section style={containerStyle}>
+      {/* Section Header */}
+      <Text style={sectionTitleStyle}>Sipariş Ürünleri</Text>
 
-      {/* Table Body */}
+      {/* Items as Cards */}
       {items.map((item, index) => (
-        <Row key={index} style={bodyRowStyle}>
-          <Column style={{ width: '40%', ...bodyCellStyle }}>
-            <Text style={bodyTextStyle}>{item.name || 'Ürün'}</Text>
-            {item.size && (
-              <Text style={sizeTextStyle}>{item.size}g</Text>
-            )}
-          </Column>
-          <Column style={{ width: '20%', ...bodyCellStyle, textAlign: 'center' }}>
-            <Text style={bodyTextStyle}>{item.quantity || 1}</Text>
-          </Column>
-          <Column style={{ width: '20%', ...bodyCellStyle, textAlign: 'right' }}>
-            <Text style={bodyTextStyle}>₺{(item.price || 0).toFixed(2)}</Text>
-          </Column>
-          <Column style={{ width: '20%', ...bodyCellStyle, textAlign: 'right' }}>
-            <Text style={bodyTextStyle}>
-              ₺{((item.price || 0) * (item.quantity || 1)).toFixed(2)}
-            </Text>
-          </Column>
-        </Row>
+        <Section key={index} style={itemCardStyle}>
+          <Row>
+            {/* Product Info */}
+            <Column style={{ width: '60%' }}>
+              <Text style={productNameStyle}>{item.name || 'Ürün'}</Text>
+              {item.size && (
+                <Text style={productSizeStyle}>Gramaj: {item.size}g</Text>
+              )}
+              <Text style={quantityStyle}>Adet: {item.quantity || 1}</Text>
+            </Column>
+
+            {/* Pricing */}
+            <Column style={{ width: '40%', textAlign: 'right' }}>
+              <Text style={unitPriceStyle}>₺{(item.price || 0).toFixed(2)}</Text>
+              <Text style={totalPriceStyle}>
+                ₺{((item.price || 0) * (item.quantity || 1)).toFixed(2)}
+              </Text>
+            </Column>
+          </Row>
+        </Section>
       ))}
     </Section>
   );
 };
 
-// Inline styles
-const tableContainerStyle = {
+// Inline styles - Modern Card Design
+const containerStyle = {
   margin: '24px 0',
-  borderRadius: '4px',
-  overflow: 'hidden',
-  border: '1px solid #e0e0e0',
 };
 
-const headerRowStyle = {
-  padding: 0,
-};
-
-const headerCellStyle = {
-  padding: '12px 16px',
-};
-
-const headerTextStyle = {
-  fontSize: '14px',
+const sectionTitleStyle = {
+  fontSize: '18px',
   fontWeight: 'bold',
-  color: '#ffffff',
-  margin: 0,
-  textTransform: 'uppercase',
-  letterSpacing: '0.5px',
+  color: '#1a1a1a',
+  margin: '0 0 16px 0',
+  letterSpacing: '0.3px',
 };
 
-const bodyRowStyle = {
-  borderBottom: '1px solid #e0e0e0',
+const itemCardStyle = {
+  backgroundColor: '#ffffff',
+  border: '1px solid #e5e7eb',
+  borderRadius: '8px',
+  padding: '20px',
+  marginBottom: '12px',
+  boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)',
 };
 
-const bodyCellStyle = {
-  padding: '16px',
+const productNameStyle = {
+  fontSize: '16px',
+  fontWeight: '600',
+  color: '#1f2937',
+  margin: '0 0 6px 0',
+  lineHeight: '22px',
 };
 
-const bodyTextStyle = {
-  fontSize: '15px',
-  lineHeight: '20px',
-  color: '#333333',
-  margin: 0,
-};
-
-const sizeTextStyle = {
+const productSizeStyle = {
   fontSize: '13px',
+  color: '#6b7280',
+  margin: '0 0 6px 0',
   lineHeight: '18px',
-  color: '#666666',
-  margin: '4px 0 0 0',
+};
+
+const quantityStyle = {
+  fontSize: '14px',
+  color: '#374151',
+  margin: 0,
+  lineHeight: '20px',
+  fontWeight: '500',
+};
+
+const unitPriceStyle = {
+  fontSize: '14px',
+  color: '#6b7280',
+  margin: '0 0 4px 0',
+  lineHeight: '20px',
+};
+
+const totalPriceStyle = {
+  fontSize: '18px',
+  fontWeight: 'bold',
+  color: '#1f2937',
+  margin: 0,
+  lineHeight: '24px',
 };
 
 export default OrderItemsTable;
