@@ -106,22 +106,61 @@ export const updateConfiguration = async (req, res) => {
         const { platform } = req.params;
         const updates = req.body;
 
-        // Find existing config
-        const config = await CourierIntegrationConfigModel.findOne({ platform });
+        // Find existing config or create new one
+        let config = await CourierIntegrationConfigModel.findOne({ platform });
 
         if (!config) {
-            return res.status(404).json({
-                success: false,
-                message: 'Configuration not found'
+            // Create new configuration
+            config = new CourierIntegrationConfigModel({
+                platform,
+                enabled: updates.enabled !== undefined ? updates.enabled : true,
+                testMode: updates.testMode !== undefined ? updates.testMode : true,
+                apiUrl: updates.apiUrl || '',
+                apiKey: updates.apiKey || '',
+                apiSecret: updates.apiSecret || '',
+                restaurantId: updates.restaurantId || '',
+                webhookSecret: updates.webhookSecret || '',
+                webhookOnlyMode: updates.webhookOnlyMode !== undefined ? updates.webhookOnlyMode : false,
+                retryConfig: updates.retryConfig || {
+                    maxRetries: 3,
+                    baseDelay: 1000,
+                    maxDelay: 60000,
+                    backoffMultiplier: 2
+                },
+                circuitBreaker: updates.circuitBreaker || {
+                    enabled: true,
+                    failureThreshold: 5,
+                    timeout: 60000,
+                    resetTimeout: 120000
+                },
+                metadata: updates.metadata || {}
+            });
+
+            await config.save();
+
+            logger.info('New courier configuration created', {
+                platform
+            });
+
+            return res.json({
+                success: true,
+                message: 'Configuration created successfully',
+                config: {
+                    ...config.toObject(),
+                    apiKey: config.apiKey ? '***masked***' : '',
+                    apiSecret: config.apiSecret ? '***masked***' : '',
+                    webhookSecret: config.webhookSecret ? '***masked***' : ''
+                }
             });
         }
 
-        // Update only allowed fields
+        // Update existing config
         const allowedFields = [
             'enabled',
             'testMode',
             'apiUrl',
             'restaurantId',
+            'webhookOnlyMode',
             'retryConfig',
             'circuitBreaker',
             'statusMapping',
@@ -137,7 +176,7 @@ export const updateConfiguration = async (req, res) => {
             }
         }
 
-        // Handle sensitive fields (encrypt if provided)
+        // Handle sensitive fields (encrypt if provided and not masked)
         for (const field of sensitiveFields) {
             if (updates[field] && !updates[field].includes('***')) {
                 // Only update if not masked value
