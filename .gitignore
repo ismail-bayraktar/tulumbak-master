@@ -15,4 +15,4 @@ plan.plan.md
 
 # Local settings and IDE files
 .claude/settings.local.json
-*.local.json
+*.local.jsonfrontend-legacy/
