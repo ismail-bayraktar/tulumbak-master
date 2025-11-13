@@ -4,7 +4,8 @@ import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { Palette, Image, Type, Link, Send, CheckCircle } from "lucide-react"
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
+import { Palette, Image, Type, Link, Send, CheckCircle, Upload } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import api from "@/lib/api"
 
@@ -17,6 +18,8 @@ export default function DesignTab({ settings, updateSetting }) {
   const [testingTemplate, setTestingTemplate] = useState(false)
   const [availableTemplates, setAvailableTemplates] = useState([])
   const [loadingTemplates, setLoadingTemplates] = useState(false)
+  const [logoUploadType, setLogoUploadType] = useState("url")
+  const [uploadingLogo, setUploadingLogo] = useState(false)
 
   // Load available templates
   const loadAvailableTemplates = async () => {
@@ -30,6 +33,66 @@ export default function DesignTab({ settings, updateSetting }) {
       console.error("Error loading templates:", error)
     } finally {
       setLoadingTemplates(false)
+    }
+  }
+
+  // Handle logo upload
+  const handleLogoUpload = async (event) => {
+    const file = event.target.files?.[0]
+    if (!file) return
+
+    // Validate file type
+    if (!file.type.startsWith("image/")) {
+      toast({
+        variant: "destructive",
+        title: "Hata",
+        description: "Lütfen bir resim dosyası seçin (PNG, JPG, SVG)",
+      })
+      return
+    }
+
+    // Validate file size (max 2MB)
+    if (file.size > 2 * 1024 * 1024) {
+      toast({
+        variant: "destructive",
+        title: "Hata",
+        description: "Dosya boyutu 2MB'dan küçük olmalıdır",
+      })
+      return
+    }
+
+    try {
+      setUploadingLogo(true)
+
+      // Create form data
+      const formData = new FormData()
+      formData.append("file", file)
+
+      // Upload to Cloudinary via backend
+      const response = await api.post("/api/upload", formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      })
+
+      if (response.data.success) {
+        const imageUrl = response.data.fileUrl
+        updateSetting("design.logoUrl", imageUrl)
+        toast({
+          title: "Başarılı",
+          description: "Logo başarıyla yüklendi",
+        })
+      } else {
+        throw new Error(response.data.message)
+      }
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Hata",
+        description: error.response?.data?.message || "Logo yüklenemedi",
+      })
+    } finally {
+      setUploadingLogo(false)
     }
   }
 
@@ -78,22 +141,94 @@ export default function DesignTab({ settings, updateSetting }) {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          {/* Logo URL */}
-          <div className="space-y-2">
-            <Label htmlFor="design-logo" className="flex items-center gap-2">
+          {/* Logo Upload - Modern Options */}
+          <div className="space-y-4">
+            <Label className="flex items-center gap-2">
               <Image className="h-4 w-4" />
-              Logo URL
+              Email Logosu
             </Label>
-            <Input
-              id="design-logo"
-              type="url"
-              placeholder="https://tulumbak.com/logo.png"
-              value={settings?.design?.logoUrl || ""}
-              onChange={(e) => updateSetting("design.logoUrl", e.target.value)}
-            />
-            <p className="text-xs text-muted-foreground">
-              Email header'ında gösterilecek logo linki
-            </p>
+
+            {/* Upload Type Selection */}
+            <RadioGroup
+              value={logoUploadType}
+              onValueChange={setLogoUploadType}
+              className="flex gap-4"
+            >
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="url" id="logo-url" />
+                <Label htmlFor="logo-url" className="font-normal cursor-pointer">
+                  <Link className="h-3 w-3 inline mr-1" />
+                  URL Link
+                </Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="upload" id="logo-upload" />
+                <Label htmlFor="logo-upload" className="font-normal cursor-pointer">
+                  <Upload className="h-3 w-3 inline mr-1" />
+                  Dosya Yükle
+                </Label>
+              </div>
+            </RadioGroup>
+
+            {/* URL Input */}
+            {logoUploadType === "url" && (
+              <div className="space-y-2">
+                <Input
+                  type="url"
+                  placeholder="https://tulumbak.com/logo.png"
+                  value={settings?.design?.logoUrl || ""}
+                  onChange={(e) => updateSetting("design.logoUrl", e.target.value)}
+                />
+                <p className="text-xs text-muted-foreground">
+                  Logo için harici URL adresi girin
+                </p>
+              </div>
+            )}
+
+            {/* File Upload */}
+            {logoUploadType === "upload" && (
+              <div className="space-y-2">
+                <div className="flex gap-2">
+                  <Input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleLogoUpload}
+                    disabled={uploadingLogo}
+                    className="flex-1"
+                  />
+                  {uploadingLogo && (
+                    <Button disabled className="min-w-[100px]">
+                      Yükleniyor...
+                    </Button>
+                  )}
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  PNG, JPG veya SVG formatında logo yükleyin (max 2MB)
+                </p>
+              </div>
+            )}
+
+            {/* Current Logo Preview */}
+            {settings?.design?.logoUrl && (
+              <div className="border rounded-md p-4 bg-muted/30">
+                <p className="text-xs font-medium mb-2">Mevcut Logo:</p>
+                <img
+                  src={settings.design.logoUrl}
+                  alt="Logo Preview"
+                  className="max-h-16 object-contain"
+                  onError={(e) => {
+                    e.target.style.display = "none"
+                    e.target.nextSibling.style.display = "block"
+                  }}
+                />
+                <p
+                  className="text-xs text-muted-foreground mt-2 hidden break-all"
+                  style={{ display: "none" }}
+                >
+                  {settings.design.logoUrl}
+                </p>
+              </div>
+            )}
           </div>
 
           {/* Brand Color */}
