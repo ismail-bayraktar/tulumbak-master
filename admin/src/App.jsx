@@ -17,6 +17,7 @@ import Coupons from './pages/coupons/Coupons'
 import DeliveryZones from './pages/delivery/DeliveryZones'
 import TimeSlots from './pages/delivery/TimeSlots'
 import EmailSettings from './pages/email/EmailSettings'
+import EmailLogs from './pages/email/EmailLogs'
 
 export const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:4000'
 
@@ -53,7 +54,10 @@ function App() {
           <Route path="/coupons" element={<Coupons />} />
           <Route path="/delivery-zones" element={<DeliveryZones />} />
           <Route path="/time-slots" element={<TimeSlots />} />
-          <Route path="/email-settings" element={<EmailSettings />} />
+          <Route path="/email/settings" element={<EmailSettings />} />
+          <Route path="/email/logs" element={<EmailLogs />} />
+          {/* Legacy route redirect */}
+          <Route path="/email-settings" element={<Navigate to="/email/settings" replace />} />
           <Route path="*" element={<Navigate to="/dashboard" replace />} />
         </Routes>
       )}

@@ -12,6 +12,9 @@ import {
   GitBranch,
   ShoppingBag,
   Image,
+  Mail,
+  FileText,
+  Palette,
 } from "lucide-react"
 
 import { NavMain } from "@/components/nav-main"
@@ -123,6 +126,21 @@ const data = {
       ],
     },
     {
+      title: "Email Yönetimi",
+      url: "#",
+      icon: Mail,
+      items: [
+        {
+          title: "Email Ayarları",
+          url: "/email/settings",
+        },
+        {
+          title: "Email Logları",
+          url: "/email/logs",
+        },
+      ],
+    },
+    {
       title: "Sistem",
       url: "#",
       icon: Settings,
@@ -130,10 +148,6 @@ const data = {
         {
           title: "Genel Ayarlar",
           url: "/settings",
-        },
-        {
-          title: "Email Yönetimi",
-          url: "/email-settings",
         },
         {
           title: "Raporlar",
