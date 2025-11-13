@@ -61,8 +61,8 @@ export default function EmailLogs() {
   const [logs, setLogs] = useState([])
   const [pagination, setPagination] = useState({ page: 1, limit: 50, total: 0, pages: 0 })
   const [filters, setFilters] = useState({
-    status: "",
-    trigger: "",
+    status: "all",
+    trigger: "all",
     to: "",
   })
   const [selectedLog, setSelectedLog] = useState(null)
@@ -91,8 +91,8 @@ export default function EmailLogs() {
       const params = new URLSearchParams({
         page: pagination.page,
         limit: pagination.limit,
-        ...(filters.status && { status: filters.status }),
-        ...(filters.trigger && { trigger: filters.trigger }),
+        ...(filters.status && filters.status !== "all" && { status: filters.status }),
+        ...(filters.trigger && filters.trigger !== "all" && { trigger: filters.trigger }),
         ...(filters.to && { to: filters.to }),
       })
 
@@ -257,7 +257,7 @@ export default function EmailLogs() {
                       <SelectValue placeholder="Tümü" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">Tümü</SelectItem>
+                      <SelectItem value="all">Tümü</SelectItem>
                       <SelectItem value="sent">Gönderildi</SelectItem>
                       <SelectItem value="failed">Başarısız</SelectItem>
                       <SelectItem value="pending">Bekliyor</SelectItem>
@@ -277,7 +277,7 @@ export default function EmailLogs() {
                       <SelectValue placeholder="Tümü" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">Tümü</SelectItem>
+                      <SelectItem value="all">Tümü</SelectItem>
                       <SelectItem value="orderCreated">Sipariş Oluşturuldu</SelectItem>
                       <SelectItem value="orderStatusUpdate">Sipariş Durumu</SelectItem>
                       <SelectItem value="courierAssigned">Kurye Atandı</SelectItem>
