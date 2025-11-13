@@ -143,12 +143,24 @@ export interface DeliveryTimeSlot {
 // Slider Types
 export interface Slider {
   _id: string;
+  template: 'split-left' | 'split-right' | 'full-width' | 'centered';
   title: string;
+  subtitle?: string;
   description: string;
+  buttonText?: string;
+  buttonLink?: string;
+  buttonStyle?: 'primary' | 'secondary' | 'outline';
   image: string;
-  link?: string;
+  overlayOpacity: number;
+  textColor: 'auto' | 'light' | 'dark';
+  viewCount: number;
+  clickCount: number;
+  altText?: string;
+  seoTitle?: string;
   order: number;
-  active: boolean;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
 }
 
 // API Response Types

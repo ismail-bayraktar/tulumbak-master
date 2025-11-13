@@ -24,9 +24,9 @@ export default function ApiTestPage() {
         }
 
         // Test Slider API
-        const slidersRes = await sliderAPI.getActive();
-        if (slidersRes.data.success && slidersRes.data.data) {
-          setSliders(slidersRes.data.data.sliders);
+        const slidersRes = await sliderAPI.getAll();
+        if (slidersRes.data.success && slidersRes.data.sliders) {
+          setSliders(slidersRes.data.sliders);
         }
 
         // Test Settings API
@@ -144,8 +144,8 @@ export default function ApiTestPage() {
                     <h3 className="font-bold">{slider.title}</h3>
                     <p className="text-sm text-gray-600">{slider.description}</p>
                   </div>
-                  <span className={`text-xs px-2 py-1 rounded ${slider.active ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}`}>
-                    {slider.active ? 'Aktif' : 'Pasif'}
+                  <span className={`text-xs px-2 py-1 rounded ${slider.isActive ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}`}>
+                    {slider.isActive ? 'Aktif' : 'Pasif'}
                   </span>
                 </div>
               ))

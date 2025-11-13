@@ -172,8 +172,14 @@ export const deliveryAPI = {
 
 // --- SLIDERS ---
 export const sliderAPI = {
-  getActive: () =>
-    api.get<ApiResponse<{ sliders: Slider[] }>>('/api/slider/active'),
+  getAll: () =>
+    api.get<ApiResponse<{ sliders: Slider[] }>>('/api/slider/list'),
+
+  trackView: (id: string) =>
+    api.post<ApiResponse>(`/api/slider/track/view/${id}`),
+
+  trackClick: (id: string) =>
+    api.post<ApiResponse>(`/api/slider/track/click/${id}`),
 };
 
 // --- SETTINGS ---
