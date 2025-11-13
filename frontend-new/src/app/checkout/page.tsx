@@ -1,9 +1,10 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useProductStore } from '@/stores/productStore';
 import { useCartStore } from '@/stores/cartStore';
+import { useAuthStore } from '@/stores/authStore';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -20,6 +21,7 @@ export default function CheckoutPage() {
   const router = useRouter();
   const { products } = useProductStore();
   const { items, getCartAmount, getShippingFee, clearCart, currency } = useCartStore();
+  const { isAuthenticated } = useAuthStore();
 
   const [loading, setLoading] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState<string>('cash_on_delivery');
@@ -44,6 +46,13 @@ export default function CheckoutPage() {
       quantity: items[productId][size],
     }));
   });
+
+  useEffect(() => {
+    if (!isAuthenticated) {
+      toast.error('Sipariş vermek için giriş yapmalısınız');
+      router.push('/login?redirect=/checkout');
+    }
+  }, [isAuthenticated, router]);
 
   const subtotal = getCartAmount();
   const shipping = getShippingFee();
@@ -96,6 +105,27 @@ export default function CheckoutPage() {
     }
 
     setLoading(true);
+
+    // 🔍 DEV MODE: Detailed logging
+    const isDev = process.env.NODE_ENV === 'development';
+    if (isDev) {
+      const token = localStorage.getItem('token');
+      console.log('🛒 [Checkout] Place Order Started:', {
+        timestamp: new Date().toISOString(),
+        hasToken: !!token,
+        tokenPreview: token ? token.substring(0, 30) + '...' : 'NO TOKEN',
+        isAuthenticated,
+        cartItemsCount: cartItems.length,
+        totalAmount: total,
+        paymentMethod,
+        deliveryInfo: {
+          name: `${deliveryInfo.firstName} ${deliveryInfo.lastName}`,
+          email: deliveryInfo.email,
+          city: deliveryInfo.city
+        }
+      });
+    }
+
     try {
       const orderItems: OrderItem[] = cartItems.map(({ product, size, quantity }) => {
         const sizePrice = product.sizePrices.find(
@@ -120,20 +150,56 @@ export default function CheckoutPage() {
         paymentMethod: paymentMethod,
       };
 
+      if (isDev) {
+        console.log('📤 [Checkout] Sending Order Request:', {
+          endpoint: API_ENDPOINTS.ORDERS.PLACE,
+          itemsCount: orderItems.length,
+          totalAmount: total / 100,
+          paymentMethod
+        });
+      }
+
       const response = await apiClient.post(API_ENDPOINTS.ORDERS.PLACE, orderData);
+
+      if (isDev) {
+        console.log('📥 [Checkout] Order Response:', {
+          success: response.data.success,
+          message: response.data.message,
+          status: response.status,
+          hasData: !!response.data
+        });
+      }
 
       if (response.data.success) {
         clearCart();
         toast.success('Siparişiniz başarıyla oluşturuldu!');
+        console.log('✅ [Checkout] Order Success - Redirecting to /orders');
         router.push('/orders');
       } else {
+        console.error('❌ [Checkout] Order Failed:', response.data.message);
         toast.error(response.data.message || 'Sipariş oluşturulurken bir hata oluştu');
       }
-    } catch (error) {
-      console.error('Place order error:', error);
-      toast.error('Sipariş oluşturulurken bir hata oluştu');
+    } catch (error: any) {
+      console.error('❌ [Checkout] Place Order Error:', {
+        message: error.message,
+        response: error.response?.data,
+        status: error.response?.status,
+        stack: isDev ? error.stack : undefined
+      });
+
+      // More specific error messages based on response
+      if (error.response?.data?.message) {
+        toast.error(error.response.data.message);
+      } else if (error.response?.status === 401) {
+        toast.error('Oturum süreniz dolmuş olabilir. Lütfen tekrar giriş yapın.');
+      } else {
+        toast.error('Sipariş oluşturulurken bir hata oluştu');
+      }
     } finally {
       setLoading(false);
+      if (isDev) {
+        console.log('🏁 [Checkout] Place Order Finished');
+      }
     }
   };
 

@@ -2,6 +2,7 @@ import { useState, useEffect } from "react"
 import { Link } from "react-router-dom"
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar"
 import { AppSidebar } from "@/components/app-sidebar"
+import ProductEditSheet from "@/components/ProductEditSheet"
 import {
   Dialog,
   DialogContent,
@@ -73,6 +74,16 @@ import {
   RefreshCw,
   TrendingUp,
 } from "lucide-react"
+import { backendUrl } from "@/lib/api"
+
+// Helper function to get full image URL
+const getImageUrl = (imageUrl) => {
+  if (!imageUrl) return null
+  // If URL already starts with http/https (Cloudinary), return as is
+  if (imageUrl.startsWith('http')) return imageUrl
+  // Otherwise, prepend backend URL for local uploads
+  return `${backendUrl}${imageUrl}`
+}
 
 export default function ProductList() {
   const { toast } = useToast()
@@ -84,6 +95,7 @@ export default function ProductList() {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [productToDelete, setProductToDelete] = useState(null)
   const [editDialogOpen, setEditDialogOpen] = useState(false)
+  const [editSheetOpen, setEditSheetOpen] = useState(false)
   const [editingProduct, setEditingProduct] = useState(null)
   const [editForm, setEditForm] = useState({
     name: "",
@@ -95,6 +107,14 @@ export default function ProductList() {
   })
   const [currentPage, setCurrentPage] = useState(1)
   const itemsPerPage = 20
+
+  // Inline editing state
+  const [inlineEdit, setInlineEdit] = useState({
+    productId: null,
+    field: null,
+    value: null,
+    originalValue: null,
+  })
 
   const categories = [
     "Taze Meyve",
@@ -113,7 +133,7 @@ export default function ProductList() {
       if (!silent) setLoading(true)
       const response = await productAPI.getAll()
       if (response.data.success) {
-        setProducts(response.data.productData || [])
+        setProducts(response.data.products || [])
       }
     } catch (error) {
       toast({
@@ -202,14 +222,91 @@ export default function ProductList() {
     }))
   }
 
+  // Inline Editing Functions
+  const startInlineEdit = (productId, field, currentValue) => {
+    setInlineEdit({
+      productId,
+      field,
+      value: currentValue,
+      originalValue: currentValue,
+    })
+  }
+
+  const cancelInlineEdit = () => {
+    setInlineEdit({
+      productId: null,
+      field: null,
+      value: null,
+      originalValue: null,
+    })
+  }
+
+  const saveInlineEdit = async () => {
+    if (!inlineEdit.productId || !inlineEdit.field) return
+
+    try {
+      const response = await productAPI.quickUpdate(
+        inlineEdit.productId,
+        inlineEdit.field,
+        inlineEdit.value
+      )
+
+      if (response.data.success) {
+        // Update local state optimistically
+        setProducts((prev) =>
+          prev.map((p) =>
+            p._id === inlineEdit.productId
+              ? { ...p, [inlineEdit.field]: inlineEdit.value }
+              : p
+          )
+        )
+
+        toast({
+          title: "Başarılı",
+          description: "Ürün güncellendi",
+        })
+
+        cancelInlineEdit()
+      }
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Hata",
+        description: error.response?.data?.message || "Güncelleme başarısız",
+      })
+      cancelInlineEdit()
+    }
+  }
+
+  const handleInlineKeyDown = (e) => {
+    if (e.key === "Enter") {
+      e.preventDefault()
+      saveInlineEdit()
+    } else if (e.key === "Escape") {
+      e.preventDefault()
+      cancelInlineEdit()
+    }
+  }
+
+  // Open Edit Sheet
+  const openEditSheet = (product) => {
+    setEditingProduct(product)
+    setEditSheetOpen(true)
+  }
+
   // Filter products
   const filteredProducts = products.filter((product) => {
+    // Handle both populated (object) and non-populated (string) category
+    const categoryName = typeof product.category === 'object' && product.category !== null
+      ? product.category.name
+      : product.category
+
     const matchesSearch =
       !searchQuery ||
       product.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      product.category?.toLowerCase().includes(searchQuery.toLowerCase())
+      categoryName?.toLowerCase().includes(searchQuery.toLowerCase())
 
-    const matchesCategory = categoryFilter === "all" || product.category === categoryFilter
+    const matchesCategory = categoryFilter === "all" || categoryName === categoryFilter
 
     let matchesStock = true
     if (stockFilter === "in-stock") {
@@ -362,17 +459,20 @@ export default function ProductList() {
                         <TableCell>
                           {product.image?.[0] ? (
                             <img
-                              src={product.image[0]}
+                              src={getImageUrl(product.image[0])}
                               alt={product.name}
                               className="h-12 w-12 rounded object-cover"
+                              onError={(e) => {
+                                e.target.onerror = null
+                                e.target.src = '/placeholder-product.png'
+                              }}
                             />
                           ) : (
                             <div className="h-12 w-12 rounded bg-muted flex items-center justify-center">
                               <Package className="h-6 w-6 text-muted-foreground" />
                             </div>
                           )}
-                        </TableCell>
-                        <TableCell>
+                        </TableCell>                        <TableCell>
                           <div>
                             <div className="font-medium flex items-center gap-2">
                               {product.name}
@@ -388,22 +488,82 @@ export default function ProductList() {
                             </div>
                           </div>
                         </TableCell>
-                        <TableCell>{product.category}</TableCell>
-                        <TableCell className="font-medium">
-                          {formatCurrency(product.basePrice)}
+                        <TableCell
+                          onDoubleClick={() => startInlineEdit(product._id, "category", product.category)}
+                          className="cursor-pointer hover:bg-muted/50"
+                          title="Çift tıkla düzenle"
+                        >
+                          {inlineEdit.productId === product._id && inlineEdit.field === "category" ? (
+                            <Select
+                              value={inlineEdit.value}
+                              onValueChange={(val) => setInlineEdit({ ...inlineEdit, value: val })}
+                              onOpenChange={(open) => {
+                                if (!open) saveInlineEdit()
+                              }}
+                            >
+                              <SelectTrigger className="h-8 w-full">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {categories.map((cat) => (
+                                  <SelectItem key={cat} value={cat}>
+                                    {cat}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          ) : (
+                            product.category
+                          )}
                         </TableCell>
-                        <TableCell>
-                          <Badge
-                            variant={
-                              product.stock === 0
-                                ? "destructive"
-                                : product.stock <= 10
-                                  ? "secondary"
-                                  : "outline"
-                            }
-                          >
-                            {product.stock || 0}
-                          </Badge>
+                        <TableCell
+                          onDoubleClick={() => startInlineEdit(product._id, "basePrice", product.basePrice)}
+                          className="font-medium cursor-pointer hover:bg-muted/50"
+                          title="Çift tıkla düzenle"
+                        >
+                          {inlineEdit.productId === product._id && inlineEdit.field === "basePrice" ? (
+                            <Input
+                              type="number"
+                              step="0.01"
+                              className="h-8 w-24"
+                              value={inlineEdit.value}
+                              onChange={(e) => setInlineEdit({ ...inlineEdit, value: parseFloat(e.target.value) })}
+                              onKeyDown={handleInlineKeyDown}
+                              onBlur={saveInlineEdit}
+                              autoFocus
+                            />
+                          ) : (
+                            formatCurrency(product.basePrice)
+                          )}
+                        </TableCell>
+                        <TableCell
+                          onDoubleClick={() => startInlineEdit(product._id, "stock", product.stock)}
+                          className="cursor-pointer hover:bg-muted/50"
+                          title="Çift tıkla düzenle"
+                        >
+                          {inlineEdit.productId === product._id && inlineEdit.field === "stock" ? (
+                            <Input
+                              type="number"
+                              className="h-8 w-20"
+                              value={inlineEdit.value}
+                              onChange={(e) => setInlineEdit({ ...inlineEdit, value: parseInt(e.target.value) })}
+                              onKeyDown={handleInlineKeyDown}
+                              onBlur={saveInlineEdit}
+                              autoFocus
+                            />
+                          ) : (
+                            <Badge
+                              variant={
+                                product.stock === 0
+                                  ? "destructive"
+                                  : product.stock <= 10
+                                    ? "secondary"
+                                    : "outline"
+                              }
+                            >
+                              {product.stock || 0}
+                            </Badge>
+                          )}
                         </TableCell>
                         <TableCell>
                           <div className="text-sm">
@@ -424,9 +584,9 @@ export default function ProductList() {
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
                               <DropdownMenuLabel>İşlemler</DropdownMenuLabel>
-                              <DropdownMenuItem onClick={() => openEditDialog(product)}>
+                              <DropdownMenuItem onClick={() => openEditSheet(product)}>
                                 <Edit className="h-4 w-4 mr-2" />
-                                Hızlı Düzenle
+                                Düzenle
                               </DropdownMenuItem>
                               <DropdownMenuSeparator />
                               <DropdownMenuItem
@@ -494,13 +654,13 @@ export default function ProductList() {
         </AlertDialogContent>
       </AlertDialog>
 
-      {/* Quick Edit Dialog */}
+      {/* Simple Edit Dialog */}
       <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
         <DialogContent className="max-w-2xl">
           <DialogHeader>
-            <DialogTitle>Hızlı Düzenle</DialogTitle>
+            <DialogTitle>Basit Düzenle</DialogTitle>
             <DialogDescription>
-              Ürün bilgilerini hızlıca güncelleyin
+              Temel ürün bilgilerini hızlıca güncelleyin
             </DialogDescription>
           </DialogHeader>
 
@@ -606,6 +766,14 @@ export default function ProductList() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Edit Sheet */}
+      <ProductEditSheet
+        open={editSheetOpen}
+        onOpenChange={setEditSheetOpen}
+        product={editingProduct}
+        onSuccess={() => fetchProducts(true)}
+      />
     </SidebarProvider>
   )
 }

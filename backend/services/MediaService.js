@@ -84,28 +84,44 @@ class MediaService {
     async uploadToCloudinary(file, options, settings) {
         try {
             const folder = options.folder || 'general';
-            const storage = getCloudinaryStorage(folder);
 
-            // Upload to Cloudinary
+            // Upload directly to Cloudinary using SDK (bypass multer-storage-cloudinary)
+            const uploadOptions = {
+                folder: `tulumbak/${folder}`,
+                resource_type: 'auto',
+                transformation: [
+                    { width: 2000, height: 2000, crop: 'limit', quality: 'auto' },
+                    { fetch_format: 'auto' }
+                ],
+                unique_filename: true
+            };
+
+            // Upload buffer to Cloudinary
             const result = await new Promise((resolve, reject) => {
-                storage._handleFile({ file }, file, (error, info) => {
-                    if (error) reject(error);
-                    else resolve(info);
-                });
+                const uploadStream = cloudinary.uploader.upload_stream(
+                    uploadOptions,
+                    (error, result) => {
+                        if (error) reject(error);
+                        else resolve(result);
+                    }
+                );
+
+                // Write buffer to stream
+                uploadStream.end(file.buffer);
             });
 
             // Generate responsive URLs
             const responsiveImages = settings.generateResponsive
-                ? generateResponsiveImages(result.publicId)
+                ? generateResponsiveImages(result.public_id)
                 : [];
 
             // Create media document
             const media = new Media({
-                filename: result.originalname,
+                filename: result.original_filename || file.originalname,
                 originalName: file.originalname,
                 mimetype: file.mimetype,
                 size: result.bytes || file.size,
-                publicId: result.publicId,
+                publicId: result.public_id,
                 url: result.url,
                 secureUrl: result.secure_url,
                 resourceType: result.resource_type || 'image',

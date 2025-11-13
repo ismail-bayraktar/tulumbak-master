@@ -44,4 +44,11 @@ export const API_ENDPOINTS = {
   COUPON: {
     VALIDATE: '/api/coupon/validate',
   },
+
+  // Categories
+  CATEGORIES: {
+    ACTIVE: '/api/category/active',        // Public - aktif kategoriler
+    LIST: '/api/category/list',            // Admin - tüm kategoriler
+    SINGLE: '/api/category/single',        // Admin - tekil kategori
+  },
 } as const;

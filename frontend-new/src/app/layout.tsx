@@ -3,6 +3,7 @@ import { Inter, Poppins, Prata, Nunito_Sans } from "next/font/google";
 import { Toaster } from 'react-hot-toast';
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
+import { AuthProvider } from "@/components/providers/AuthProvider";
 import "./globals.css";
 
 const inter = Inter({
@@ -47,12 +48,14 @@ export default function RootLayout({
       <body
         className={`${inter.variable} ${poppins.variable} ${prata.variable} ${nunitoSans.variable} font-sans antialiased`}
       >
-        <Toaster position="top-right" />
-        <Header />
-        <main className="min-h-screen">
-          {children}
-        </main>
-        <Footer />
+        <AuthProvider>
+          <Toaster position="top-right" />
+          <Header />
+          <main className="min-h-screen">
+            {children}
+          </main>
+          <Footer />
+        </AuthProvider>
       </body>
     </html>
   );

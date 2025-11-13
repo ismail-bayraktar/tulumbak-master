@@ -80,7 +80,10 @@ const mediaSchema = new mongoose.Schema({
 
     // Usage Tracking
     usedIn: [{
-        type: String,     // 'slider', 'product', 'blog', etc.
+        type: {
+            type: String,     // 'slider', 'product', 'blog', etc.
+            required: false
+        },
         id: String,        // ID of the item using this media
         url: String,       // Context URL
         addedAt: {

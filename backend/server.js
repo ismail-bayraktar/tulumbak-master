@@ -3,11 +3,12 @@ import cors from 'cors';
 import helmet from 'helmet';
 import "dotenv/config"
 import connectDB from "./config/mongodb.js";
-// import connectCloudinary from "./config/cloudinary.js"; // Temporarily disabled
+import connectCloudinary from "./config/cloudinary.js";
 import { connectRedis } from "./config/redis.js";
 import path, {dirname} from "path";
 import userRouter from "./routes/UserRoute.js";
 import productRouter from "./routes/ProductRoute.js";
+import categoryRouter from "./routes/CategoryRoute.js";
 import cartRouter from "./routes/CartRoute.js";
 import orderRouter from "./routes/OrderRoute.js";
 import ejsLayouts from 'express-ejs-layouts';
@@ -58,8 +59,9 @@ logInfo('Starting Tulumbak Backend Server', {
   environment: process.env.NODE_ENV || 'development'
 });
 
+// Connect to services
 connectDB();
-// connectCloudinary(); // Temporarily disabled
+connectCloudinary();
 connectRedis();
 
 // Initialize default settings on startup (dynamic import to avoid circular dependency)
@@ -97,6 +99,17 @@ setTimeout(async () => {
     logger.error("Error initializing CourierIntegrationService", { error: error.message, stack: error.stack });
   }
 }, 4000);
+
+// Initialize Product Cleanup Job (30-day auto-delete for soft deleted products)
+setTimeout(async () => {
+  try {
+    const { cleanupJob } = await import("./jobs/cleanupDeletedProducts.js");
+    cleanupJob.start();
+    logger.info("Product cleanup job scheduled successfully (daily at 3:00 AM)");
+  } catch (error) {
+    logger.error("Error initializing product cleanup job", { error: error.message, stack: error.stack });
+  }
+}, 5000);
 
 // PAYTR
 const __filename = fileURLToPath(import.meta.url);
@@ -204,6 +217,7 @@ app.get('/api/image-proxy/:filename', (req, res) => {
 // API ENDPOINTS
 app.use('/api/user', userRouter)
 app.use('/api/product', productRouter)
+app.use('/api/category', categoryRouter)
 app.use('/api/cart', cartRouter)
 app.use('/api/order', orderRouter)
 app.use('/api/paytr', paytrRouter);

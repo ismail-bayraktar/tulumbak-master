@@ -2,10 +2,11 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Search, ShoppingCart, User, Menu, X } from 'lucide-react';
+import { Search, ShoppingCart, User, Menu, X, ChevronDown } from 'lucide-react';
 import { useAuthStore } from '@/stores/authStore';
 import { useCartStore } from '@/stores/cartStore';
 import { useProductStore } from '@/stores/productStore';
+import { useCategoryStore } from '@/stores/categoryStore';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -23,8 +24,16 @@ export function Header() {
   const { isAuthenticated, user, logout } = useAuthStore();
   const { getCartCount } = useCartStore();
   const { search, setSearch, setShowSearch, showSearch } = useProductStore();
+  const { categories, fetchCategories } = useCategoryStore();
 
   const cartCount = getCartCount();
+
+  // Kategorileri yükle
+  useEffect(() => {
+    if (categories.length === 0) {
+      fetchCategories();
+    }
+  }, [categories.length, fetchCategories]);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -63,9 +72,40 @@ export function Header() {
             <Link href="/" className="hover:text-neutral-600 transition-colors">
               Ana Sayfa
             </Link>
-            <Link href="/collection" className="hover:text-neutral-600 transition-colors">
-              Ürünler
-            </Link>
+
+            {/* Ürünler - Kategori Dropdown */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button className="flex items-center gap-1 hover:text-neutral-600 transition-colors">
+                  Ürünler
+                  <ChevronDown size={16} />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start" className="w-56">
+                <DropdownMenuItem asChild>
+                  <Link href="/collection" className="w-full cursor-pointer">
+                    Tüm Ürünler
+                  </Link>
+                </DropdownMenuItem>
+                {categories.length > 0 && (
+                  <>
+                    <DropdownMenuSeparator />
+                    {categories.map((category) => (
+                      <DropdownMenuItem key={category._id} asChild>
+                        <Link
+                          href={`/collection?category=${category.slug}`}
+                          className="w-full cursor-pointer"
+                        >
+                          {category.icon && <span className="mr-2">{category.icon}</span>}
+                          {category.name}
+                        </Link>
+                      </DropdownMenuItem>
+                    ))}
+                  </>
+                )}
+              </DropdownMenuContent>
+            </DropdownMenu>
+
             <Link href="/about" className="hover:text-neutral-600 transition-colors">
               Hakkımızda
             </Link>
@@ -107,8 +147,9 @@ export function Header() {
                 </DropdownMenuContent>
               </DropdownMenu>
             ) : (
-              <Link href="/login" className="hover:text-neutral-600 transition-colors">
+              <Link href="/login" className="flex items-center gap-1 hover:text-neutral-600 transition-colors">
                 <User size={20} />
+                <span className="hidden md:inline text-sm">Giriş Yap</span>
               </Link>
             )}
 
@@ -150,13 +191,33 @@ export function Header() {
             >
               Ana Sayfa
             </Link>
-            <Link
-              href="/collection"
-              className="hover:text-neutral-600 transition-colors"
-              onClick={() => setMobileMenuOpen(false)}
-            >
-              Ürünler
-            </Link>
+
+            {/* Ürünler - Kategoriler */}
+            <div>
+              <Link
+                href="/collection"
+                className="hover:text-neutral-600 transition-colors font-medium block mb-2"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                Tüm Ürünler
+              </Link>
+              {categories.length > 0 && (
+                <div className="pl-4 flex flex-col gap-2 border-l-2 border-neutral-200">
+                  {categories.map((category) => (
+                    <Link
+                      key={category._id}
+                      href={`/collection?category=${category.slug}`}
+                      className="text-sm text-neutral-600 hover:text-neutral-900 transition-colors"
+                      onClick={() => setMobileMenuOpen(false)}
+                    >
+                      {category.icon && <span className="mr-2">{category.icon}</span>}
+                      {category.name}
+                    </Link>
+                  ))}
+                </div>
+              )}
+            </div>
+
             <Link
               href="/about"
               className="hover:text-neutral-600 transition-colors"
@@ -171,6 +232,42 @@ export function Header() {
             >
               İletişim
             </Link>
+            {!isAuthenticated && (
+              <Link
+                href="/login"
+                className="hover:text-neutral-600 transition-colors font-medium"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                Giriş Yap / Kayıt Ol
+              </Link>
+            )}
+            {isAuthenticated && (
+              <>
+                <Link
+                  href="/orders"
+                  className="hover:text-neutral-600 transition-colors"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  Siparişlerim
+                </Link>
+                <Link
+                  href="/profile"
+                  className="hover:text-neutral-600 transition-colors"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  Profilim
+                </Link>
+                <button
+                  onClick={() => {
+                    logout();
+                    setMobileMenuOpen(false);
+                  }}
+                  className="text-left hover:text-neutral-600 transition-colors"
+                >
+                  Çıkış Yap
+                </button>
+              </>
+            )}
           </nav>
         </div>
       )}

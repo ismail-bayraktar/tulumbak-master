@@ -1,7 +1,7 @@
 import axios from 'axios'
 
 // Backend URL from environment or default
-const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:4000'
+export const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:4000'
 
 // Create axios instance with default config
 const api = axios.create({
@@ -132,6 +132,10 @@ export const productAPI = {
   // Get all products with optional filters
   getAll: (params) => api.get('/api/product/list', { params }),
 
+  // Get all including deleted (admin view)
+  getAllIncludingDeleted: (params) =>
+    api.get('/api/product/list', { params: { ...params, includeDeleted: 'true' } }),
+
   // Get single product by ID
   getById: (id) => api.post('/api/product/single', { id }),
 
@@ -147,8 +151,48 @@ export const productAPI = {
       headers: { 'Content-Type': 'multipart/form-data' },
     }),
 
-  // Remove product
+  // Remove product (hard delete)
   remove: (id) => api.post('/api/product/remove', { id }),
+
+  // Soft delete (set active: false)
+  softDelete: (id) => api.post('/api/product/soft-delete', { id }),
+
+  // Restore deleted product
+  restore: (id) => api.post('/api/product/restore', { id }),
+
+  // Permanent delete
+  permanentDelete: (id) => api.post('/api/product/permanent-delete', { id }),
+
+  // Quick update single field (for inline editing)
+  quickUpdate: (id, field, value) =>
+    api.post('/api/product/quick-update', { id, field, value }),
+}
+
+// Category API calls
+export const categoryAPI = {
+  // Get all categories (admin - includes inactive)
+  getAll: (params) => api.get('/api/category/list', { params }),
+
+  // Get only active categories (for product forms)
+  getActive: () => api.get('/api/category/active'),
+
+  // Get single category by ID
+  getById: (id) => api.post('/api/category/single', { id }),
+
+  // Add new category
+  add: (data) => api.post('/api/category/add', data),
+
+  // Update existing category
+  update: (data) => api.post('/api/category/update', data),
+
+  // Remove category
+  remove: (id) => api.post('/api/category/remove', { id }),
+
+  // Toggle active status
+  toggleActive: (id) => api.post('/api/category/toggle-active', { id }),
+
+  // Reorder categories
+  reorder: (categories) => api.post('/api/category/reorder', { categories }),
 }
 
 // Slider API calls

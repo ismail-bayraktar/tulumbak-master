@@ -15,19 +15,40 @@ const apiClient: AxiosInstance = axios.create({
 // Request interceptor
 apiClient.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
+    // 🔍 DEV MODE: Detailed logging
+    const isDev = process.env.NODE_ENV === 'development';
+
     // Get token from localStorage
     if (typeof window !== 'undefined') {
       const token = localStorage.getItem('token');
+
+      if (isDev) {
+        console.log('📡 [API Client] Request Interceptor:', {
+          url: config.url,
+          method: config.method?.toUpperCase(),
+          hasToken: !!token,
+          tokenPreview: token ? token.substring(0, 30) + '...' : 'NO TOKEN'
+        });
+      }
+
       if (token && config.headers) {
         // Use Bearer format (improved from legacy)
         config.headers.Authorization = `Bearer ${token}`;
+
+        if (isDev) {
+          console.log('✅ [API Client] Authorization header set:', {
+            authHeaderPreview: config.headers.Authorization.substring(0, 40) + '...'
+          });
+        }
+      } else if (isDev && !token) {
+        console.warn('⚠️  [API Client] No token found in localStorage');
       }
     }
 
     return config;
   },
   (error: AxiosError) => {
-    console.error('Request error:', error);
+    console.error('❌ [API Client] Request error:', error);
     return Promise.reject(error);
   }
 );

@@ -76,7 +76,7 @@ export const useCartStore = create<CartState>((set, get) => ({
 
       for (const size in items[productId]) {
         const quantity = items[productId][size];
-        const sizePrice = product.sizePrices.find(sp => sp.size === size);
+        const sizePrice = product.sizePrices.find(sp => sp.size === Number(size));
         const price = sizePrice ? sizePrice.price : product.basePrice;
         totalAmount += price * quantity;
       }

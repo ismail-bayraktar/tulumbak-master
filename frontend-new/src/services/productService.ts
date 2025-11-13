@@ -30,7 +30,7 @@ export const productService = {
     const response = await apiClient.get<ProductListResponse>(
       `${API_ENDPOINTS.PRODUCTS.LIST}?search=${encodeURIComponent(query)}`
     );
-    return response.data.data?.products || [];
+    return response.data.products || [];
   },
 
   /**
@@ -40,6 +40,6 @@ export const productService = {
     const response = await apiClient.get<ProductListResponse>(
       `${API_ENDPOINTS.PRODUCTS.LIST}?category=${encodeURIComponent(category)}`
     );
-    return response.data.data?.products || [];
+    return response.data.products || [];
   },
 };

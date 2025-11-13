@@ -33,6 +33,8 @@ const getCloudinaryStorage = (folder = 'tulumbak') => {
 
 // Image transformation utilities
 const generateResponsiveImages = (publicId, options = {}) => {
+    if (!publicId) return [];
+
     const sizes = [
         { name: 'thumbnail', width: 150, height: 150 },
         { name: 'small', width: 300, height: 300 },
@@ -47,7 +49,7 @@ const generateResponsiveImages = (publicId, options = {}) => {
             height: size.height,
             crop: 'fill',
             quality: 'auto',
-            format: 'auto',
+            fetch_format: 'auto',
             ...options
         }),
         width: size.width,
