@@ -27,6 +27,14 @@ export const getConfigurations = async (req, res) => {
             if (safeConfig.apiSecret) {
                 safeConfig.apiSecret = '***masked***';
             }
+            // Webhook secret is in webhookConfig object
+            if (safeConfig.webhookConfig?.secretKey) {
+                safeConfig.hasWebhookSecret = true;
+                safeConfig.webhookConfig.secretKey = '***masked***';
+            } else {
+                safeConfig.hasWebhookSecret = false;
+            }
+            // Legacy field support
             if (safeConfig.webhookSecret) {
                 safeConfig.webhookSecret = '***masked***';
             }
@@ -76,6 +84,14 @@ export const getConfiguration = async (req, res) => {
         if (safeConfig.apiSecret) {
             safeConfig.apiSecret = '***masked***';
         }
+        // Webhook secret is in webhookConfig object
+        if (safeConfig.webhookConfig?.secretKey) {
+            safeConfig.hasWebhookSecret = true;
+            safeConfig.webhookConfig.secretKey = '***masked***';
+        } else {
+            safeConfig.hasWebhookSecret = false;
+        }
+        // Legacy field support
         if (safeConfig.webhookSecret) {
             safeConfig.webhookSecret = '***masked***';
         }
@@ -111,16 +127,30 @@ export const updateConfiguration = async (req, res) => {
 
         if (!config) {
             // Create new configuration
+            // Generate name from platform
+            const platformName = platform.charAt(0).toUpperCase() + platform.slice(1);
+
             config = new CourierIntegrationConfigModel({
                 platform,
+                name: updates.name || platformName,
                 enabled: updates.enabled !== undefined ? updates.enabled : true,
                 testMode: updates.testMode !== undefined ? updates.testMode : true,
                 apiUrl: updates.apiUrl || '',
                 apiKey: updates.apiKey || '',
                 apiSecret: updates.apiSecret || '',
                 restaurantId: updates.restaurantId || '',
-                webhookSecret: updates.webhookSecret || '',
                 webhookOnlyMode: updates.webhookOnlyMode !== undefined ? updates.webhookOnlyMode : false,
+                webhookConfig: {
+                    enabled: true,
+                    secretKey: updates.webhookSecret || '',
+                    events: [
+                        'order.status.updated',
+                        'order.delivered',
+                        'order.failed',
+                        'order.cancelled',
+                        'order.assigned'
+                    ]
+                },
                 retryConfig: updates.retryConfig || {
                     maxRetries: 3,
                     baseDelay: 1000,
@@ -149,7 +179,10 @@ export const updateConfiguration = async (req, res) => {
                     ...config.toObject(),
                     apiKey: config.apiKey ? '***masked***' : '',
                     apiSecret: config.apiSecret ? '***masked***' : '',
-                    webhookSecret: config.webhookSecret ? '***masked***' : ''
+                    webhookConfig: config.webhookConfig ? {
+                        ...config.webhookConfig,
+                        secretKey: '***masked***'
+                    } : null
                 }
             });
         }
@@ -164,11 +197,12 @@ export const updateConfiguration = async (req, res) => {
             'retryConfig',
             'circuitBreaker',
             'statusMapping',
-            'metadata'
+            'metadata',
+            'webhookConfig'
         ];
 
         // Update sensitive fields only if provided
-        const sensitiveFields = ['apiKey', 'apiSecret', 'webhookSecret'];
+        const sensitiveFields = ['apiKey', 'apiSecret'];
 
         for (const field of allowedFields) {
             if (updates[field] !== undefined) {
@@ -176,12 +210,21 @@ export const updateConfiguration = async (req, res) => {
             }
         }
 
-        // Handle sensitive fields (encrypt if provided and not masked)
+        // Handle sensitive fields (will be encrypted by pre-save hook)
         for (const field of sensitiveFields) {
             if (updates[field] && !updates[field].includes('***')) {
-                // Only update if not masked value
-                config[field] = config.constructor.encryptField(updates[field]);
+                // Only update if not masked value (pre-save hook will encrypt)
+                config[field] = updates[field];
             }
+        }
+
+        // Handle webhook secret separately (nested in webhookConfig)
+        if (updates.webhookSecret && !updates.webhookSecret.includes('***')) {
+            // Update webhookConfig.secretKey
+            if (!config.webhookConfig) {
+                config.webhookConfig = {};
+            }
+            config.webhookConfig.secretKey = updates.webhookSecret;
         }
 
         config.updatedAt = Date.now();
@@ -626,19 +669,46 @@ export const validateConfiguration = async (req, res) => {
         if (!config.apiKey || config.apiKey.length < 10) {
             validation.valid = false;
             validation.errors.push('API Key is missing or invalid');
+        } else {
+            // Decrypt and check format for MuditaKurye
+            try {
+                const decryptedKey = config.getDecryptedApiKey();
+                if (platform === 'muditakurye' && !decryptedKey.startsWith('yk_')) {
+                    validation.warnings.push('API Key should start with "yk_" for MuditaKurye');
+                }
+            } catch (error) {
+                validation.warnings.push('API Key decryption failed - key may be corrupted');
+                logger.warn('API Key decryption failed', { error: error.message });
+            }
         }
 
         if (!config.restaurantId) {
             validation.valid = false;
             validation.errors.push('Restaurant ID is required');
+        } else if (platform === 'muditakurye' && !config.restaurantId.startsWith('rest_')) {
+            validation.warnings.push('Restaurant ID should start with "rest_" for MuditaKurye');
         }
 
-        if (!config.webhookSecret) {
+        // Check webhook secret (in webhookConfig.secretKey)
+        if (!config.webhookConfig?.secretKey) {
             validation.warnings.push('Webhook secret is not configured');
+        } else {
+            try {
+                const decryptedWebhookSecret = config.getDecryptedWebhookSecret();
+                if (platform === 'muditakurye' && !decryptedWebhookSecret.startsWith('wh_')) {
+                    validation.warnings.push('Webhook secret should start with "wh_" for MuditaKurye');
+                }
+            } catch (error) {
+                validation.warnings.push('Webhook secret decryption failed - secret may be corrupted');
+                logger.warn('Webhook secret decryption failed', { error: error.message });
+            }
         }
 
         if (!config.apiUrl) {
+            validation.valid = false;
             validation.errors.push('API URL is required');
+        } else if (platform === 'muditakurye' && !config.apiUrl.includes('muditakurye.com')) {
+            validation.warnings.push('API URL should be MuditaKurye domain for this platform');
         }
 
         // Check test mode
@@ -827,7 +897,30 @@ export const testIncomingWebhook = async (req, res) => {
             payload: webhookPayload
         });
 
-        // Find the order
+        // Test mode: Skip real order lookup for test/mock order IDs
+        const isTestOrder = orderId.toString().startsWith('TEST_') || orderId.toString().startsWith('test_');
+
+        if (isTestOrder) {
+            // Simulate webhook processing without real order
+            logger.info('Test mode webhook simulation - skipping real order lookup', {
+                orderId,
+                status
+            });
+
+            res.json({
+                success: true,
+                message: 'Webhook simulation successful (test mode)',
+                data: {
+                    payload: webhookPayload,
+                    orderUpdated: false,
+                    testMode: true,
+                    note: 'This was a simulated webhook event. No real order was updated.'
+                }
+            });
+            return;
+        }
+
+        // Real order mode: Find and update the actual order
         const order = await orderModel.findById(orderId);
         if (!order) {
             return res.status(404).json({
@@ -921,16 +1014,26 @@ export const getIntegrationHealth = async (req, res) => {
                 });
 
                 if (!testResult.success) {
-                    health.status = 'unhealthy';
+                    // In test mode, degraded status is acceptable
+                    health.status = config.testMode ? 'degraded' : 'unhealthy';
                 }
             } catch (error) {
                 health.checks.push({
                     name: 'API Connection',
-                    status: 'fail',
-                    message: error.message
+                    status: config.testMode ? 'warn' : 'fail',
+                    message: error.message,
+                    note: config.testMode ? 'API test skipped in test mode' : undefined
                 });
-                health.status = 'unhealthy';
+                // In test mode, degraded status is acceptable
+                health.status = config.testMode ? 'degraded' : 'unhealthy';
             }
+        } else {
+            // Webhook-only mode
+            health.checks.push({
+                name: 'API Connection',
+                status: 'pass',
+                message: 'Webhook-only mode - API not used'
+            });
         }
 
         // Check 4: Recent failures

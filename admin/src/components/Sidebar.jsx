@@ -34,6 +34,8 @@ const Sidebar = () => {
   const [expandedSections, setExpandedSections] = useState({
     main: true,
     orders: false,
+    branch: false,
+    courier: false,
     settings: false,
     reports: false
   });
@@ -89,26 +91,20 @@ const Sidebar = () => {
           icon: Building,
           label: 'Kurumsal Siparişler',
           description: 'Kurumsal müşteri siparişleri'
-        }
-      ]
-    },
-
-    // Delivery Management Section
-    {
-      section: 'delivery',
-      items: [
+        },
         {
           to: '/order-processing',
           icon: PackageSearch,
           label: 'Sipariş İşleme',
-          description: 'Sipariş hazırlama ve kurye yönetimi'
-        },
-        {
-          to: '/branch-assignment-settings',
-          icon: Settings,
-          label: 'Şube Atama Ayarları',
-          description: 'Şube atama modu ve ayarları'
-        },
+          description: 'Sipariş hazırlama ve kurye atama'
+        }
+      ]
+    },
+
+    // Branch Management Section
+    {
+      section: 'branch',
+      items: [
         {
           to: '/branches',
           icon: Store,
@@ -128,22 +124,23 @@ const Sidebar = () => {
           description: 'Teslimat zaman dilimleri'
         },
         {
-          to: '/courier-management',
-          icon: Truck,
-          label: 'Kurye Yönetimi',
-          description: 'Kurye takibi ve yönetimi'
-        },
-        {
-          to: '/courier-integration',
-          icon: Navigation,
-          label: 'Entegrasyon Ayarları',
-          description: 'Kurye paneli webhook entegrasyonları'
-        },
+          to: '/branch-assignment-settings',
+          icon: Settings,
+          label: 'Şube Atama Ayarları',
+          description: 'Şube atama modu ve ayarları'
+        }
+      ]
+    },
+
+    // Esnaf Express Courier Section
+    {
+      section: 'courier',
+      items: [
         {
           to: '/courier-test',
-          icon: Activity,
-          label: 'Entegrasyon Test Paneli',
-          description: 'MuditaKurye entegrasyon testleri'
+          icon: Truck,
+          label: 'Kurye Entegrasyonu',
+          description: 'Esnaf Express kurye yönetimi'
         }
       ]
     },
@@ -209,7 +206,8 @@ const Sidebar = () => {
     const icons = {
         main: Archive,
         orders: ShoppingCart,
-        delivery: Truck,
+        branch: Store,
+        courier: Truck,
         settings: Settings,
         reports: BarChart3
     };
@@ -290,7 +288,8 @@ const Sidebar = () => {
                     <span className="uppercase tracking-wider">
                       {navSection.section === 'main' && 'Ana Menü'}
                       {navSection.section === 'orders' && 'Siparişler'}
-                      {navSection.section === 'delivery' && 'Teslimat Yönetimi'}
+                      {navSection.section === 'branch' && 'Şube'}
+                      {navSection.section === 'courier' && 'Esnaf Express'}
                       {navSection.section === 'settings' && 'Ayarlar'}
                       {navSection.section === 'reports' && 'Raporlar'}
                     </span>

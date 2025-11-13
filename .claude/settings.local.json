@@ -22,7 +22,9 @@
       "Bash(pkill node:*)",
       "Bash(netstat:*)",
       "Bash(findstr:*)",
-      "Bash(timeout 5 npm run dev:*)"
+      "Bash(timeout 5 npm run dev:*)",
+      "Bash(cat:*)",
+      "Bash(test:*)"
     ],
     "deny": [],
     "ask": []

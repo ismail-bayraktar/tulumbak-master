@@ -56,9 +56,8 @@ class MuditaKuryeService {
             }
 
             // Set up axios client with defaults
-            const baseURL = this.config.testMode
-                ? (process.env.MUDITA_STAGING_API_URL || 'https://staging-api.muditakurye.com')
-                : (this.config.apiUrl || process.env.MUDITA_API_URL || 'https://api.muditakurye.com.tr');
+            // Always use production URL from config or env (staging URL not available)
+            const baseURL = this.config.apiUrl || process.env.MUDITAKURYE_BASE_URL || 'https://api.muditakurye.com.tr';
 
             this.apiClient = axios.create({
                 baseURL,
@@ -143,28 +142,33 @@ class MuditaKuryeService {
                 await this.initialize();
             }
 
-            const credentials = this.config.credentials;
+            // Get decrypted credentials from config
+            const apiKey = this.config.credentials?.apiKey || this.config.getDecryptedApiKey();
+            const apiSecret = this.config.credentials?.apiSecret || this.config.getDecryptedApiSecret?.();
 
             // MuditaKurye uses API key in header, not OAuth token endpoint
             // So we'll set up the authentication header directly
-            if (this.config.authType === 'api_key' || this.config.authType === 'bearer') {
-                this.authToken = credentials.apiKey;
+            if (this.config.authType === 'api_key' || this.config.authType === 'bearer' || !this.config.authType) {
+                this.authToken = apiKey;
                 this.tokenExpiresAt = Date.now() + (10 * 60 * 1000); // 10 minutes
 
-                // Set default auth header
+                // Set default auth header (MuditaKurye uses X-API-Key)
                 this.apiClient.defaults.headers['X-API-Key'] = this.authToken;
 
                 if (this.config.authType === 'bearer') {
                     this.apiClient.defaults.headers['Authorization'] = `Bearer ${this.authToken}`;
                 }
 
-                logger.info('MuditaKurye authentication successful');
+                logger.info('MuditaKurye authentication successful', {
+                    authType: this.config.authType || 'api_key',
+                    apiKeyPrefix: apiKey?.substring(0, 10) + '...'
+                });
                 return this.authToken;
             }
 
             // Basic auth
             if (this.config.authType === 'basic') {
-                const auth = Buffer.from(`${credentials.apiKey}:${credentials.apiSecret || ''}`).toString('base64');
+                const auth = Buffer.from(`${apiKey}:${apiSecret || ''}`).toString('base64');
                 this.apiClient.defaults.headers['Authorization'] = `Basic ${auth}`;
                 this.authToken = auth;
                 this.tokenExpiresAt = Date.now() + (10 * 60 * 1000);
@@ -275,7 +279,7 @@ class MuditaKuryeService {
             }
 
             // Ensure authenticated
-            await this.authenticate();
+            const apiKey = await this.authenticate();
 
             // Transform order data
             const muditaOrder = this.transformOrderData(orderData);
@@ -286,6 +290,7 @@ class MuditaKuryeService {
                 muditaOrder,
                 {
                     headers: {
+                        'X-API-Key': apiKey,
                         'X-Idempotency-Key': orderData._id.toString(),
                         'X-Correlation-ID': correlationId
                     }
@@ -449,32 +454,29 @@ class MuditaKuryeService {
 
     /**
      * Cancel order
+     *
+     * ⚠️ IMPORTANT: MuditaKurye API does NOT provide a cancel order endpoint.
+     * Cancellations must be done manually in the MuditaKurye panel.
+     * When canceled, MuditaKurye sends a webhook to your cancel webhook URL.
+     *
+     * This function is kept for interface compatibility but will always return error.
      */
     async cancelOrder(externalOrderId, reason) {
-        try {
-            await this.authenticate();
+        logger.warn('cancelOrder called but MuditaKurye API does not support order cancellation', {
+            externalOrderId,
+            reason,
+            note: 'Cancellation must be done manually in MuditaKurye panel'
+        });
 
-            const response = await this.apiClient.post(
-                `/api/orders/${externalOrderId}/cancel`,
-                { reason }
-            );
-
-            return {
-                success: true,
-                status: 'CANCELED',
-                response: response.data
-            };
-        } catch (error) {
-            const errorInfo = this.classifyError(error);
-            logger.error('Failed to cancel order', {
-                externalOrderId,
-                error: errorInfo
-            });
-            return {
-                success: false,
-                error: errorInfo
-            };
-        }
+        return {
+            success: false,
+            error: {
+                code: 'NOT_SUPPORTED',
+                message: 'MuditaKurye API does not support programmatic order cancellation. Please cancel the order manually in MuditaKurye panel. You will receive a webhook notification when the order is canceled.',
+                category: 'configuration',
+                retryable: false
+            }
+        };
     }
 
     /**

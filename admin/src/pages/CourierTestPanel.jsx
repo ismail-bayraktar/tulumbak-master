@@ -35,19 +35,41 @@ const CourierTestPanel = ({ token }) => {
         webhookSecret: false,
         apiSecret: false
     });
-    const [config, setConfig] = useState({
-        platform: 'mudita',
-        enabled: true,
-        testMode: true,
-        apiKey: '',
-        apiSecret: '',
-        restaurantId: '',
-        webhookSecret: '',
-        apiUrl: 'https://api.muditakurye.com.tr',
-        webhookOnlyMode: false
-    });
+    // Load config from localStorage or use defaults
+    const getInitialConfig = () => {
+        try {
+            const savedConfig = localStorage.getItem('courierTestPanelConfig');
+            if (savedConfig) {
+                return JSON.parse(savedConfig);
+            }
+        } catch (error) {
+            console.error('localStorage okuma hatası:', error);
+        }
+        return {
+            platform: 'muditakurye',
+            enabled: true,
+            testMode: true,
+            apiKey: '',
+            apiSecret: '',
+            restaurantId: '',
+            webhookSecret: '',
+            apiUrl: 'https://api.muditakurye.com.tr',
+            webhookOnlyMode: false
+        };
+    };
+
+    const [config, setConfig] = useState(getInitialConfig());
     const [testResults, setTestResults] = useState({});
     const [logs, setLogs] = useState([]);
+
+    // Save config to localStorage whenever it changes
+    useEffect(() => {
+        try {
+            localStorage.setItem('courierTestPanelConfig', JSON.stringify(config));
+        } catch (error) {
+            console.error('localStorage yazma hatası:', error);
+        }
+    }, [config]);
 
     // Dashboard verilerini yükle
     const loadDashboard = async () => {
@@ -69,15 +91,27 @@ const CourierTestPanel = ({ token }) => {
     const loadConfig = async () => {
         try {
             const response = await axios.get(
-                `${backendUrl}/api/admin/courier-integration/configs/mudita`,
+                `${backendUrl}/api/admin/courier-integration/configs/muditakurye`,
                 { headers: { token } }
             );
-            if (response.data && response.data._id) {
-                setConfig(prev => ({ ...prev, ...response.data }));
+            if (response.data && response.data.config) {
+                const loadedConfig = { ...response.data.config };
+
+                // Encrypted değerleri gösterme - sadece placeholder
+                if (loadedConfig.apiKey?.startsWith('enc:')) {
+                    loadedConfig.apiKey = ''; // Boş bırak, kullanıcı değiştirmek isterse doldurur
+                }
+                if (loadedConfig.webhookSecret?.startsWith('enc:')) {
+                    loadedConfig.webhookSecret = ''; // Boş bırak
+                }
+
+                setConfig(prev => ({ ...prev, ...loadedConfig }));
                 addLog('success', 'Konfigürasyon yüklendi');
             }
         } catch (error) {
             if (error.response?.status !== 404) {
+                addLog('error', 'Konfigürasyon yüklenirken hata', error.response?.data?.message || error.message);
+            } else {
                 addLog('info', 'Henüz konfigürasyon yok, yeni oluşturulacak');
             }
         }
@@ -87,14 +121,24 @@ const CourierTestPanel = ({ token }) => {
     const saveConfig = async () => {
         setLoading(true);
         try {
+            // Boş encrypted alanları gönderme - backend'deki mevcut değeri korusun
+            const configToSave = { ...config };
+            if (!configToSave.apiKey || configToSave.apiKey.trim() === '') {
+                delete configToSave.apiKey; // Backend mevcut encrypted değeri korur
+            }
+            if (!configToSave.webhookSecret || configToSave.webhookSecret.trim() === '') {
+                delete configToSave.webhookSecret; // Backend mevcut encrypted değeri korur
+            }
+
             const response = await axios.put(
-                `${backendUrl}/api/admin/courier-integration/configs/mudita`,
-                config,
+                `${backendUrl}/api/admin/courier-integration/configs/muditakurye`,
+                configToSave,
                 { headers: { token } }
             );
             toast.success('✅ Konfigürasyon kaydedildi!');
             addLog('success', 'Konfigürasyon kaydedildi', response.data);
             loadDashboard();
+            loadConfig(); // Config'i yeniden yükle
         } catch (error) {
             const errorMsg = error.response?.data?.error || error.response?.data?.message || error.message;
             toast.error('❌ Hata: ' + errorMsg);
@@ -109,7 +153,7 @@ const CourierTestPanel = ({ token }) => {
         setLoading(true);
         try {
             const response = await axios.post(
-                `${backendUrl}/api/admin/courier-integration/validate/mudita`,
+                `${backendUrl}/api/admin/courier-integration/validate/muditakurye`,
                 {},
                 { headers: { token } }
             );
@@ -141,7 +185,7 @@ const CourierTestPanel = ({ token }) => {
         setLoading(true);
         try {
             const response = await axios.post(
-                `${backendUrl}/api/admin/courier-integration/test-order/mudita`,
+                `${backendUrl}/api/admin/courier-integration/test-order/muditakurye`,
                 {
                     customerName: 'Test Müşteri',
                     customerPhone: '+905551234567',
@@ -170,9 +214,9 @@ const CourierTestPanel = ({ token }) => {
         setLoading(true);
         try {
             const response = await axios.post(
-                `${backendUrl}/api/admin/courier-integration/test-webhook/mudita`,
+                `${backendUrl}/api/admin/courier-integration/test-webhook/muditakurye`,
                 {
-                    event: 'courier.status.updated',
+                    event: 'order.status_changed',
                     orderId: 'TEST_ORDER_001',
                     status: status,
                     courierName: 'Test Kurye',
@@ -196,14 +240,18 @@ const CourierTestPanel = ({ token }) => {
         setLoading(true);
         try {
             const response = await axios.get(
-                `${backendUrl}/api/admin/courier-integration/health/mudita`,
+                `${backendUrl}/api/admin/courier-integration/health/muditakurye`,
                 { headers: { token } }
             );
             setTestResults({ health: response.data });
 
-            if (response.data.healthy) {
+            const healthStatus = response.data.health?.status;
+            if (healthStatus === 'healthy') {
                 toast.success('✅ Entegrasyon sağlıklı!');
                 addLog('success', 'Sağlık kontrolü başarılı', response.data);
+            } else if (healthStatus === 'degraded') {
+                toast.info('⚠️ Entegrasyon kısmen çalışıyor (test mode)');
+                addLog('info', 'Sağlık kontrolü: degraded', response.data);
             } else {
                 toast.warning('⚠️ Entegrasyon sorunları tespit edildi');
                 addLog('warning', 'Sağlık kontrolü uyarıları', response.data);
@@ -244,10 +292,10 @@ const CourierTestPanel = ({ token }) => {
                     <div>
                         <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold mb-2 flex items-center gap-3">
                             <Truck className="w-8 h-8 md:w-10 md:h-10" />
-                            MuditaKurye Entegrasyon
+                            Esnaf Express Kurye Entegrasyonu
                         </h1>
                         <p className="text-primary-100 dark:text-primary-200">
-                            Kurye entegrasyonunuzu test edin ve yönetin
+                            Gerçek sipariş takibi ve kurye yönetimi
                         </p>
                     </div>
                     <button
@@ -284,17 +332,6 @@ const CourierTestPanel = ({ token }) => {
                     >
                         <Settings size={18} />
                         <span className="hidden sm:inline">Konfigürasyon</span>
-                    </button>
-                    <button
-                        onClick={() => setActiveTab('test')}
-                        className={`flex items-center gap-2 px-4 md:px-6 py-3 md:py-4 font-semibold transition-colors ${
-                            activeTab === 'test'
-                                ? 'border-b-2 border-primary-600 text-primary-600 dark:text-primary-400'
-                                : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
-                        }`}
-                    >
-                        <Beaker size={18} />
-                        <span className="hidden sm:inline">Test İşlemleri</span>
                     </button>
                     <button
                         onClick={() => setActiveTab('logs')}
@@ -401,7 +438,7 @@ const CourierTestPanel = ({ token }) => {
             {/* Config Tab */}
             {activeTab === 'config' && (
                 <div className="card p-6">
-                    <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-6">MuditaKurye API Konfigürasyonu</h2>
+                    <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-6">Esnaf Express API Konfigürasyonu</h2>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                         <div>
@@ -429,7 +466,7 @@ const CourierTestPanel = ({ token }) => {
                                     value={config.apiKey}
                                     onChange={(e) => setConfig({ ...config, apiKey: e.target.value })}
                                     className="form-input dark:form-input-dark pr-10"
-                                    placeholder="yk_YOUR_API_KEY"
+                                    placeholder={config.apiKey ? "••••••••••••" : "Mevcut key korunuyor (değiştirmek için yeni key girin)"}
                                 />
                                 <button
                                     type="button"
@@ -439,6 +476,11 @@ const CourierTestPanel = ({ token }) => {
                                     {showSecrets.apiKey ? <EyeOff size={18} /> : <Eye size={18} />}
                                 </button>
                             </div>
+                            {!config.apiKey && (
+                                <p className="mt-1 text-xs text-info-600 dark:text-info-400">
+                                    ℹ️ API Key güvenle saklanıyor. Değiştirmek için yeni key girin.
+                                </p>
+                            )}
                         </div>
 
                         <div>
@@ -466,7 +508,7 @@ const CourierTestPanel = ({ token }) => {
                                     value={config.webhookSecret}
                                     onChange={(e) => setConfig({ ...config, webhookSecret: e.target.value })}
                                     className="form-input dark:form-input-dark pr-10"
-                                    placeholder="wh_YOUR_WEBHOOK_SECRET"
+                                    placeholder={config.webhookSecret ? "••••••••••••" : "Mevcut secret korunuyor (değiştirmek için yeni secret girin)"}
                                 />
                                 <button
                                     type="button"
@@ -476,6 +518,11 @@ const CourierTestPanel = ({ token }) => {
                                     {showSecrets.webhookSecret ? <EyeOff size={18} /> : <Eye size={18} />}
                                 </button>
                             </div>
+                            {!config.webhookSecret && (
+                                <p className="mt-1 text-xs text-info-600 dark:text-info-400">
+                                    ℹ️ Webhook Secret güvenle saklanıyor. Değiştirmek için yeni secret girin.
+                                </p>
+                            )}
                         </div>
 
                         <div>
@@ -633,90 +680,43 @@ const CourierTestPanel = ({ token }) => {
                             </div>
                         </div>
                     )}
-                </div>
-            )}
 
-            {/* Test Tab */}
-            {activeTab === 'test' && (
-                <div className="space-y-6">
-                    {/* Test Order */}
-                    <div className="card p-6">
-                        <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-                            <Package size={24} className="text-primary-600 dark:text-primary-400" />
-                            Test Siparişi Gönder
-                        </h2>
-                        <p className="text-gray-600 dark:text-gray-400 mb-4">
-                            MuditaKurye API'ye gerçek bir test siparişi gönderin. Test modu aktif olmalıdır.
-                        </p>
-                        <button
-                            onClick={sendTestOrder}
-                            disabled={loading || !config.testMode}
-                            className="btn-primary inline-flex items-center gap-2 disabled:opacity-50"
-                        >
-                            <Send size={18} />
-                            {loading ? 'Gönderiliyor...' : 'Test Siparişi Gönder'}
-                        </button>
+                    {/* Quick Test Order */}
+                    <div className="mt-6 p-4 bg-primary-50 dark:bg-primary-900/20 border border-primary-200 dark:border-primary-800 rounded-lg">
+                        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                            <div>
+                                <h3 className="font-semibold text-primary-900 dark:text-primary-100 mb-1 flex items-center gap-2">
+                                    <Package size={20} />
+                                    Hızlı Entegrasyon Testi
+                                </h3>
+                                <p className="text-sm text-primary-700 dark:text-primary-300">
+                                    Esnaf Express API'ye test siparişi göndererek entegrasyonu kontrol edin
+                                </p>
+                            </div>
+                            <button
+                                onClick={sendTestOrder}
+                                disabled={loading || !config.testMode}
+                                className="btn-primary inline-flex items-center gap-2 disabled:opacity-50 whitespace-nowrap"
+                            >
+                                <Send size={18} />
+                                {loading ? 'Gönderiliyor...' : 'Test Siparişi Gönder'}
+                            </button>
+                        </div>
                         {!config.testMode && (
-                            <p className="mt-3 text-danger-600 dark:text-danger-400 text-sm flex items-center gap-2">
+                            <p className="mt-3 text-warning-600 dark:text-warning-400 text-sm flex items-center gap-2">
                                 <AlertTriangle size={16} />
-                                Test modu aktif değil! Konfigürasyon sekmesinden test modunu açın.
+                                Test modu aktif değil! Test modunu açın.
                             </p>
                         )}
+                        {testResults.testOrder && (
+                            <div className="mt-4 p-3 bg-white dark:bg-gray-800 rounded border border-primary-200 dark:border-primary-700">
+                                <p className="text-sm font-semibold text-gray-900 dark:text-white mb-2">Test Sonucu:</p>
+                                <pre className="text-xs text-gray-700 dark:text-gray-300 overflow-auto max-h-40">
+                                    {JSON.stringify(testResults.testOrder, null, 2)}
+                                </pre>
+                            </div>
+                        )}
                     </div>
-
-                    {/* Webhook Simulation */}
-                    <div className="card p-6">
-                        <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-                            <Activity size={24} className="text-success-600 dark:text-success-400" />
-                            Webhook Simülasyonu
-                        </h2>
-                        <p className="text-gray-600 dark:text-gray-400 mb-4">
-                            Farklı sipariş durumlarını simüle edin ve webhook işleyicilerini test edin.
-                        </p>
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                            <button
-                                onClick={() => testWebhook('VALIDATED')}
-                                disabled={loading}
-                                className="px-4 py-3 bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300 rounded-lg hover:bg-primary-200 dark:hover:bg-primary-900/50 disabled:opacity-50 font-semibold transition-colors text-sm md:text-base"
-                            >
-                                Doğrulandı
-                            </button>
-                            <button
-                                onClick={() => testWebhook('ASSIGNED')}
-                                disabled={loading}
-                                className="px-4 py-3 bg-secondary-100 dark:bg-secondary-900/30 text-secondary-700 dark:text-secondary-300 rounded-lg hover:bg-secondary-200 dark:hover:bg-secondary-900/50 disabled:opacity-50 font-semibold transition-colors text-sm md:text-base"
-                            >
-                                Kuryeye Atandı
-                            </button>
-                            <button
-                                onClick={() => testWebhook('ON_DELIVERY')}
-                                disabled={loading}
-                                className="px-4 py-3 bg-warning-100 dark:bg-warning-900/30 text-warning-700 dark:text-warning-300 rounded-lg hover:bg-warning-200 dark:hover:bg-warning-900/50 disabled:opacity-50 font-semibold transition-colors text-sm md:text-base"
-                            >
-                                Yolda
-                            </button>
-                            <button
-                                onClick={() => testWebhook('DELIVERED')}
-                                disabled={loading}
-                                className="px-4 py-3 bg-success-100 dark:bg-success-900/30 text-success-700 dark:text-success-300 rounded-lg hover:bg-success-200 dark:hover:bg-success-900/50 disabled:opacity-50 font-semibold transition-colors text-sm md:text-base"
-                            >
-                                Teslim Edildi
-                            </button>
-                        </div>
-                    </div>
-
-                    {/* Test Results */}
-                    {testResults.testOrder && (
-                        <div className="card p-6">
-                            <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-                                <TrendingUp size={24} className="text-primary-600 dark:text-primary-400" />
-                                Test Siparişi Sonucu
-                            </h2>
-                            <pre className="bg-gray-100 dark:bg-gray-900 p-4 rounded-lg overflow-auto text-xs md:text-sm text-gray-900 dark:text-gray-100">
-                                {JSON.stringify(testResults.testOrder, null, 2)}
-                            </pre>
-                        </div>
-                    )}
                 </div>
             )}
 
