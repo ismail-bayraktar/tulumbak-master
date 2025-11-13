@@ -1,6 +1,6 @@
 import { renderEmailToHTML, generateEmailSubject } from '../emails/utils/renderEmail.js';
 import { OrderConfirmation } from '../emails/templates/customer/OrderConfirmation.jsx';
-import EmailSettings from '../models/EmailSettings.js';
+import EmailSettings from '../models/EmailSettingsModel.js';
 
 /**
  * EmailRenderer Class
