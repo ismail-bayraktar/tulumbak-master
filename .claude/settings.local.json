@@ -24,7 +24,11 @@
       "Bash(findstr:*)",
       "Bash(timeout 5 npm run dev:*)",
       "Bash(cat:*)",
-      "Bash(test:*)"
+      "Bash(test:*)",
+      "Bash(npx shadcn@latest init -y)",
+      "Bash(echo:*)",
+      "Bash(npx shadcn@latest init)",
+      "Bash(npx:*)"
     ],
     "deny": [],
     "ask": []
