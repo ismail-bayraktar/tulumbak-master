@@ -9,7 +9,7 @@ const settingsSchema = new mongoose.Schema({
   value: { type: mongoose.Schema.Types.Mixed, required: true },
   category: {
     type: String,
-    enum: ['email', 'security', 'stock', 'general', 'payment', 'delivery', 'whatsapp'],
+    enum: ['email', 'security', 'stock', 'general', 'payment', 'delivery', 'whatsapp', 'media', 'seo', 'social', 'currency'],
     required: true
   },
   description: { type: String },

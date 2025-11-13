@@ -22,7 +22,7 @@ import settingsRouter from "./routes/SettingsRoute.js";
 import reportRouter from "./routes/ReportRoute.js";
 import adminRouter from "./routes/AdminRoute.js";
 import mediaRouter from "./routes/MediaRoute.js";
-// import enhancedMediaRouter from "./routes/EnhancedMediaRoute.js"; // Temporarily disabled
+import enhancedMediaRouter from "./routes/EnhancedMediaRoute.js";
 import courierManagementRouter from "./routes/CourierManagementRoute.js";
 import branchRouter from "./routes/BranchRoute.js";
 import webhookConfigRouter from "./routes/WebhookConfigRoute.js";
@@ -31,12 +31,14 @@ import courierIntegrationRouter from "./routes/CourierIntegrationRoute.js";
 import deadLetterQueueRouter from "./routes/DeadLetterQueueRoute.js";
 import cacheManagementRouter from "./routes/CacheManagementRoute.js";
 import outgoingWebhookRouter from "./routes/OutgoingWebhookRoute.js";
+import emailRouter from "./routes/emailRoute.js";
 import RateLimiterService from "./services/RateLimiter.js";
 import OutgoingWebhookService from "./services/OutgoingWebhookService.js";
 import logger, { logInfo } from "./utils/logger.js";
 import { initSentry } from "./utils/sentry.js";
 import { errorHandler, notFoundHandler } from "./middleware/errorHandler.js";
 import { swaggerDocs } from "./config/swagger.js";
+import { maintenanceMode } from "./middleware/MaintenanceMode.js";
 
 // APP CONFIG
 const app = express();
@@ -65,6 +67,11 @@ setTimeout(async () => {
   try {
     const { initDefaultSettings } = await import("./controllers/SettingsController.js");
     await initDefaultSettings();
+
+    // Initialize media settings
+    const { initializeSettings } = await import("./utils/initializeSettings.js");
+    await initializeSettings();
+    logger.info("Media settings initialized successfully");
   } catch (error) {
     logger.error("Error initializing settings", { error: error.message, stack: error.stack });
   }
@@ -79,6 +86,17 @@ setTimeout(async () => {
     logger.error("Error initializing OutgoingWebhookService", { error: error.message, stack: error.stack });
   }
 }, 3000);
+
+// Initialize CourierIntegrationService
+setTimeout(async () => {
+  try {
+    const { default: CourierIntegrationService } = await import("./services/CourierIntegrationService.js");
+    await CourierIntegrationService.initialize();
+    logger.info("CourierIntegrationService initialized successfully");
+  } catch (error) {
+    logger.error("Error initializing CourierIntegrationService", { error: error.message, stack: error.stack });
+  }
+}, 4000);
 
 // PAYTR
 const __filename = fileURLToPath(import.meta.url);
@@ -144,6 +162,9 @@ app.use(cors({
 // Rate limiting
 app.use('/api', RateLimiterService.createGeneralLimiter(100, 15 * 60 * 1000)); // 100 requests per 15 minutes
 
+// Maintenance mode middleware - blocks all requests when enabled (except admin routes)
+app.use(maintenanceMode);
+
 // Static files for uploads with enhanced CORS
 app.use('/uploads', (req, res, next) => {
     res.setHeader('Access-Control-Allow-Origin', '*');
@@ -188,7 +209,7 @@ app.use('/api/order', orderRouter)
 app.use('/api/paytr', paytrRouter);
 app.use('/api/slider', sliderRouter);
 app.use('/api/media', mediaRouter);
-// app.use('/api/media-enhanced', enhancedMediaRouter); // Temporarily disabled
+app.use('/api/media-enhanced', enhancedMediaRouter);
 app.use('/api/courier', courierRouter);
 app.use('/api/delivery', deliveryRouter);
 app.use('/api/coupon', couponRouter);
@@ -204,6 +225,7 @@ app.use('/api/webhook-config', webhookConfigRouter);
 app.use('/api/webhook', webhookRouter);
 app.use('/api/admin/courier-integration', courierIntegrationRouter);
 app.use('/api/dlq', deadLetterQueueRouter);
+app.use('/api/email', emailRouter);
 
 // Swagger Documentation
 swaggerDocs(app);

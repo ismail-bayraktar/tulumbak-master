@@ -7,24 +7,31 @@ import logger from "../utils/logger.js";
  */
 const getSettings = async (req, res) => {
   try {
-    const { category } = req.query;
-    
+    // Category can come from URL params or query params
+    const category = req.params.category || req.query.category;
+
     let query = {};
     if (category) {
       query.category = category;
     }
-    
+
     const settings = await settingsModel.find(query);
-    
-    // Convert to key-value object for easier frontend consumption
+
+    // Convert to key-value object (removing category prefix for cleaner keys)
     const settingsObject = {};
     settings.forEach(setting => {
-      settingsObject[setting.key] = setting.value;
+      // Remove category prefix from key if filtering by category (e.g., "media.useCloudinary" → "useCloudinary")
+      const cleanKey = category ? setting.key.replace(`${category}.`, '') : setting.key;
+      settingsObject[cleanKey] = setting.value;
     });
-    
+
     res.json({ success: true, settings: settingsObject });
   } catch (error) {
-    logger.error('Error fetching settings', { error: error.message, stack: error.stack, category: req.query.category });
+    logger.error('Error fetching settings', {
+      error: error.message,
+      stack: error.stack,
+      category: req.params.category || req.query.category
+    });
     res.status(500).json({ success: false, message: error.message });
   }
 };

@@ -17,6 +17,11 @@ import {
     testIncomingWebhook,
     getIntegrationHealth
 } from '../controllers/CourierIntegrationController.js';
+import {
+    getCourierLogs,
+    clearCourierLogs,
+    streamCourierLogs
+} from '../controllers/LogController.js';
 
 const router = express.Router();
 
@@ -51,5 +56,10 @@ router.post('/circuit-breakers/:platform/reset', adminAuth, resetCircuitBreaker)
 router.post('/submit-order', adminAuth, submitOrder);
 router.post('/cancel-order', adminAuth, cancelOrder);
 router.get('/tracking/:orderId', adminAuth, getOrderTracking);
+
+// Log management
+router.get('/logs', adminAuth, getCourierLogs);
+router.delete('/logs', adminAuth, clearCourierLogs);
+router.get('/logs/stream', adminAuth, streamCourierLogs);
 
 export default router;

@@ -1,73 +1,63 @@
-import { Routes, Route } from "react-router-dom"
-import { useEffect, useState } from "react"
-import { Toaster } from "sonner"
-import { ThemeProvider } from "@/components/layouts/theme-provider"
-import { DashboardLayout } from "@/components/layouts/dashboard-layout"
-import Login from "@/pages/auth/login"
-import DashboardPage from "@/pages/dashboard"
+import { useState, useEffect } from 'react'
+import { Routes, Route, Navigate } from 'react-router-dom'
+import Login from './pages/auth/Login'
+import Dashboard from './pages/dashboard/Dashboard'
+import Orders from './pages/orders/Orders'
+import ProductAdd from './pages/products/ProductAdd'
+import ProductList from './pages/products/ProductList'
+import Categories from './pages/products/Categories'
+import CourierSettings from './pages/courier/CourierSettings'
+import CourierPerformance from './pages/courier/CourierPerformance'
+import SliderManagement from './pages/slider/SliderManagement'
+import MediaLibrary from './pages/media/MediaLibrary'
+import GeneralSettings from './pages/settings/GeneralSettings'
+import Reports from './pages/reports/Reports'
+import Customers from './pages/customers/Customers'
+import Coupons from './pages/coupons/Coupons'
+import DeliveryZones from './pages/delivery/DeliveryZones'
+import TimeSlots from './pages/delivery/TimeSlots'
+import EmailSettings from './pages/email/EmailSettings'
 
-// Legacy imports (eski sayfalar)
-import Add from "./pages/Add"
-import List from "./pages/List"
-import Orders from "./pages/Orders"
-import Edit from "./pages/Edit"
-import DeliveryZones from "./pages/DeliveryZones"
-import TimeSlots from "./pages/TimeSlots"
-import Coupons from "./pages/Coupons"
-import CorporateOrders from "./pages/CorporateOrders"
-import Settings from "./pages/Settings"
-import Reports from "./pages/Reports"
-import CourierTestPanel from "./pages/CourierTestPanel"
-import EmailLogs from "./pages/EmailLogs"
-import SmsLogs from "./pages/SmsLogs"
-import Branches from "./pages/Branches"
-import MediaLibrary from "./pages/MediaLibrary"
-import OrderProcessing from "./pages/OrderProcessing"
-import BranchAssignmentSettings from "./pages/BranchAssignmentSettings"
+export const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:4000'
 
-export const backendUrl = import.meta.env.VITE_BACKEND_URL
-export const currency = "₺"
-
-const App = () => {
-  const [token, setToken] = useState(
-    localStorage.getItem("token") ? localStorage.getItem("token") : ""
-  )
+function App() {
+  const [token, setToken] = useState(localStorage.getItem('token') || '')
 
   useEffect(() => {
-    localStorage.setItem("token", token)
+    if (token) {
+      localStorage.setItem('token', token)
+    } else {
+      localStorage.removeItem('token')
+    }
   }, [token])
 
   return (
-    <ThemeProvider defaultTheme="light" storageKey="tulumbak-ui-theme">
-      <Toaster position="top-right" richColors />
-      {token === "" ? (
+    <div className="min-h-screen">
+      {token === '' ? (
         <Login setToken={setToken} />
       ) : (
-        <DashboardLayout setToken={setToken}>
-          <Routes>
-            <Route path="/" element={<DashboardPage token={token} />} />
-            <Route path="/dashboard" element={<DashboardPage token={token} />} />
-            <Route path="/add" element={<Add token={token} />} />
-            <Route path="/list" element={<List token={token} />} />
-            <Route path="/edit/:id" element={<Edit token={token} />} />
-            <Route path="/orders" element={<Orders token={token} />} />
-            <Route path="/order-processing" element={<OrderProcessing token={token} />} />
-            <Route path="/branch-assignment-settings" element={<BranchAssignmentSettings token={token} />} />
-            <Route path="/delivery-zones" element={<DeliveryZones token={token} />} />
-            <Route path="/time-slots" element={<TimeSlots token={token} />} />
-            <Route path="/coupons" element={<Coupons token={token} />} />
-            <Route path="/corporate-orders" element={<CorporateOrders token={token} />} />
-            <Route path="/settings" element={<Settings token={token} />} />
-            <Route path="/email-logs" element={<EmailLogs token={token} />} />
-            <Route path="/sms-logs" element={<SmsLogs token={token} />} />
-            <Route path="/reports" element={<Reports token={token} />} />
-            <Route path="/courier-test" element={<CourierTestPanel token={token} />} />
-            <Route path="/branches" element={<Branches token={token} />} />
-            <Route path="/media-library" element={<MediaLibrary token={token} />} />
-          </Routes>
-        </DashboardLayout>
+        <Routes>
+          <Route path="/" element={<Navigate to="/dashboard" replace />} />
+          <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/orders" element={<Orders />} />
+          <Route path="/add" element={<ProductAdd />} />
+          <Route path="/list" element={<ProductList />} />
+          <Route path="/categories" element={<Categories />} />
+          <Route path="/courier-settings" element={<CourierSettings />} />
+          <Route path="/courier-performance" element={<CourierPerformance />} />
+          <Route path="/slider" element={<SliderManagement />} />
+          <Route path="/media" element={<MediaLibrary />} />
+          <Route path="/settings" element={<GeneralSettings />} />
+          <Route path="/reports" element={<Reports />} />
+          <Route path="/customers" element={<Customers />} />
+          <Route path="/coupons" element={<Coupons />} />
+          <Route path="/delivery-zones" element={<DeliveryZones />} />
+          <Route path="/time-slots" element={<TimeSlots />} />
+          <Route path="/email-settings" element={<EmailSettings />} />
+          <Route path="*" element={<Navigate to="/dashboard" replace />} />
+        </Routes>
       )}
-    </ThemeProvider>
+    </div>
   )
 }
 

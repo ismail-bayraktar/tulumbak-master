@@ -37,24 +37,105 @@ class EmailService {
    */
   updateConfiguration(smtpConfig) {
     const { host, port, user, password, enabled } = smtpConfig;
-    
-    if (!enabled) {
+
+    if (enabled === false) {
       logger.info('Email service disabled in settings');
       this.transporter = null;
       return;
     }
 
-    this.transporter = nodemailer.createTransport({
-      host: host || process.env.SMTP_HOST,
-      port: port || parseInt(process.env.SMTP_PORT) || 587,
-      secure: false,
-      auth: {
-        user: user || process.env.SMTP_USER,
-        pass: password || process.env.SMTP_PASSWORD,
-      },
-    });
+    try {
+      const portNum = parseInt(port) || parseInt(process.env.SMTP_PORT) || 587;
+      const configuredHost = host || process.env.SMTP_HOST;
 
-    logger.info('Email service configuration updated', { host, port: port || process.env.SMTP_PORT });
+      this.transporter = nodemailer.createTransport({
+        host: configuredHost,
+        port: portNum,
+        secure: portNum === 465, // true for 465, false for other ports
+        connectionTimeout: 60000, // 60 seconds
+        greetingTimeout: 30000,   // 30 seconds
+        socketTimeout: 60000,     // 60 seconds
+        auth: {
+          user: user || process.env.SMTP_USER,
+          pass: password || process.env.SMTP_PASSWORD,
+        },
+        tls: {
+          rejectUnauthorized: false // Allow self-signed certificates in development
+        },
+        pool: false // Disable connection pooling for better error detection
+      });
+
+      logger.info('Email service configuration updated', {
+        host: configuredHost,
+        port: portNum,
+        secure: portNum === 465,
+        user: user || process.env.SMTP_USER
+      });
+    } catch (error) {
+      logger.error('Error updating email configuration', { error: error.message });
+      throw error;
+    }
+  }
+
+  /**
+   * Verify SMTP connection
+   * @returns {Promise<Object>}
+   */
+  async verifyConnection() {
+    if (!this.transporter) {
+      return {
+        success: false,
+        message: 'Email service not configured. Please update SMTP settings.'
+      };
+    }
+
+    try {
+      logger.info('Verifying SMTP connection...');
+      await this.transporter.verify();
+      logger.info('SMTP connection verified successfully');
+      return { success: true, message: 'SMTP connection verified successfully' };
+    } catch (error) {
+      logger.error('SMTP connection verification failed', {
+        error: error.message,
+        code: error.code,
+        command: error.command
+      });
+
+      // Provide specific guidance based on error
+      let userMessage = error.message;
+      let guidance = [];
+
+      if (error.code === 'ETIMEDOUT') {
+        userMessage = 'Connection timed out while connecting to SMTP server.';
+        guidance = [
+          'Check if the SMTP host address is correct',
+          'Verify the port number (usually 587 for TLS or 465 for SSL)',
+          'Ensure your firewall allows outbound SMTP connections',
+          'If using Gmail, make sure you are using an App Password, not your regular password'
+        ];
+      } else if (error.code === 'EAUTH') {
+        userMessage = 'SMTP authentication failed.';
+        guidance = [
+          'Check username and password',
+          'For Gmail, use App Password instead of regular password',
+          'Verify that SMTP authentication is enabled on your mail server'
+        ];
+      } else if (error.code === 'ECONNECTION' || error.code === 'ENOTFOUND') {
+        userMessage = 'Could not connect to SMTP server.';
+        guidance = [
+          'Verify the SMTP host address',
+          'Check if the server is accessible from your network',
+          'Ensure DNS resolution is working'
+        ];
+      }
+
+      return {
+        success: false,
+        message: userMessage,
+        code: error.code,
+        guidance
+      };
+    }
   }
 
   /**
@@ -64,17 +145,57 @@ class EmailService {
    */
   async sendEmail(mailOptions) {
     if (!this.transporter) {
-      logger.warn('Email service not configured. Skipping email send.', { to: mailOptions.to });
-      return { success: false, message: 'Email service not configured' };
+      const errorMsg = 'Email service not configured. Please update SMTP settings.';
+      logger.warn(errorMsg, { to: mailOptions.to });
+      return { success: false, message: errorMsg };
     }
 
     try {
+      logger.info('Attempting to send email', {
+        to: mailOptions.to,
+        from: mailOptions.from,
+        subject: mailOptions.subject
+      });
+
       const info = await this.transporter.sendMail(mailOptions);
-      logger.info('Email sent successfully', { messageId: info.messageId, to: mailOptions.to, subject: mailOptions.subject });
-      return { success: true, messageId: info.messageId };
+
+      logger.info('Email sent successfully', {
+        messageId: info.messageId,
+        to: mailOptions.to,
+        subject: mailOptions.subject,
+        response: info.response
+      });
+
+      return {
+        success: true,
+        messageId: info.messageId,
+        response: info.response
+      };
     } catch (error) {
-      logger.error('Email send error', { error: error.message, stack: error.stack, to: mailOptions.to, subject: mailOptions.subject });
-      return { success: false, message: error.message };
+      logger.error('Email send error', {
+        error: error.message,
+        code: error.code,
+        command: error.command,
+        stack: error.stack,
+        to: mailOptions.to,
+        subject: mailOptions.subject
+      });
+
+      // Return user-friendly error messages
+      let userMessage = error.message;
+      if (error.code === 'EAUTH') {
+        userMessage = 'SMTP authentication failed. Please check username and password.';
+      } else if (error.code === 'ECONNECTION') {
+        userMessage = 'Could not connect to SMTP server. Please check host and port.';
+      } else if (error.code === 'ETIMEDOUT') {
+        userMessage = 'Connection timed out. Please check your network and SMTP settings.';
+      }
+
+      return {
+        success: false,
+        message: userMessage,
+        code: error.code
+      };
     }
   }
 
