@@ -6,52 +6,49 @@
 import mongoose from 'mongoose';
 import { jest } from '@jest/globals';
 
+// Mock mongoose
+jest.mock('mongoose', () => ({
+  connect: jest.fn().mockResolvedValue(true),
+  connection: {
+    dropDatabase: jest.fn().mockResolvedValue(true),
+    close: jest.fn().mockResolvedValue(true),
+    collections: {},
+    on: jest.fn(),
+    once: jest.fn(),
+  },
+  Schema: Object.assign(jest.fn().mockImplementation(function() {
+    return {
+      index: jest.fn(),
+      pre: jest.fn(),
+      methods: {},
+      virtual: jest.fn().mockReturnThis(),
+      get: jest.fn(),
+      statics: {},
+    };
+  }), {
+    Types: {
+      Mixed: {},
+    },
+  }),
+  model: jest.fn(),
+  models: {},
+}));
+
+
 // Mock environment variables
 process.env.NODE_ENV = 'test';
 process.env.JWT_SECRET = 'test-jwt-secret-key-for-testing-only';
 process.env.MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/tulumbak-test';
+process.env.WEBHOOK_ENCRYPTION_KEY = 'a-very-secure-webhook-encryption-key';
 
 // Global test timeout
 jest.setTimeout(30000);
 
-// Mock logger to avoid file system operations during tests
-jest.mock('../utils/logger.js', () => ({
-  default: {
-    info: jest.fn(),
-    error: jest.fn(),
-    warn: jest.fn(),
-    debug: jest.fn()
-  },
-  logInfo: jest.fn(),
-  logError: jest.fn()
-}));
-
 // Mock Sentry
-jest.mock('../utils/sentry.js', () => ({
+jest.mock('../utils/sentry', () => ({
   initSentry: jest.fn(),
   captureException: jest.fn()
 }));
-
-// Database connection for tests
-let mongoConnection = null;
-
-beforeAll(async () => {
-  try {
-    mongoConnection = await mongoose.connect(process.env.MONGODB_URI, {
-      useNewUrlParser: true,
-      useUnifiedTopology: true
-    });
-  } catch (error) {
-    console.error('Test database connection failed:', error);
-  }
-});
-
-afterAll(async () => {
-  if (mongoConnection) {
-    await mongoose.connection.dropDatabase();
-    await mongoose.connection.close();
-  }
-});
 
 // Clean up after each test
 afterEach(async () => {

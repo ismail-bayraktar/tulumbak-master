@@ -15,7 +15,6 @@ export default {
   ],
   coverageDirectory: 'coverage',
   verbose: true,
-  extensionsToTreatAsEsm: ['.js'],
   globals: {
     'ts-jest': {
       useESM: true
@@ -25,7 +24,9 @@ export default {
     'node_modules/(?!(.*\\.mjs$))'
   ],
   moduleNameMapper: {
-    '^(\\.{1,2}/.*)\\.js$': '$1'
-  }
+    '^(\\.{1,2}/.*)\\.js$': '$1',
+    '^/utils/(.*)$': '<rootDir>/utils/$1'
+  },
+  setupFilesAfterEnv: ['<rootDir>/__tests__/setup.js']
 };
 

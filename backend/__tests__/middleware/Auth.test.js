@@ -8,13 +8,6 @@ import authUser from '../../middleware/Auth.js';
 import jwt from 'jsonwebtoken';
 import { createMockRequest, createMockResponse, createMockNext } from '../setup.js';
 
-// Mock logger
-jest.mock('../../utils/logger.js', () => ({
-  default: {
-    error: jest.fn()
-  }
-}));
-
 describe('Auth Middleware', () => {
   let req, res, next;
 
