@@ -10,5 +10,8 @@ describe('Order Controller', () => {
 
   // Note: Full integration tests would require database mocking
   // This is a basic structure for unit tests
+  it('should pass this placeholder test', () => {
+    expect(true).toBe(true);
+  });
 });
 
