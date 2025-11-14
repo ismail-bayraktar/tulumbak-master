@@ -1,8 +1,15 @@
 export default {
   testEnvironment: 'node',
   transform: {},
+  setupFiles: ['./jest.setup.js'],
   moduleFileExtensions: ['js', 'json'],
   testMatch: ['**/__tests__/**/*.test.js'],
+  setupFilesAfterEnv: ['./__tests__/setup.js'],
+  moduleNameMapper: {
+    '^(\\.{1,2}/.*)\\.js$': '$1',
+    '^#(.*)$': '<rootDir>/$1',
+    '^utils/logger$': '<rootDir>/__tests__/__mocks__/utils/logger.js',
+  },
   collectCoverageFrom: [
     'controllers/**/*.js',
     'services/**/*.js',
@@ -15,17 +22,12 @@ export default {
   ],
   coverageDirectory: 'coverage',
   verbose: true,
-  extensionsToTreatAsEsm: ['.js'],
-  globals: {
-    'ts-jest': {
-      useESM: true
-    }
-  },
   transformIgnorePatterns: [
     'node_modules/(?!(.*\\.mjs$))'
   ],
   moduleNameMapper: {
-    '^(\\.{1,2}/.*)\\.js$': '$1'
+    '^(\\.{1,2}/.*)\\.js$': '$1',
+    '^#(.*)$': '<rootDir>/$1'
   }
 };
 

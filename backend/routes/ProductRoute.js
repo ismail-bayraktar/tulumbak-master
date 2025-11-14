@@ -3,6 +3,7 @@ import {listProducts, addProduct, removeProduct, singleProduct, updateProduct} f
 import adminAuth from "../middleware/AdminAuth.js";
 import uploadImagesWithMulter from "../config/uploadImagesWithMulter.js";
 import RateLimiterService from "../services/RateLimiter.js";
+import { body } from "express-validator";
 import { cache, invalidateCache } from "../middleware/cache.js";
 
 const productRouter = express.Router();
@@ -46,8 +47,34 @@ const imageUploadMiddleware = uploadImagesWithMulter.fields([
 ]);
 
 // Admin routes with rate limiting and cache invalidation
-productRouter.post('/add', adminAuth, RateLimiterService.createUploadLimiter(), imageUploadMiddleware, invalidateCache('products:*'), addProduct);
-productRouter.post('/update', adminAuth, RateLimiterService.createUploadLimiter(), imageUploadMiddleware, invalidateCache('products:*'), updateProduct);
+productRouter.post('/add',
+    adminAuth,
+    [
+        body('name').notEmpty().withMessage('Name is required'),
+        body('description').notEmpty().withMessage('Description is required'),
+        body('basePrice').isFloat({ gt: 0 }).withMessage('Base price must be a positive number'),
+        body('category').notEmpty().withMessage('Category is required'),
+        body('stock').isInt({ gt: -1 }).withMessage('Stock must be a non-negative integer'),
+    ],
+    RateLimiterService.createUploadLimiter(),
+    imageUploadMiddleware,
+    invalidateCache('products:*'),
+    addProduct
+);
+productRouter.post('/update',
+    adminAuth,
+    [
+        body('name').notEmpty().withMessage('Name is required'),
+        body('description').notEmpty().withMessage('Description is required'),
+        body('basePrice').isFloat({ gt: 0 }).withMessage('Base price must be a positive number'),
+        body('category').notEmpty().withMessage('Category is required'),
+        body('stock').isInt({ gt: -1 }).withMessage('Stock must be a non-negative integer'),
+    ],
+    RateLimiterService.createUploadLimiter(),
+    imageUploadMiddleware,
+    invalidateCache('products:*'),
+    updateProduct
+);
 productRouter.post('/remove', adminAuth, invalidateCache('products:*'), removeProduct);
 
 /**

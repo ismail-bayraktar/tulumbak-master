@@ -1,10 +1,16 @@
 import userModel from "../models/UserModel.js";
 import logger from "../utils/logger.js";
+import { validationResult } from "express-validator";
 
 // add products to user cart
 const addToCart = async (req, res) => {
     try {
-        const { userId, itemId, size } = req.body;
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+            return res.status(400).json({ success: false, errors: errors.array() });
+        }
+        const userId = req.user.id;
+        const { itemId, size } = req.body;
         const userData = await userModel.findById(userId);
         let cartData = await userData.cartData;
 
@@ -30,11 +36,18 @@ const addToCart = async (req, res) => {
 // update user cart
 const updateCart = async (req, res) => {
     try {
-        const { userId, itemId, size, quantity } = req.body;
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+            return res.status(400).json({ success: false, errors: errors.array() });
+        }
+        const userId = req.user.id;
+        const { itemId, size, quantity } = req.body;
         const userData = await userModel.findById(userId);
         let cartData = await userData.cartData;
 
-        cartData[itemId][size] = quantity;
+        if (cartData[itemId]) {
+            cartData[itemId][size] = quantity;
+        }
 
         await userModel.findByIdAndUpdate(userId, {cartData});
         res.json({success: true, message: "Cart updated!"});
@@ -48,7 +61,7 @@ const updateCart = async (req, res) => {
 // get user cart data
 const getUserCart = async (req, res) => {
     try {
-        const { userId } = req.body;
+        const userId = req.user.id;
 
         const userData = await userModel.findById(userId);
         let cartData = await userData.cartData;
