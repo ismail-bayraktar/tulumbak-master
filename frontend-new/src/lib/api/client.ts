@@ -59,6 +59,9 @@ apiClient.interceptors.response.use(
     return response;
   },
   (error: AxiosError) => {
+    // Suppress notification stream errors (likely from browser extensions)
+    const isNotificationStream = error.config?.url?.includes('/api/notifications/stream');
+
     // Handle errors globally
     if (error.response) {
       const status = error.response.status;
@@ -77,7 +80,10 @@ apiClient.interceptors.response.use(
           toast.error('Bu işlem için yetkiniz yok.');
           break;
         case 404:
-          toast.error('Kaynak bulunamadı.');
+          // Don't show toast for notification stream endpoint (likely browser extension)
+          if (!isNotificationStream) {
+            toast.error('Kaynak bulunamadı.');
+          }
           break;
         case 500:
           toast.error('Sunucu hatası. Lütfen daha sonra tekrar deneyin.');
@@ -87,9 +93,13 @@ apiClient.interceptors.response.use(
       }
     } else if (error.request) {
       // Network error
-      toast.error('İnternet bağlantınızı kontrol edin.');
+      if (!isNotificationStream) {
+        toast.error('İnternet bağlantınızı kontrol edin.');
+      }
     } else {
-      toast.error('Beklenmeyen bir hata oluştu.');
+      if (!isNotificationStream) {
+        toast.error('Beklenmeyen bir hata oluştu.');
+      }
     }
 
     return Promise.reject(error);

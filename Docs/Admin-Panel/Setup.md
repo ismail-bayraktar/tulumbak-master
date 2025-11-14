@@ -49,6 +49,7 @@ npm install
 - `lucide-react`: Icon library
 - `recharts`: Charts library
 - `sonner`: Toast notifications
+- **Browser APIs**: Notification API, Web Audio API (for real-time notifications and sounds)
 
 ### 3. Environment Configuration
 
@@ -197,6 +198,71 @@ export default {
   }
 }
 ```
+
+---
+
+## Real-time Notifications System
+
+The admin panel features a comprehensive real-time notification system:
+
+### Overview
+- **Server-Sent Events (SSE)**: Real-time push notifications from backend (`/api/notifications/stream`)
+- **Browser Notifications**: Native browser notifications with permission management
+- **Web Audio API**: Dynamic sound generation without external audio files
+- **LocalStorage Persistence**: User notification preferences saved across sessions
+- **Status Bar Integration**: Visual notification status on all admin pages
+
+### Key Features
+- Real-time order notifications (NEW_ORDER, ORDER_STATUS_CHANGED, COURIER_ASSIGNED)
+- Browser notification permission management via modal
+- Multiple sound options (default, bell, chime, ping, none)
+- Web Audio API oscillator-based sound generation
+- Automatic reconnection with exponential backoff
+- Toast notifications for in-app alerts
+
+### Core Components
+1. **useRealtimeStats Hook** (`admin/src/pages/dashboard/hooks/useRealtimeStats.js`)
+   - SSE connection management
+   - Event-based callback system
+   - Browser notification integration
+   - Exponential backoff reconnection
+
+2. **useNotificationSettings Hook** (`admin/src/hooks/useNotificationSettings.js`)
+   - Browser Notification API management
+   - Permission request handling
+   - Web Audio API sound generation
+   - LocalStorage settings persistence
+
+3. **NotificationSettingsModal** (`admin/src/components/NotificationSettingsModal.jsx`)
+   - User-friendly settings interface
+   - Permission status display
+   - Sound selection and preview
+   - Notification type toggles
+
+### Usage Example
+```jsx
+import { useRealtimeStats } from '@/pages/dashboard/hooks/useRealtimeStats'
+import { useNotificationSettings } from '@/hooks/useNotificationSettings'
+
+function Dashboard() {
+  const { isEnabled: notificationsEnabled } = useNotificationSettings()
+
+  const { connected } = useRealtimeStats({
+    onNewOrder: (order) => {
+      // Handle new order
+      fetchOrders(true)
+    }
+  })
+
+  return (
+    <Badge variant={notificationsEnabled ? "outline" : "secondary"}>
+      {notificationsEnabled ? "Bildirim Aktif" : "Bildirim Kapalı"}
+    </Badge>
+  )
+}
+```
+
+📖 **For detailed notification system documentation, see**: [Notifications Documentation](./Notifications.md)
 
 ---
 

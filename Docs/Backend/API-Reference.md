@@ -914,6 +914,89 @@ Swagger UI provides:
 
 ---
 
+## Real-time Notifications (SSE)
+
+Real-time updates via Server-Sent Events:
+
+### SSE Stream Endpoint
+
+**GET** `/api/notifications/stream` 🔒 Admin
+
+Establishes a Server-Sent Events connection for real-time admin notifications.
+
+**Query Parameters:**
+```
+token=<admin_jwt_token>
+```
+
+**Headers:**
+```http
+Accept: text/event-stream
+Cache-Control: no-cache
+Connection: keep-alive
+```
+
+**Response Format:**
+```
+event: NEW_ORDER
+data: {"order": {...}, "title": "Yeni Sipariş", "message": "Sipariş #12345 alındı"}
+
+event: ORDER_STATUS_CHANGED
+data: {"order": {...}, "title": "Durum Güncellendi", "message": "Sipariş durumu değişti"}
+
+event: COURIER_ASSIGNED
+data: {"order": {...}, "title": "Kurye Atandı", "message": "Sipariş kuryeye verildi"}
+
+event: TEST_NOTIFICATION
+data: {"title": "Test", "message": "Test bildirimi"}
+```
+
+### Event Types
+
+| Event Type | Description | Payload |
+|------------|-------------|---------|
+| `NEW_ORDER` | New order placed | `{ order, title, message }` |
+| `ORDER_STATUS_CHANGED` | Order status updated | `{ order, title, message }` |
+| `COURIER_ASSIGNED` | Courier assigned to order | `{ order, title, message }` |
+| `TEST_NOTIFICATION` | Test notification | `{ title, message }` |
+
+### Client Implementation Example
+
+```javascript
+const token = localStorage.getItem('adminToken')
+const sseUrl = `${apiUrl}/api/notifications/stream?token=${token}`
+const eventSource = new EventSource(sseUrl)
+
+eventSource.addEventListener('NEW_ORDER', (event) => {
+  const data = JSON.parse(event.data)
+  console.log('New order received:', data.order)
+  // Trigger browser notification
+  showNotification(data.title, { body: data.message })
+})
+
+eventSource.addEventListener('ORDER_STATUS_CHANGED', (event) => {
+  const data = JSON.parse(event.data)
+  console.log('Order status changed:', data.order)
+})
+
+eventSource.onerror = (error) => {
+  console.error('SSE connection error:', error)
+  // Implement reconnection with exponential backoff
+}
+```
+
+### Connection Management
+
+- **Authentication**: Requires valid admin JWT token in query parameter
+- **Keep-Alive**: Server sends heartbeat every 30 seconds
+- **Reconnection**: Client should implement exponential backoff (2s → 4s → 8s → 16s → 30s max)
+- **Error Handling**: Connection closes on authentication failure or server error
+- **Multiple Clients**: Each admin user maintains separate SSE connection
+
+📖 **For detailed notification system documentation, see**: [Admin Panel Notifications](../Admin-Panel/Notifications.md)
+
+---
+
 ## WebSocket Events
 
 Real-time updates via Socket.IO:

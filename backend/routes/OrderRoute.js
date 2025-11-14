@@ -1,20 +1,21 @@
 import express from 'express';
 import {
-    placeOrder, 
-    placeOrderStripe, 
-    placeOrderRazorpay, 
-    allOrders, 
-    userOrders, 
-    updateStatus, 
-    bankInfo, 
-    getOrderStatus, 
-    getOrderHistory, 
-    getOrderTimeline, 
+    placeOrder,
+    placeOrderStripe,
+    placeOrderRazorpay,
+    allOrders,
+    userOrders,
+    updateStatus,
+    bankInfo,
+    getOrderStatus,
+    getOrderHistory,
+    getOrderTimeline,
     approveBranchAssignment,
     assignBranchToOrder,
     getBranchSuggestion,
     prepareOrder,
-    sendToCourier
+    sendToCourier,
+    deleteOrder
 } from '../controllers/OrderController.js';
 import adminAuth from "../middleware/AdminAuth.js";
 import authUser from "../middleware/Auth.js";
@@ -31,6 +32,7 @@ orderRouter.post("/approve-branch", adminAuth, approveBranchAssignment);
 orderRouter.post("/assign-branch", adminAuth, assignBranchToOrder);
 orderRouter.post("/prepare", adminAuth, prepareOrder);
 orderRouter.post("/send-to-courier", adminAuth, sendToCourier);
+orderRouter.post("/delete", adminAuth, deleteOrder);
 orderRouter.get("/:id/branch-suggestion", adminAuth, getBranchSuggestion);
 
 // payment features with stock check and rate limiting

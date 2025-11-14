@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { Search, ShoppingCart, User, Menu, X, ChevronDown } from 'lucide-react';
 import { useAuthStore } from '@/stores/authStore';
 import { useCartStore } from '@/stores/cartStore';
@@ -63,8 +64,15 @@ export function Header() {
           </button>
 
           {/* Logo */}
-          <Link href="/" className="text-2xl font-bold">
-            <span className="text-neutral-900">TULUMBAK</span>
+          <Link href="/" className="flex items-center gap-2">
+            <Image
+              src="/assets/tulumbak-logo.png"
+              alt="Tulumbak İzmir Baklava"
+              width={150}
+              height={50}
+              className="h-12 w-auto"
+              priority
+            />
           </Link>
 
           {/* Desktop Navigation */}

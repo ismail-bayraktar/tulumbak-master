@@ -2,6 +2,7 @@
 
 import { useEffect } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { useProductStore } from '@/stores/productStore';
 import { useCartStore } from '@/stores/cartStore';
@@ -9,6 +10,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
 import { Trash2, Plus, Minus, ShoppingBag } from 'lucide-react';
+import { getProductImageUrl } from '@/lib/utils/image';
 import toast from 'react-hot-toast';
 
 export default function CartPage() {
@@ -95,9 +97,15 @@ export default function CartPage() {
                 key={`${product._id}-${size}`}
                 className="flex gap-4 p-4 bg-white border rounded-lg"
               >
-                {/* Image Placeholder */}
-                <div className="w-24 h-24 bg-gradient-to-br from-amber-100 to-orange-200 rounded-lg flex-shrink-0 flex items-center justify-center">
-                  <span className="text-xs text-neutral-400">Ürün</span>
+                {/* Product Image */}
+                <div className="relative w-24 h-24 bg-neutral-100 rounded-lg flex-shrink-0 overflow-hidden">
+                  <Image
+                    src={getProductImageUrl(product.image, 0)}
+                    alt={product.name}
+                    fill
+                    className="object-cover"
+                    sizes="96px"
+                  />
                 </div>
 
                 {/* Product Info */}

@@ -1,5 +1,6 @@
+import { useState, useEffect } from "react"
 import { ChevronRight } from "lucide-react"
-import { Link } from "react-router-dom"
+import { Link, useLocation } from "react-router-dom"
 
 import {
   Collapsible,
@@ -18,6 +19,54 @@ import {
 } from "@/components/ui/sidebar"
 
 export function NavMain({ items }) {
+  const location = useLocation()
+  const [openItems, setOpenItems] = useState(() => {
+    // Load from localStorage or use defaults
+    const saved = localStorage.getItem('sidebar-open-items')
+    if (saved) {
+      try {
+        return JSON.parse(saved)
+      } catch {
+        return {}
+      }
+    }
+    // Set default open items
+    const defaults = {}
+    items.forEach(item => {
+      defaults[item.title] = item.isActive || false
+    })
+    return defaults
+  })
+
+  // Find which item contains current route and open it
+  useEffect(() => {
+    const currentPath = location.pathname
+    const newOpenItems = { ...openItems }
+
+    items.forEach(item => {
+      const hasActiveChild = item.items?.some(subItem =>
+        currentPath === subItem.url || currentPath.startsWith(subItem.url + '/')
+      )
+      if (hasActiveChild) {
+        newOpenItems[item.title] = true
+      }
+    })
+
+    setOpenItems(newOpenItems)
+  }, [location.pathname])
+
+  // Save to localStorage whenever openItems changes
+  useEffect(() => {
+    localStorage.setItem('sidebar-open-items', JSON.stringify(openItems))
+  }, [openItems])
+
+  const handleToggle = (title) => {
+    setOpenItems(prev => ({
+      ...prev,
+      [title]: !prev[title]
+    }))
+  }
+
   return (
     <SidebarGroup>
       <SidebarGroupLabel>Platform</SidebarGroupLabel>
@@ -26,7 +75,8 @@ export function NavMain({ items }) {
           <Collapsible
             key={item.title}
             asChild
-            defaultOpen={item.isActive}
+            open={openItems[item.title] || false}
+            onOpenChange={() => handleToggle(item.title)}
             className="group/collapsible"
           >
             <SidebarMenuItem>

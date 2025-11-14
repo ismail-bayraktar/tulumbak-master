@@ -25,13 +25,19 @@ import {
   CheckCircle,
   Clock,
   Package,
+  Send,
+  Loader2,
 } from "lucide-react"
 import { formatCurrency, formatRelativeTime, getStatusColor } from "@/lib/utils"
 import { Skeleton } from "@/components/ui/skeleton"
+import { orderAPI } from "@/lib/api"
+import { useToast } from "@/hooks/use-toast"
 
 export function OrdersTable({ orders, loading, onStatusUpdate, onViewDetails }) {
   const [selectedOrders, setSelectedOrders] = useState([])
   const [currentPage, setCurrentPage] = useState(1)
+  const [actionLoading, setActionLoading] = useState({}) // Track loading state per order
+  const { toast } = useToast()
   const itemsPerPage = 15
 
   // Pagination
@@ -63,6 +69,53 @@ export function OrdersTable({ orders, loading, onStatusUpdate, onViewDetails }) 
   // Status update handler
   const handleStatusUpdate = async (orderId, newStatus) => {
     await onStatusUpdate(orderId, newStatus)
+  }
+
+  // Handle "Hazırlanıyor" status change
+  const handlePrepareOrder = async (orderId) => {
+    setActionLoading(prev => ({ ...prev, [`prepare-${orderId}`]: true }))
+    try {
+      await onStatusUpdate(orderId, "Hazırlanıyor")
+      toast({
+        title: "Başarılı",
+        description: "Sipariş hazırlanıyor olarak işaretlendi",
+      })
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Hata",
+        description: error.message || "Durum güncellenirken hata oluştu",
+      })
+    } finally {
+      setActionLoading(prev => ({ ...prev, [`prepare-${orderId}`]: false }))
+    }
+  }
+
+  // Handle send to courier - ACTUAL API CALL!
+  const handleSendToCourier = async (orderId) => {
+    setActionLoading(prev => ({ ...prev, [`courier-${orderId}`]: true }))
+    try {
+      const response = await orderAPI.sendToCourier(orderId)
+
+      if (response.data.success) {
+        toast({
+          title: "Başarılı",
+          description: "Sipariş kuryeye gönderildi",
+        })
+        // Refresh order data
+        await onStatusUpdate(orderId, null) // null means refresh without status change
+      } else {
+        throw new Error(response.data.message || "Kurye gönderilemedi")
+      }
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Hata",
+        description: error.response?.data?.message || error.message || "Kurye gönderilirken hata oluştu",
+      })
+    } finally {
+      setActionLoading(prev => ({ ...prev, [`courier-${orderId}`]: false }))
+    }
   }
 
   if (loading) {
@@ -153,92 +206,125 @@ export function OrdersTable({ orders, loading, onStatusUpdate, onViewDetails }) 
             </TableRow>
           </TableHeader>
           <TableBody>
-            {paginatedOrders.map((order) => (
-              <TableRow key={order._id} className={isSelected(order._id) ? "bg-muted/50" : ""}>
-                <TableCell>
-                  <Checkbox
-                    checked={isSelected(order._id)}
-                    onCheckedChange={() => toggleSelectOrder(order._id)}
-                  />
-                </TableCell>
-                <TableCell className="font-mono text-sm">
-                  #{order._id?.slice(-8) || "N/A"}
-                </TableCell>
-                <TableCell>
-                  <div>
-                    <div className="font-medium">
-                      {order.address?.firstName || ""} {order.address?.lastName || ""}
+            {paginatedOrders.map((order) => {
+              const isCourierAssigned = order.courierIntegration?.syncStatus === 'synced'
+
+              return (
+                <TableRow key={order._id} className={isSelected(order._id) ? "bg-muted/50" : ""}>
+                  <TableCell>
+                    <Checkbox
+                      checked={isSelected(order._id)}
+                      onCheckedChange={() => toggleSelectOrder(order._id)}
+                    />
+                  </TableCell>
+                  <TableCell className="font-mono text-sm">
+                    #{order._id?.slice(-8) || "N/A"}
+                  </TableCell>
+                  <TableCell>
+                    <div>
+                      <div className="font-medium">
+                        {order.address?.firstName || ""} {order.address?.lastName || ""}
+                      </div>
+                      <div className="text-sm text-muted-foreground">
+                        {order.address?.phone || "N/A"}
+                      </div>
                     </div>
-                    <div className="text-sm text-muted-foreground">
-                      {order.address?.phone || "N/A"}
+                  </TableCell>
+                  <TableCell>
+                    <div className="text-sm">
+                      {order.items?.length || 0} ürün
                     </div>
-                  </div>
-                </TableCell>
-                <TableCell>
-                  <div className="text-sm">
-                    {order.items?.length || 0} ürün
-                  </div>
-                </TableCell>
-                <TableCell className="font-medium">
-                  {formatCurrency(order.amount || 0)}
-                </TableCell>
-                <TableCell>
-                  <Badge className={getStatusColor(order.status || "Bilinmiyor")}>
-                    {order.status || "Bilinmiyor"}
-                  </Badge>
-                </TableCell>
-                <TableCell>
-                  {order.courierAssigned ? (
-                    <Badge variant="outline" className="bg-purple-50">
-                      <Truck className="h-3 w-3 mr-1" />
-                      Atandı
+                  </TableCell>
+                  <TableCell className="font-medium">
+                    {formatCurrency(order.amount || 0)}
+                  </TableCell>
+                  <TableCell>
+                    <Badge className={getStatusColor(order.status || "Bilinmiyor")}>
+                      {order.status || "Bilinmiyor"}
                     </Badge>
-                  ) : (
-                    <Badge variant="outline" className="bg-gray-50">
-                      Bekliyor
-                    </Badge>
-                  )}
-                </TableCell>
-                <TableCell className="text-sm text-muted-foreground">
-                  {formatRelativeTime(order.date)}
-                </TableCell>
-                <TableCell className="text-right">
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="icon">
-                        <MoreHorizontal className="h-4 w-4" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuLabel>İşlemler</DropdownMenuLabel>
-                      <DropdownMenuItem onClick={() => onViewDetails(order)}>
-                        <Eye className="h-4 w-4 mr-2" />
-                        Detayları Gör
-                      </DropdownMenuItem>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem
-                        onClick={() => handleStatusUpdate(order._id, "Hazırlanıyor")}
-                      >
-                        <Clock className="h-4 w-4 mr-2" />
-                        Hazırlanıyor
-                      </DropdownMenuItem>
-                      <DropdownMenuItem
-                        onClick={() => handleStatusUpdate(order._id, "Kuryeye Verildi")}
-                      >
-                        <Truck className="h-4 w-4 mr-2" />
-                        Kuryeye Ver
-                      </DropdownMenuItem>
-                      <DropdownMenuItem
-                        onClick={() => handleStatusUpdate(order._id, "Teslim Edildi")}
-                      >
-                        <CheckCircle className="h-4 w-4 mr-2" />
-                        Teslim Et
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </TableCell>
-              </TableRow>
-            ))}
+                  </TableCell>
+                  <TableCell>
+                    {isCourierAssigned ? (
+                      <Badge variant="outline" className="bg-purple-50">
+                        <Truck className="h-3 w-3 mr-1" />
+                        Atandı
+                      </Badge>
+                    ) : (
+                      <Badge variant="outline" className="bg-gray-50">
+                        Bekliyor
+                      </Badge>
+                    )}
+                  </TableCell>
+                  <TableCell className="text-sm text-muted-foreground">
+                    {formatRelativeTime(order.date)}
+                  </TableCell>
+
+                  {/* INLINE ACTION BUTTONS + DROPDOWN */}
+                  <TableCell className="text-right">
+                    <div className="flex items-center justify-end gap-2">
+                      {/* Show "Hazırlanıyor" button if status is "Siparişiniz Alındı" */}
+                      {order.status === "Siparişiniz Alındı" && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => handlePrepareOrder(order._id)}
+                          disabled={actionLoading[`prepare-${order._id}`]}
+                          className="h-8 text-xs"
+                        >
+                          {actionLoading[`prepare-${order._id}`] ? (
+                            <Loader2 className="h-3 w-3 mr-1 animate-spin" />
+                          ) : (
+                            <CheckCircle className="h-3 w-3 mr-1" />
+                          )}
+                          Hazırlanıyor
+                        </Button>
+                      )}
+
+                      {/* Show "Kuryeye Gönder" if status is "Hazırlanıyor" and NOT assigned */}
+                      {order.status === "Hazırlanıyor" && !isCourierAssigned && (
+                        <Button
+                          size="sm"
+                          onClick={() => handleSendToCourier(order._id)}
+                          disabled={actionLoading[`courier-${order._id}`]}
+                          className="h-8 text-xs bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
+                        >
+                          {actionLoading[`courier-${order._id}`] ? (
+                            <Loader2 className="h-3 w-3 mr-1 animate-spin" />
+                          ) : (
+                            <Send className="h-3 w-3 mr-1" />
+                          )}
+                          Kuryeye Gönder
+                        </Button>
+                      )}
+
+                      {/* Dropdown for all other actions */}
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="icon" className="h-8 w-8">
+                            <MoreHorizontal className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuLabel>İşlemler</DropdownMenuLabel>
+                          <DropdownMenuItem onClick={() => onViewDetails(order)}>
+                            <Eye className="h-4 w-4 mr-2" />
+                            Detayları Gör
+                          </DropdownMenuItem>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem
+                            onClick={() => handleStatusUpdate(order._id, "Teslim Edildi")}
+                            disabled={order.status === "Teslim Edildi"}
+                          >
+                            <CheckCircle className="h-4 w-4 mr-2" />
+                            Teslim Edildi
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              )
+            })}
           </TableBody>
         </Table>
       </div>

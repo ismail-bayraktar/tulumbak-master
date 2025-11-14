@@ -1,5 +1,5 @@
 export interface OrderItem {
-  productId: string;
+  id: string;  // Backend expects 'id' field for stock validation
   name: string;
   size: string;
   quantity: number;

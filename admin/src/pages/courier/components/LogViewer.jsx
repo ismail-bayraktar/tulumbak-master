@@ -324,7 +324,7 @@ export function LogViewer() {
                       <p className={`${colors.text} font-medium`}>{log.message}</p>
                       {log.error && (
                         <p className="text-red-400 mt-1 text-[10px] font-semibold">
-                          Error: {log.error}
+                          Error: {typeof log.error === 'object' ? JSON.stringify(log.error) : log.error}
                         </p>
                       )}
                       {log.stack && (

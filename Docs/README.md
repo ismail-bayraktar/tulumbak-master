@@ -254,6 +254,7 @@ Modern dashboard built with Shadcn UI:
 - **Products**: Product CRUD operations
 - **Email**: Email template and settings management
 - **Courier**: Courier integration configuration
+- **Notifications**: Real-time SSE notifications with browser alerts and Web Audio API sounds
 - **Settings**: System-wide settings
 
 📖 [Admin Panel Documentation](./Admin-Panel/Setup.md)
@@ -451,6 +452,7 @@ REDIS_ENABLED=false
 - [Components](./Admin-Panel/Components.md) - Shadcn UI components guide
 - [Pages](./Admin-Panel/Pages.md) - Page structure and routing
 - [Styling](./Admin-Panel/Styling.md) - Tailwind CSS and design system
+- [Notifications](./Admin-Panel/Notifications.md) - Real-time notification system with SSE, browser alerts, and sounds
 
 ### Integration Documentation
 - [MuditaKurye Implementation](./Integrations/MuditaKurye-Implementation.md) - Courier integration guide

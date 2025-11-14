@@ -15,6 +15,8 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from '@/components/ui/accordion';
+import apiClient from '@/lib/api/client';
+import { API_ENDPOINTS } from '@/lib/api/endpoints';
 
 export interface FilterState {
   categoryId: string | null;
@@ -34,12 +36,33 @@ interface FilterSidebarProps {
 
 export function FilterSidebar({ filters, onFilterChange, onClose, isMobile = false }: FilterSidebarProps) {
   const { categories, fetchCategories } = useCategoryStore();
+  const [priceRange, setPriceRange] = useState<{ min: number; max: number }>({ min: 0, max: 5000 });
 
   useEffect(() => {
     if (categories.length === 0) {
       fetchCategories();
     }
   }, [categories.length, fetchCategories]);
+
+  // Fetch price range from backend
+  useEffect(() => {
+    const fetchPriceRange = async () => {
+      try {
+        const response = await apiClient.get<{ success: boolean; minPrice: number; maxPrice: number }>(
+          API_ENDPOINTS.PRODUCTS.PRICE_RANGE
+        );
+        if (response.data.success) {
+          setPriceRange({
+            min: response.data.minPrice,
+            max: response.data.maxPrice
+          });
+        }
+      } catch (error) {
+        console.error('Error fetching price range:', error);
+      }
+    };
+    fetchPriceRange();
+  }, []);
 
   const handleCategoryChange = (categoryId: string) => {
     onFilterChange({
@@ -70,7 +93,7 @@ export function FilterSidebar({ filters, onFilterChange, onClose, isMobile = fal
     onFilterChange({
       categoryId: null,
       sizes: [],
-      priceRange: [0, 5000],
+      priceRange: [priceRange.min, priceRange.max],
       personCounts: [],
       freshType: 'all',
       inStockOnly: false
@@ -80,8 +103,8 @@ export function FilterSidebar({ filters, onFilterChange, onClose, isMobile = fal
   const hasActiveFilters =
     filters.categoryId !== null ||
     filters.sizes.length > 0 ||
-    filters.priceRange[0] > 0 ||
-    filters.priceRange[1] < 5000 ||
+    filters.priceRange[0] > priceRange.min ||
+    filters.priceRange[1] < priceRange.max ||
     filters.personCounts.length > 0 ||
     filters.freshType !== 'all' ||
     filters.inStockOnly;
@@ -162,8 +185,8 @@ export function FilterSidebar({ filters, onFilterChange, onClose, isMobile = fal
             <AccordionContent>
               <div className="space-y-4">
                 <Slider
-                  min={0}
-                  max={5000}
+                  min={priceRange.min}
+                  max={priceRange.max}
                   step={50}
                   value={filters.priceRange}
                   onValueChange={handlePriceChange}

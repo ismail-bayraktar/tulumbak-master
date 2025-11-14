@@ -9,17 +9,29 @@ import { Separator } from '@/components/ui/separator';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Package, ChevronRight, ShoppingBag } from 'lucide-react';
 import { Order, OrderListResponse } from '@/types/order';
+import { useAuthStore } from '@/stores/authStore';
 import apiClient from '@/lib/api/client';
 import { API_ENDPOINTS } from '@/lib/api/endpoints';
 
 export default function OrdersPage() {
   const router = useRouter();
+  const { isAuthenticated } = useAuthStore();
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
 
+  // Auth kontrolü
   useEffect(() => {
-    fetchOrders();
-  }, []);
+    if (!isAuthenticated) {
+      router.push('/login?redirect=/orders');
+      return;
+    }
+  }, [isAuthenticated, router]);
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      fetchOrders();
+    }
+  }, [isAuthenticated]);
 
   const fetchOrders = async () => {
     setLoading(true);

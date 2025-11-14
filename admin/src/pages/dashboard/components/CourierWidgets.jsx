@@ -1,6 +1,7 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Skeleton } from "@/components/ui/skeleton"
+import { Button } from "@/components/ui/button"
 import {
   Table,
   TableBody,
@@ -16,10 +17,45 @@ import {
   AlertTriangle,
   Package,
   TrendingUp,
+  Send,
 } from "lucide-react"
 import { Link } from "react-router-dom"
+import { useState } from "react"
+import { orderAPI } from "@/lib/api"
+import { useToast } from "@/hooks/use-toast"
 
-export function CourierWidgets({ courierData, loading }) {
+export function CourierWidgets({ courierData, loading, onRefresh }) {
+  const [sendingToCourier, setSendingToCourier] = useState({})
+  const { toast } = useToast()
+
+  const handleSendToCourier = async (orderId) => {
+    setSendingToCourier(prev => ({ ...prev, [orderId]: true }))
+    try {
+      const response = await orderAPI.sendToCourier(orderId)
+
+      if (response.data.success) {
+        toast({
+          title: "Başarılı",
+          description: "Sipariş kuryeye gönderildi",
+        })
+        // Refresh courier data
+        if (onRefresh) {
+          onRefresh()
+        }
+      } else {
+        throw new Error(response.data.message || "Kurye gönderilemedi")
+      }
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Hata",
+        description: error.response?.data?.message || error.message || "Kurye gönderilirken hata oluştu",
+      })
+    } finally {
+      setSendingToCourier(prev => ({ ...prev, [orderId]: false }))
+    }
+  }
+
   if (loading) {
     return (
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
@@ -30,67 +66,17 @@ export function CourierWidgets({ courierData, loading }) {
     )
   }
 
-  // Mock data - will be replaced with real API data
+  // Use real API data - no more mock data
   const displayData = courierData || {
-    activeDeliveries: [
-      {
-        id: "DEL-001",
-        orderId: "ORD-789",
-        status: "in_transit",
-        estimatedTime: "15 dk",
-        address: "Kadıköy, İstanbul",
-      },
-      {
-        id: "DEL-002",
-        orderId: "ORD-790",
-        status: "preparing",
-        estimatedTime: "5 dk",
-        address: "Beşiktaş, İstanbul",
-      },
-      {
-        id: "DEL-003",
-        orderId: "ORD-791",
-        status: "in_transit",
-        estimatedTime: "22 dk",
-        address: "Üsküdar, İstanbul",
-      },
-    ],
+    activeDeliveries: [],
     todaySummary: {
-      totalDeliveries: 47,
-      successful: 42,
-      inProgress: 3,
-      failed: 2,
+      totalDeliveries: 0,
+      successful: 0,
+      inProgress: 0,
+      failed: 0,
     },
-    pendingAssignments: [
-      {
-        id: "ORD-794",
-        customerName: "Ahmet Yılmaz",
-        address: "Şişli, İstanbul",
-        waitTime: "5 dk",
-      },
-      {
-        id: "ORD-795",
-        customerName: "Ayşe Demir",
-        address: "Sarıyer, İstanbul",
-        waitTime: "12 dk",
-      },
-    ],
-    problematicDeliveries: [
-      {
-        id: "DEL-045",
-        orderId: "ORD-788",
-        issue: "Müşteriye ulaşılamadı",
-        attempts: 2,
-        lastAttempt: "10 dk önce",
-      },
-      {
-        id: "DEL-046",
-        orderId: "ORD-787",
-        issue: "Hatalı adres",
-        attempts: 1,
-        lastAttempt: "25 dk önce",
-      },
-    ],
+    pendingAssignments: [],
+    problematicDeliveries: [],
   }
 
   const getStatusBadge = (status) => {
@@ -239,7 +225,7 @@ export function CourierWidgets({ courierData, loading }) {
               </div>
             ) : (
               <div className="space-y-3">
-                {displayData.pendingAssignments.map((order) => (
+                {displayData.pendingAssignments.slice(0, 2).map((order) => (
                   <div key={order.id} className="border-l-2 border-yellow-500 pl-3 py-2">
                     <div className="flex items-center justify-between mb-1">
                       <span className="font-medium text-sm">{order.id}</span>
@@ -247,8 +233,19 @@ export function CourierWidgets({ courierData, loading }) {
                         {order.waitTime}
                       </Badge>
                     </div>
-                    <p className="text-xs text-muted-foreground">{order.customerName}</p>
-                    <p className="text-xs text-muted-foreground">{order.address}</p>
+                    <p className="text-xs text-muted-foreground mb-1">{order.customerName}</p>
+                    <p className="text-xs text-muted-foreground mb-2">{order.address}</p>
+                    {/* Quick action button to send to courier */}
+                    <Button
+                      size="sm"
+                      className="w-full h-7 text-xs"
+                      onClick={() => handleSendToCourier(order.mongoId)}
+                      disabled={sendingToCourier[order.mongoId]}
+                      title="Kuryeye gönder"
+                    >
+                      <Send className="h-3 w-3 mr-1" />
+                      {sendingToCourier[order.mongoId] ? "Gönderiliyor..." : "Kuryeye Gönder"}
+                    </Button>
                   </div>
                 ))}
                 {displayData.pendingAssignments.length > 2 && (

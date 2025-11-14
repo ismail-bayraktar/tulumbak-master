@@ -4,13 +4,21 @@ export interface SizePrice {
   _id?: string;
 }
 
+// Category reference from backend
+export interface ProductCategory {
+  _id: string;
+  name: string;
+  active: boolean;
+  slug: string;
+}
+
 export interface Product {
   _id: string;
   name: string;
   description: string;
   basePrice: number;  // TL cinsinden base fiyat
   image: string[];    // Görsel URL'leri
-  category: string;   // Kategori ID'si
+  category: ProductCategory;   // Kategori objesi (populated from backend)
   subCategory?: string;
 
   // Gramaj ve Ağırlıklar

@@ -64,8 +64,8 @@ function CollectionContent() {
   // Ürünleri filtrele
   const filteredProducts = products
     .filter(p => {
-      // Kategori filtresi
-      if (filters.categoryId && p.category !== filters.categoryId) return false;
+      // Kategori filtresi - category artık object
+      if (filters.categoryId && p.category?._id !== filters.categoryId) return false;
 
       // Gramaj filtresi
       if (filters.sizes.length > 0) {

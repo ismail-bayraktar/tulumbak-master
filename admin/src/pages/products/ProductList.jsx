@@ -73,6 +73,8 @@ import {
   Package,
   RefreshCw,
   TrendingUp,
+  Copy,
+  Check,
 } from "lucide-react"
 import { backendUrl } from "@/lib/api"
 
@@ -107,6 +109,9 @@ export default function ProductList() {
   })
   const [currentPage, setCurrentPage] = useState(1)
   const itemsPerPage = 20
+
+  // Copy ID state
+  const [copiedId, setCopiedId] = useState(null)
 
   // Inline editing state
   const [inlineEdit, setInlineEdit] = useState({
@@ -220,6 +225,25 @@ export default function ProductList() {
         ? prev.sizes.filter((s) => s !== size)
         : [...prev.sizes, size],
     }))
+  }
+
+  // Copy ID to clipboard
+  const copyToClipboard = async (id) => {
+    try {
+      await navigator.clipboard.writeText(id)
+      setCopiedId(id)
+      toast({
+        title: "Kopyalandı!",
+        description: "Ürün ID panoya kopyalandı",
+      })
+      setTimeout(() => setCopiedId(null), 2000)
+    } catch (err) {
+      toast({
+        title: "Hata",
+        description: "Kopyalama başarısız oldu",
+        variant: "destructive",
+      })
+    }
   }
 
   // Inline Editing Functions
@@ -445,6 +469,8 @@ export default function ProductList() {
                     <TableRow>
                       <TableHead className="w-20">Görsel</TableHead>
                       <TableHead>Ürün Adı</TableHead>
+                      <TableHead className="font-mono text-xs">SKU</TableHead>
+                      <TableHead className="font-mono text-xs">Ürün ID</TableHead>
                       <TableHead>Kategori</TableHead>
                       <TableHead>Fiyat</TableHead>
                       <TableHead>Stok</TableHead>
@@ -472,7 +498,8 @@ export default function ProductList() {
                               <Package className="h-6 w-6 text-muted-foreground" />
                             </div>
                           )}
-                        </TableCell>                        <TableCell>
+                        </TableCell>
+                        <TableCell>
                           <div>
                             <div className="font-medium flex items-center gap-2">
                               {product.name}
@@ -488,8 +515,50 @@ export default function ProductList() {
                             </div>
                           </div>
                         </TableCell>
+                        <TableCell className="font-mono text-xs">
+                          <div className="flex items-center gap-2">
+                            <span className="font-semibold text-primary select-all">
+                              {product.sku || '-'}
+                            </span>
+                            {product.sku && (
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-6 w-6"
+                                onClick={() => copyToClipboard(product.sku)}
+                                title="SKU'yu kopyala"
+                              >
+                                {copiedId === product.sku ? (
+                                  <Check className="h-3 w-3 text-green-500" />
+                                ) : (
+                                  <Copy className="h-3 w-3" />
+                                )}
+                              </Button>
+                            )}
+                          </div>
+                        </TableCell>
+                        <TableCell className="font-mono text-xs">
+                          <div className="flex items-center gap-2">
+                            <span className="text-muted-foreground select-all">
+                              {product._id}
+                            </span>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-6 w-6"
+                              onClick={() => copyToClipboard(product._id)}
+                              title="ID'yi kopyala"
+                            >
+                              {copiedId === product._id ? (
+                                <Check className="h-3 w-3 text-green-500" />
+                              ) : (
+                                <Copy className="h-3 w-3" />
+                              )}
+                            </Button>
+                          </div>
+                        </TableCell>
                         <TableCell
-                          onDoubleClick={() => startInlineEdit(product._id, "category", product.category)}
+                          onDoubleClick={() => startInlineEdit(product._id, "category", typeof product.category === 'object' ? product.category._id : product.category)}
                           className="cursor-pointer hover:bg-muted/50"
                           title="Çift tıkla düzenle"
                         >
@@ -506,14 +575,14 @@ export default function ProductList() {
                               </SelectTrigger>
                               <SelectContent>
                                 {categories.map((cat) => (
-                                  <SelectItem key={cat} value={cat}>
-                                    {cat}
+                                  <SelectItem key={cat._id} value={cat._id}>
+                                    {cat.name}
                                   </SelectItem>
                                 ))}
                               </SelectContent>
                             </Select>
                           ) : (
-                            product.category
+                            typeof product.category === 'object' ? product.category.name : product.category
                           )}
                         </TableCell>
                         <TableCell

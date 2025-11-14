@@ -40,6 +40,8 @@ export default function ProductEditSheet({ open, onOpenChange, product, onSucces
   const { categories } = useCategories()
   const [loading, setLoading] = useState(false)
   const [imageLoading, setImageLoading] = useState({})
+  const [manualSKU, setManualSKU] = useState(false) // SKU manuel mi?
+  const [originalSKU, setOriginalSKU] = useState("") // Orijinal SKU (değiştirilmemesi için)
 
   const [formData, setFormData] = useState({
     name: "",
@@ -63,6 +65,8 @@ export default function ProductEditSheet({ open, onOpenChange, product, onSucces
     metaTitle: "",
     metaDescription: "",
     keywords: "",
+    sku: "",
+    barcode: "",
   })
 
   // Separate state for existing vs new images (prevents flickering)
@@ -95,6 +99,8 @@ export default function ProductEditSheet({ open, onOpenChange, product, onSucces
         metaTitle: product.metaTitle || "",
         metaDescription: product.metaDescription || "",
         keywords: Array.isArray(product.keywords) ? product.keywords.join(", ") : "",
+        sku: product.sku || "",
+        barcode: product.barcode || "",
       })
 
       // Store existing images separately
@@ -102,6 +108,10 @@ export default function ProductEditSheet({ open, onOpenChange, product, onSucces
       setNewImageFiles({})
       setNewImagePreviews({})
       setImageLoading({})
+
+      // Store original SKU
+      setOriginalSKU(product.sku || "")
+      setManualSKU(false)
     }
   }, [product, open])
 
@@ -246,6 +256,9 @@ export default function ProductEditSheet({ open, onOpenChange, product, onSucces
       submitData.append("metaDescription", formData.metaDescription)
       submitData.append("keywords", formData.keywords)
 
+      // Product Identification
+      if (formData.barcode) submitData.append("barcode", formData.barcode)
+
       // Images (only if new images selected)
       if (newImageFiles.image1) submitData.append("image1", newImageFiles.image1)
       if (newImageFiles.image2) submitData.append("image2", newImageFiles.image2)
@@ -279,10 +292,23 @@ export default function ProductEditSheet({ open, onOpenChange, product, onSucces
         {/* Sticky Header */}
         <div className="sticky top-0 z-10 bg-background border-b px-6 py-4">
           <SheetHeader>
-            <SheetTitle className="text-xl">Ürün Düzenle</SheetTitle>
-            <SheetDescription>
-              Ürün bilgilerini düzenleyin (Gramaj fiyatları ve SEO dahil)
-            </SheetDescription>
+            <div className="flex items-start justify-between">
+              <div className="space-y-1">
+                <SheetTitle className="text-xl">Ürün Düzenle</SheetTitle>
+                <SheetDescription>
+                  Ürün bilgilerini düzenleyin (Gramaj fiyatları ve SEO dahil)
+                </SheetDescription>
+              </div>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 shrink-0 inline-flex lg:hidden"
+                onClick={() => onOpenChange(false)}
+              >
+                <X className="h-4 w-4" />
+                <span className="sr-only">Kapat</span>
+              </Button>
+            </div>
           </SheetHeader>
         </div>
 
@@ -397,7 +423,7 @@ export default function ProductEditSheet({ open, onOpenChange, product, onSucces
                   </SelectTrigger>
                   <SelectContent>
                     {categories.map((cat) => (
-                      <SelectItem key={cat._id} value={cat.name}>
+                      <SelectItem key={cat._id} value={cat._id}>
                         {cat.name}
                       </SelectItem>
                     ))}
@@ -413,6 +439,65 @@ export default function ProductEditSheet({ open, onOpenChange, product, onSucces
                   value={formData.stock}
                   onChange={(e) => setFormData({ ...formData, stock: parseInt(e.target.value) || 0 })}
                 />
+              </div>
+            </div>
+
+            {/* SKU Manuel/Otomatik Toggle */}
+            <div className="flex items-center space-x-2 p-3 rounded-lg bg-muted/50">
+              <Switch
+                id="manual-sku-edit"
+                checked={manualSKU}
+                onCheckedChange={setManualSKU}
+              />
+              <Label htmlFor="manual-sku-edit" className="cursor-pointer">
+                SKU'yu değiştir
+              </Label>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="grid gap-2">
+                <Label htmlFor="sku">SKU {!manualSKU && "(Mevcut)"}</Label>
+                {manualSKU ? (
+                  <>
+                    <Input
+                      id="sku"
+                      className="font-mono text-sm"
+                      placeholder="Örn: TUL-500-001"
+                      value={formData.sku}
+                      onChange={(e) => setFormData({ ...formData, sku: e.target.value.toUpperCase() })}
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Yeni bir SKU kodu girin (örn: TUL-500-001)
+                    </p>
+                  </>
+                ) : (
+                  <>
+                    <Input
+                      id="sku"
+                      value={formData.sku}
+                      disabled
+                      className="bg-muted font-mono text-sm"
+                      placeholder="Otomatik oluşturulmuş"
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Mevcut SKU: {originalSKU || "Otomatik oluşturulacak"}
+                    </p>
+                  </>
+                )}
+              </div>
+
+              <div className="grid gap-2">
+                <Label htmlFor="barcode">Barkod (Opsiyonel)</Label>
+                <Input
+                  id="barcode"
+                  value={formData.barcode}
+                  onChange={(e) => setFormData({ ...formData, barcode: e.target.value })}
+                  className="font-mono text-sm"
+                  placeholder="GTIN/EAN barkod"
+                />
+                <p className="text-xs text-muted-foreground">
+                  Ürün barkodu (varsa)
+                </p>
               </div>
             </div>
           </div>

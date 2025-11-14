@@ -52,7 +52,11 @@
       "Bash(npm run kill-port:*)",
       "Bash(npm run server:*)",
       "Bash(npm run start:clean:*)",
-      "Bash(mongosh:*)"
+      "Bash(mongosh:*)",
+      "Bash(powershell -Command \"(Get-Content ''F:\\NEXTJS\\tulumbak-master\\admin\\src\\components\\ProductFullEditDialog.jsx'').Count\")",
+      "Bash(if exist .next rmdir /s /q .next 2)",
+      "mcp__playwright__browser_navigate",
+      "mcp__chrome-devtools__navigate_page"
     ],
     "deny": [],
     "ask": []

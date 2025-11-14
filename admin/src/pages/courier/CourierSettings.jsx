@@ -39,13 +39,33 @@ import {
   CheckCircle,
   XCircle,
   AlertCircle,
+  Wifi,
+  WifiOff,
 } from "lucide-react"
+import { NotificationSettingsModal } from "@/components/NotificationSettingsModal"
+import { useCourierData } from "@/pages/dashboard/hooks/useCourierData"
+import { useRealtimeStats } from "@/pages/dashboard/hooks/useRealtimeStats"
+import { useNotificationSettings } from "@/hooks/useNotificationSettings"
 
 export default function CourierSettings() {
   const { toast } = useToast()
   const [loading, setLoading] = useState(true)
   const [testing, setTesting] = useState(false)
   const [testingOrder, setTestingOrder] = useState(false)
+  const [notificationSettingsOpen, setNotificationSettingsOpen] = useState(false)
+  const { courierData, loading: courierLoading, fetchCourierData } = useCourierData()
+  const { isEnabled: notificationsEnabled } = useNotificationSettings()
+
+  // Real-time SSE connection
+  const { connected: realtimeConnected, reconnect: reconnectRealtime } = useRealtimeStats({
+    onNewOrder: () => {
+      fetchCourierData(true)
+    },
+    onCourierAssigned: () => {
+      fetchCourierData(true)
+    }
+  })
+
   const [config, setConfig] = useState({
     platform: "muditakurye",
     enabled: false,
@@ -54,7 +74,6 @@ export default function CourierSettings() {
     apiKey: "",
     restaurantId: "",
     webhookOnlyMode: false,
-    autoAssignMode: "manual", // manual, semi-auto, auto
     retryConfig: {
       maxRetries: 5,
       baseDelay: 1000,
@@ -208,6 +227,41 @@ export default function CourierSettings() {
           </div>
         </header>
 
+        {/* Status Bar - Desktop Only */}
+        <div className="hidden md:flex items-center gap-3 px-4 py-2.5 bg-muted/30 border-b">
+          <div className="flex items-center gap-2 text-xs text-muted-foreground">
+            <span className="font-medium">Sistem Durumu:</span>
+          </div>
+          <Badge
+            variant={courierData?.todaySummary?.totalDeliveries > 0 ? "default" : "secondary"}
+            className="cursor-pointer"
+            title={courierData?.todaySummary?.totalDeliveries > 0
+              ? `Kurye Entegrasyonu Aktif - ${courierData.todaySummary.totalDeliveries} sipariş`
+              : "Kurye entegrasyonu bağlantısı bekleniyor"}
+          >
+            <Truck className="h-3 w-3 mr-1" />
+            {courierData?.todaySummary?.totalDeliveries > 0 ? "Kurye Bağlı" : "Kurye Bekliyor"}
+          </Badge>
+          <Badge
+            variant={notificationsEnabled ? "outline" : "secondary"}
+            className="cursor-pointer hover:bg-accent"
+            onClick={() => setNotificationSettingsOpen(true)}
+            title="Bildirim ayarlarını aç"
+          >
+            {notificationsEnabled ? (
+              <>
+                <Wifi className="h-3 w-3 mr-1" />
+                Bildirim Aktif
+              </>
+            ) : (
+              <>
+                <WifiOff className="h-3 w-3 mr-1" />
+                Bildirim Kapalı
+              </>
+            )}
+          </Badge>
+        </div>
+
         <div className="flex flex-1 flex-col gap-6 p-6">
           {/* Header */}
           <div className="flex items-center justify-between">
@@ -236,7 +290,6 @@ export default function CourierSettings() {
           <Tabs defaultValue="api" className="space-y-6">
             <TabsList>
               <TabsTrigger value="api">API Bağlantısı</TabsTrigger>
-              <TabsTrigger value="auto-assign">Otomatik Atama</TabsTrigger>
               <TabsTrigger value="advanced">Gelişmiş Ayarlar</TabsTrigger>
               <TabsTrigger value="logs">Log Yönetimi</TabsTrigger>
             </TabsList>
@@ -370,105 +423,6 @@ export default function CourierSettings() {
                       </div>
                     )}
                   </div>
-                </CardContent>
-              </Card>
-            </TabsContent>
-
-            {/* Auto-Assign Tab */}
-            <TabsContent value="auto-assign" className="space-y-4">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Otomatik Atama Modu</CardTitle>
-                  <CardDescription>
-                    Siparişlerin kuryeye nasıl atanacağını belirleyin
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="grid gap-4">
-                    {/* Manuel Mode */}
-                    <div
-                      className={`border-2 p-4 rounded-lg cursor-pointer transition-colors ${
-                        config.autoAssignMode === "manual"
-                          ? "border-primary bg-primary/5"
-                          : "border-border hover:border-primary/50"
-                      }`}
-                      onClick={() => setConfig({ ...config, autoAssignMode: "manual" })}
-                    >
-                      <div className="flex items-start justify-between">
-                        <div>
-                          <h3 className="font-semibold">Manuel Atama</h3>
-                          <p className="text-sm text-muted-foreground mt-1">
-                            Her sipariş için admin manuel olarak kuryeye atama yapar
-                          </p>
-                        </div>
-                        {config.autoAssignMode === "manual" && (
-                          <CheckCircle className="h-5 w-5 text-primary" />
-                        )}
-                      </div>
-                    </div>
-
-                    {/* Semi-Auto Mode */}
-                    <div
-                      className={`border-2 p-4 rounded-lg cursor-pointer transition-colors ${
-                        config.autoAssignMode === "semi-auto"
-                          ? "border-primary bg-primary/5"
-                          : "border-border hover:border-primary/50"
-                      }`}
-                      onClick={() => setConfig({ ...config, autoAssignMode: "semi-auto" })}
-                    >
-                      <div className="flex items-start justify-between">
-                        <div>
-                          <h3 className="font-semibold">Yarı Otomatik</h3>
-                          <p className="text-sm text-muted-foreground mt-1">
-                            Sistem kurye önerir, admin onaylar veya değiştirir
-                          </p>
-                        </div>
-                        {config.autoAssignMode === "semi-auto" && (
-                          <CheckCircle className="h-5 w-5 text-primary" />
-                        )}
-                      </div>
-                    </div>
-
-                    {/* Full Auto Mode */}
-                    <div
-                      className={`border-2 p-4 rounded-lg cursor-pointer transition-colors ${
-                        config.autoAssignMode === "auto"
-                          ? "border-primary bg-primary/5"
-                          : "border-border hover:border-primary/50"
-                      }`}
-                      onClick={() => setConfig({ ...config, autoAssignMode: "auto" })}
-                    >
-                      <div className="flex items-start justify-between">
-                        <div>
-                          <h3 className="font-semibold">Tam Otomatik</h3>
-                          <p className="text-sm text-muted-foreground mt-1">
-                            Sistem kuralları tanımlanır, siparişler otomatik atanır
-                          </p>
-                        </div>
-                        {config.autoAssignMode === "auto" && (
-                          <CheckCircle className="h-5 w-5 text-primary" />
-                        )}
-                      </div>
-                    </div>
-                  </div>
-
-                  {config.autoAssignMode !== "manual" && (
-                    <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                      <div className="flex items-start gap-2">
-                        <AlertCircle className="h-5 w-5 text-blue-600 mt-0.5" />
-                        <div>
-                          <p className="text-sm font-medium text-blue-900">
-                            Otomatik Atama Kuralları
-                          </p>
-                          <p className="text-sm text-blue-700 mt-1">
-                            {config.autoAssignMode === "semi-auto"
-                              ? "Sistem sipariş bölgesine göre en yakın kuryeyi önerecek"
-                              : "Siparişler otomatik olarak bölge ve yoğunluğa göre atanacak"}
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  )}
                 </CardContent>
               </Card>
             </TabsContent>
@@ -632,6 +586,12 @@ export default function CourierSettings() {
             </TabsContent>
           </Tabs>
         </div>
+
+        {/* Notification Settings Modal */}
+        <NotificationSettingsModal
+          open={notificationSettingsOpen}
+          onOpenChange={setNotificationSettingsOpen}
+        />
       </SidebarInset>
     </SidebarProvider>
   )

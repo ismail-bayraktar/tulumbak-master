@@ -7,6 +7,7 @@ import { Product } from '@/types/product';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { getProductImageUrl } from '@/lib/utils/image';
 
 interface ProductCardProps {
   product: Product;
@@ -17,10 +18,8 @@ export function ProductCard({ product }: ProductCardProps) {
   const displayPrice = product.sizePrices[0]?.price || product.basePrice * 100;
   const priceInTL = displayPrice / 100;
 
-  // Görsel URL (backend'den /assets/... geliyor veya placeholder)
-  const imageUrl = product.image && product.image.length > 0
-    ? product.image[0]
-    : '/assets/tulumba.png'; // Varsayılan placeholder görsel
+  // Görsel URL (backend'den /uploads/... geliyor veya placeholder)
+  const imageUrl = getProductImageUrl(product.image, 0, '/assets/tulumba.png');
 
   // Stok durumu badge
   const getStockBadge = () => {
@@ -109,13 +108,6 @@ export function ProductCard({ product }: ProductCardProps) {
             </div>
           )}
         </div>
-
-        {/* Taze/Kuru Badge */}
-        {product.freshType && (
-          <Badge variant="outline" className="text-xs mb-2">
-            {product.freshType === 'taze' ? 'Taze' : 'Kuru'}
-          </Badge>
-        )}
 
         {/* Fiyat */}
         <div className="flex items-baseline gap-2">

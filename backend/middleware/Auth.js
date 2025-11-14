@@ -16,7 +16,10 @@ const authUser = async (req, res, next) => {
         });
     }
 
-    // Support both legacy (token) and standard (Authorization: Bearer) formats
+    // Support multiple token formats:
+    // 1. Legacy header (token)
+    // 2. Standard header (Authorization: Bearer)
+    // 3. Query parameter (token) - for SSE where headers aren't supported
     let token = req.headers.token;
 
     if (!token && req.headers.authorization) {
@@ -29,6 +32,17 @@ const authUser = async (req, res, next) => {
                     tokenPreview: token.substring(0, 20) + '...'
                 });
             }
+        }
+    }
+
+    // For SSE and other scenarios where headers can't be customized
+    if (!token && req.query.token) {
+        token = req.query.token;
+        if (isDev) {
+            logger.info('✅ Token extracted from query parameter', {
+                tokenPreview: token.substring(0, 20) + '...',
+                path: req.path
+            });
         }
     }
 

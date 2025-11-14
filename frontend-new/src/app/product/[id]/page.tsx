@@ -10,6 +10,7 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { ShoppingCart, Package, Users, Info } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { getProductImageUrl } from '@/lib/utils/image';
 
 export default function ProductDetailPage() {
   const params = useParams();
@@ -54,10 +55,8 @@ export default function ProductDetailPage() {
   const price = selectedSizePrice ? selectedSizePrice.price : product.basePrice;
   const priceInTL = price / 100;
 
-  // Görsel URL
-  const imageUrl = product.image && product.image.length > 0
-    ? product.image[selectedImage]
-    : '/assets/tulumba.png';
+  // Görsel URL (backend'den /uploads/... geliyor)
+  const imageUrl = getProductImageUrl(product.image, selectedImage, '/assets/tulumba.png');
 
   const handleAddToCart = () => {
     if (!selectedSize) {
@@ -128,7 +127,7 @@ export default function ProductDetailPage() {
                   }`}
                 >
                   <Image
-                    src={img}
+                    src={getProductImageUrl(product.image, idx, '/assets/tulumba.png')}
                     alt={`${product.name} ${idx + 1}`}
                     fill
                     className="object-cover"

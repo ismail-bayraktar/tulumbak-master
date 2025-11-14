@@ -15,16 +15,31 @@ export function useCourierData() {
       if (response.data.success) {
         const apiData = response.data.data
 
+        // Map order statuses to delivery statuses
+        const getDeliveryStatus = (orderStatus, syncStatus) => {
+          if (syncStatus === 'synced' && (orderStatus === 'Kuryeye Atandı' || orderStatus === 'Yolda')) {
+            return 'in_transit'
+          }
+          if (orderStatus === 'Hazırlanıyor') {
+            return 'preparing'
+          }
+          if (orderStatus === 'Teslim Edildi') {
+            return 'delivered'
+          }
+          return 'preparing'
+        }
+
         // Transform backend data to widget format
         const transformedData = {
+          // Active Deliveries: Orders that are synced with courier (status = "Kuryeye Atandı")
           activeDeliveries: apiData.recentOrders?.filter(o =>
-            o.status === 'pending' || o.status === 'in_transit'
-          ).slice(0, 3).map(o => ({
+            o.status === 'synced' && o.orderStatus === 'Kuryeye Atandı'
+          ).slice(0, 5).map(o => ({
             id: o.externalId || o.id,
-            orderId: o.orderNumber || o.id,
-            status: o.status || 'in_transit',
+            orderId: o.orderNumber || `#${o.id.slice(-6)}`,
+            status: getDeliveryStatus(o.orderStatus, o.status),
             estimatedTime: 'Hesaplanıyor',
-            address: 'N/A'
+            address: o.address || 'Adres bilgisi yok'
           })) || [],
 
           todaySummary: {
@@ -34,16 +49,22 @@ export function useCourierData() {
             failed: apiData.status?.dlqPending || 0,
           },
 
+          // Pending Assignments: Orders not yet sent to courier (no externalId)
           pendingAssignments: apiData.recentOrders?.filter(o =>
-            !o.externalId && o.status === 'pending'
-          ).slice(0, 2).map(o => ({
-            id: o.orderNumber || o.id,
-            customerName: 'Müşteri',
-            address: 'N/A',
-            waitTime: 'Bekliyor'
-          })) || [],
+            !o.externalId && o.orderStatus === 'Hazırlanıyor'
+          ).slice(0, 2).map(o => {
+            const timeAgo = Math.floor((Date.now() - new Date(o.createdAt).getTime()) / 60000) // minutes
+            return {
+              id: o.orderNumber || `#${o.id.slice(-6)}`,
+              mongoId: o.id, // Add MongoDB ID for API calls
+              customerName: o.customerName || 'Müşteri',
+              address: o.address || 'Adres bilgisi yok',
+              waitTime: `${timeAgo} dk`
+            }
+          }) || [],
 
-          problematicDeliveries: [] // DLQ'dan gelecek
+          // Problematic Deliveries: Failed syncs from DLQ
+          problematicDeliveries: [] // TODO: Implement DLQ query when needed
         }
 
         setCourierData(transformedData)

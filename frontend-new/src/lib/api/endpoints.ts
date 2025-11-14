@@ -10,6 +10,7 @@ export const API_ENDPOINTS = {
   PRODUCTS: {
     LIST: '/api/product/list',
     DETAIL: (id: string) => `/api/product/${id}`,
+    PRICE_RANGE: '/api/product/price-range',
   },
 
   // Cart
@@ -50,5 +51,10 @@ export const API_ENDPOINTS = {
     ACTIVE: '/api/category/active',        // Public - aktif kategoriler
     LIST: '/api/category/list',            // Admin - tüm kategoriler
     SINGLE: '/api/category/single',        // Admin - tekil kategori
+  },
+
+  // Sliders
+  SLIDERS: {
+    LIST: '/api/slider/list',              // Public - aktif sliderlar
   },
 } as const;

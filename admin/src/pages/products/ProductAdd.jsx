@@ -59,7 +59,11 @@ export default function ProductAdd() {
     shelfLife: "",
     storageInfo: "",
     sizePrices: [],
+    barcode: "",
+    sku: "", // Manuel SKU
   })
+
+  const [manualSKU, setManualSKU] = useState(false) // SKU manuel mi?
 
   // Fetch active categories on component mount
   useEffect(() => {
@@ -196,8 +200,11 @@ export default function ProductAdd() {
           shelfLife: "",
           storageInfo: "",
           sizePrices: [],
+          barcode: "",
+          sku: "",
         })
         setImages([null, null, null, null])
+        setManualSKU(false)
       }
     } catch (error) {
       toast({
@@ -274,7 +281,7 @@ export default function ProductAdd() {
                       </SelectTrigger>
                       <SelectContent>
                         {categories.map((cat) => (
-                          <SelectItem key={cat._id} value={cat.name}>
+                          <SelectItem key={cat._id} value={cat._id}>
                             {cat.name}
                           </SelectItem>
                         ))}
@@ -331,6 +338,70 @@ export default function ProductAdd() {
                       value={formData.subCategory}
                       onChange={(e) => setFormData({ ...formData, subCategory: e.target.value })}
                     />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Product Identification */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Ürün Tanımlama</CardTitle>
+                <CardDescription>SKU otomatik oluşturulur veya manuel girebilirsiniz</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {/* SKU Manuel/Otomatik Toggle */}
+                <div className="flex items-center space-x-2 p-3 rounded-lg bg-muted/50">
+                  <Switch
+                    id="manual-sku"
+                    checked={manualSKU}
+                    onCheckedChange={setManualSKU}
+                  />
+                  <Label htmlFor="manual-sku" className="cursor-pointer">
+                    SKU'yu manuel gir
+                  </Label>
+                </div>
+
+                <div className="grid gap-4 md:grid-cols-2">
+                  <div className="space-y-2">
+                    <Label htmlFor="sku">SKU {!manualSKU && "(Otomatik)"}</Label>
+                    {manualSKU ? (
+                      <>
+                        <Input
+                          id="sku"
+                          className="font-mono text-sm"
+                          placeholder="Örn: TUL-500-001"
+                          value={formData.sku}
+                          onChange={(e) => setFormData({ ...formData, sku: e.target.value.toUpperCase() })}
+                        />
+                        <p className="text-xs text-muted-foreground">
+                          Benzersiz bir SKU kodu girin (örn: TUL-500-001)
+                        </p>
+                      </>
+                    ) : (
+                      <>
+                        <div className="flex items-center justify-center h-10 px-3 rounded-md border border-input bg-muted text-sm font-mono text-muted-foreground">
+                          Otomatik oluşturulacak
+                        </div>
+                        <p className="text-xs text-muted-foreground">
+                          SKU kategori ve gramaj bazlı otomatik oluşturulur (örn: TUL-500-001)
+                        </p>
+                      </>
+                    )}
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="barcode">Barkod (Opsiyonel)</Label>
+                    <Input
+                      id="barcode"
+                      className="font-mono text-sm"
+                      placeholder="GTIN/EAN barkod"
+                      value={formData.barcode}
+                      onChange={(e) => setFormData({ ...formData, barcode: e.target.value })}
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Ürün barkodu varsa girebilirsiniz
+                    </p>
                   </div>
                 </div>
               </CardContent>

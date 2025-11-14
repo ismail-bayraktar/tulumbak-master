@@ -193,7 +193,6 @@ export const updateConfiguration = async (req, res) => {
             'testMode',
             'apiUrl',
             'restaurantId',
-            'webhookOnlyMode',
             'retryConfig',
             'circuitBreaker',
             'statusMapping',
@@ -563,7 +562,7 @@ export const getDashboard = async (req, res) => {
         })
         .sort({ createdAt: -1 })
         .limit(10)
-        .select('_id orderNumber courierIntegration.syncStatus courierIntegration.externalOrderId createdAt')
+        .select('_id orderNumber courierIntegration status address createdAt')
         .lean();
 
         // Get DLQ count
@@ -624,8 +623,11 @@ export const getDashboard = async (req, res) => {
                     id: o._id,
                     orderNumber: o.orderNumber,
                     status: o.courierIntegration?.syncStatus,
+                    orderStatus: o.status,
                     externalId: o.courierIntegration?.externalOrderId,
-                    createdAt: o.createdAt
+                    createdAt: o.createdAt,
+                    customerName: `${o.address?.firstName || ''} ${o.address?.lastName || ''}`.trim() || 'Müşteri',
+                    address: `${o.address?.street || ''}, ${o.address?.city || ''}`.trim() || 'Adres bilgisi yok'
                 }))
             }
         });

@@ -306,6 +306,42 @@ const singleProduct = async (req, res) => {
     }
 }
 
+// Get product by SKU
+const getProductBySKU = async (req, res) => {
+    try {
+        const { sku } = req.params;
+        const product = await productModel.findOne({ sku: sku.toUpperCase() }).populate('category', 'name slug active');
+
+        if (!product) {
+            return res.json({success: false, message: `Ürün bulunamadı: ${sku}`});
+        }
+
+        logger.info('Product fetched by SKU', { sku });
+        res.json({success: true, product});
+    } catch (error) {
+        logger.error('Error fetching product by SKU', { error: error.message, stack: error.stack, sku: req.params.sku });
+        res.json({success: false, message: error.message});
+    }
+}
+
+// Get product by Barcode
+const getProductByBarcode = async (req, res) => {
+    try {
+        const { barcode } = req.params;
+        const product = await productModel.findOne({ barcode }).populate('category', 'name slug active');
+
+        if (!product) {
+            return res.json({success: false, message: `Barkod bulunamadı: ${barcode}`});
+        }
+
+        logger.info('Product fetched by barcode', { barcode });
+        res.json({success: true, product});
+    } catch (error) {
+        logger.error('Error fetching product by barcode', { error: error.message, stack: error.stack, barcode: req.params.barcode });
+        res.json({success: false, message: error.message});
+    }
+}
+
 // Soft Delete - Set active: false
 const softDeleteProduct = async (req, res) => {
     try {
@@ -434,6 +470,34 @@ const quickUpdateProduct = async (req, res) => {
     }
 };
 
+// Get price range for filter slider
+const getPriceRange = async (req, res) => {
+    try {
+        const products = await productModel.find({ active: true });
+
+        if (products.length === 0) {
+            return res.json({ success: true, minPrice: 0, maxPrice: 10000 });
+        }
+
+        // Get all prices from basePrice and sizePrices
+        const allPrices = [];
+        products.forEach(product => {
+            allPrices.push(product.basePrice);
+            if (product.sizePrices && product.sizePrices.length > 0) {
+                product.sizePrices.forEach(sp => allPrices.push(sp.price));
+            }
+        });
+
+        const minPrice = Math.floor(Math.min(...allPrices) / 100); // Convert from kuruş to TL
+        const maxPrice = Math.ceil(Math.max(...allPrices) / 100);
+
+        res.json({ success: true, minPrice, maxPrice });
+    } catch (error) {
+        logger.error('Error getting price range', { error: error.message, stack: error.stack });
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
+
 export {
     listProducts,
     addProduct,
@@ -443,5 +507,8 @@ export {
     softDeleteProduct,
     restoreProduct,
     permanentDeleteProduct,
-    quickUpdateProduct
+    quickUpdateProduct,
+    getProductBySKU,
+    getProductByBarcode,
+    getPriceRange
 };

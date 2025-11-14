@@ -25,7 +25,8 @@ const DEFAULT_PRODUCTS = [
         ingredients: "Un, şeker, su, kabartma tozu, nişasta",
         allergens: "Gluten",
         shelfLife: "3 gün",
-        storageInfo: "Oda sıcaklığında muhafaza edilmelidir"
+        storageInfo: "Oda sıcaklığında muhafaza edilmelidir",
+        barcode: "8690123456789"
     },
     {
         name: "Kaymaklı Tulumba",
@@ -45,7 +46,8 @@ const DEFAULT_PRODUCTS = [
         ingredients: "Un, şeker, kaymak, su, kabartma tozu",
         allergens: "Gluten, Süt",
         shelfLife: "2 gün",
-        storageInfo: "Serin yerde muhafaza edilmelidir"
+        storageInfo: "Serin yerde muhafaza edilmelidir",
+        barcode: "8690123456796"
     },
     {
         name: "Tahinli Fıstıklı Tulumba",
@@ -105,7 +107,8 @@ const DEFAULT_PRODUCTS = [
         ingredients: "Un, şeker, Lotus bisküvisi, karamel, su",
         allergens: "Gluten, Süt",
         shelfLife: "3 gün",
-        storageInfo: "Oda sıcaklığında muhafaza edilmelidir"
+        storageInfo: "Oda sıcaklığında muhafaza edilmelidir",
+        barcode: "8690123456802"
     },
 
     // ========== SÜTLÜ TATILAR ==========
@@ -692,13 +695,15 @@ const seedProducts = async () => {
             });
 
             if (existing) {
-                // Update if exists
-                await productModel.findByIdAndUpdate(existing._id, productData);
+                // Update if exists - replace category name with ID
+                const updateData = { ...productData, category: category._id };
+                await productModel.findByIdAndUpdate(existing._id, updateData);
                 updatedCount++;
                 console.log(`✏️  Updated: ${productData.name}`);
             } else {
-                // Create if doesn't exist
-                const product = new productModel(productData);
+                // Create if doesn't exist - replace category name with ID
+                const createData = { ...productData, category: category._id };
+                const product = new productModel(createData);
                 await product.save();
                 addedCount++;
                 console.log(`✅ Added: ${productData.name} (${productData.category})`);

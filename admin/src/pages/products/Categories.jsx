@@ -25,15 +25,6 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog"
-import {
   AlertDialog,
   AlertDialogAction,
   AlertDialogCancel,
@@ -47,6 +38,8 @@ import { useToast } from "@/hooks/use-toast"
 import { Plus, Edit, Trash2, FolderTree, Loader2, Upload, X } from "lucide-react"
 import useCategories from "@/hooks/useCategories"
 import { Textarea } from "@/components/ui/textarea"
+import CategoryEditSheet from "@/components/CategoryEditSheet"
+import CategoryAddSheet from "@/components/CategoryAddSheet"
 
 export default function Categories() {
   const { toast } = useToast()
@@ -61,125 +54,16 @@ export default function Categories() {
     refresh,
   } = useCategories()
 
-  const [dialogOpen, setDialogOpen] = useState(false)
+  const [addSheetOpen, setAddSheetOpen] = useState(false)
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+  const [editSheetOpen, setEditSheetOpen] = useState(false)
   const [editingCategory, setEditingCategory] = useState(null)
   const [categoryToDelete, setCategoryToDelete] = useState(null)
-  const [formData, setFormData] = useState({
-    name: "",
-    description: "",
-    image: null,
-    metaTitle: "",
-    metaDescription: "",
-    keywords: "",
-    active: true
-  })
-  const [imageFile, setImageFile] = useState(null)
-  const [imagePreview, setImagePreview] = useState(null)
   const [submitting, setSubmitting] = useState(false)
-
-  const handleSubmit = async (e) => {
-    e.preventDefault()
-
-    if (!formData.name || formData.name.trim().length < 2) {
-      toast({
-        variant: "destructive",
-        title: "Eksik Bilgi",
-        description: "Kategori adı en az 2 karakter olmalıdır",
-      })
-      return
-    }
-
-    setSubmitting(true)
-
-    try {
-      if (editingCategory) {
-        // Update existing
-        const result = await updateCategory({
-          id: editingCategory._id,
-          ...formData,
-        })
-
-        if (result.success) {
-          toast({
-            title: "Başarılı",
-            description: result.message || "Kategori güncellendi",
-          })
-          setDialogOpen(false)
-          setEditingCategory(null)
-          setFormData({ name: "", description: "", image: null, metaTitle: "", metaDescription: "", keywords: "", active: true })
-          setImageFile(null)
-          setImagePreview(null)
-        } else {
-          toast({
-            variant: "destructive",
-            title: "Hata",
-            description: result.message || "Kategori güncellenemedi",
-          })
-        }
-      } else {
-        // Add new
-        const result = await addCategory(formData)
-
-        if (result.success) {
-          toast({
-            title: "Başarılı",
-            description: "Kategori eklendi",
-          })
-          setDialogOpen(false)
-          setFormData({ name: "", description: "", image: null, metaTitle: "", metaDescription: "", keywords: "", active: true })
-          setImageFile(null)
-          setImagePreview(null)
-        } else {
-          toast({
-            variant: "destructive",
-            title: "Hata",
-            description: result.message || "Kategori eklenemedi",
-          })
-        }
-      }
-    } catch (err) {
-      toast({
-        variant: "destructive",
-        title: "Hata",
-        description: "Beklenmeyen bir hata oluştu",
-      })
-    } finally {
-      setSubmitting(false)
-    }
-  }
 
   const handleEdit = (category) => {
     setEditingCategory(category)
-    setFormData({
-      name: category.name,
-      description: category.description || "",
-      image: category.image || null,
-      metaTitle: category.metaTitle || "",
-      metaDescription: category.metaDescription || "",
-      keywords: category.keywords ? category.keywords.join(", ") : "",
-      active: category.active,
-    })
-    setImagePreview(category.image)
-    setImageFile(null)
-    setDialogOpen(true)
-  }
-
-  const handleImageUpload = (file) => {
-    if (file) {
-      setImageFile(file)
-      const reader = new FileReader()
-      reader.onloadend = () => {
-        setImagePreview(reader.result)
-      }
-      reader.readAsDataURL(file)
-    }
-  }
-
-  const removeImage = () => {
-    setImageFile(null)
-    setImagePreview(null)
-    setFormData({ ...formData, image: null })
+    setEditSheetOpen(true)
   }
 
   const handleDelete = async () => {
@@ -287,155 +171,10 @@ export default function Categories() {
                 {loading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
                 Yenile
               </Button>
-              <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-                <DialogTrigger asChild>
-                  <Button size="sm" onClick={() => {
-                    setEditingCategory(null)
-                    setFormData({ name: "", description: "", image: null, metaTitle: "", metaDescription: "", keywords: "", active: true })
-                    setImageFile(null)
-                    setImagePreview(null)
-                  }}>
-                    <Plus className="h-4 w-4 mr-2" />
-                    Yeni Kategori
-                  </Button>
-                </DialogTrigger>
-                <DialogContent>
-                  <form onSubmit={handleSubmit}>
-                    <DialogHeader>
-                      <DialogTitle>
-                        {editingCategory ? "Kategori Düzenle" : "Yeni Kategori Ekle"}
-                      </DialogTitle>
-                      <DialogDescription>
-                        Kategori bilgilerini girin
-                      </DialogDescription>
-                    </DialogHeader>
-                    <div className="space-y-4 py-4 max-h-[60vh] overflow-y-auto">
-                      <div className="space-y-2">
-                        <Label htmlFor="name">Kategori Adı *</Label>
-                        <Input
-                          id="name"
-                          placeholder="Örn: Tulumbalar"
-                          value={formData.name}
-                          onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                          disabled={submitting}
-                          required
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="description">Açıklama</Label>
-                        <Textarea
-                          id="description"
-                          placeholder="Kategori açıklaması..."
-                          value={formData.description}
-                          onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                          disabled={submitting}
-                          rows={2}
-                        />
-                      </div>
-
-                      {/* Image Upload */}
-                      <div className="space-y-2">
-                        <Label>Kategori Görseli</Label>
-                        {imagePreview ? (
-                          <div className="relative inline-block">
-                            <img
-                              src={imagePreview}
-                              alt="Preview"
-                              className="w-32 h-32 object-cover rounded border"
-                            />
-                            <Button
-                              type="button"
-                              variant="destructive"
-                              size="icon"
-                              className="absolute top-0 right-0"
-                              onClick={removeImage}
-                              disabled={submitting}
-                            >
-                              <X className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        ) : (
-                          <div className="border-2 border-dashed rounded-lg p-4 hover:border-primary transition-colors">
-                            <Input
-                              type="file"
-                              accept="image/*"
-                              onChange={(e) => e.target.files?.[0] && handleImageUpload(e.target.files[0])}
-                              disabled={submitting}
-                              className="hidden"
-                              id="category-image"
-                            />
-                            <label
-                              htmlFor="category-image"
-                              className="flex flex-col items-center gap-2 cursor-pointer"
-                            >
-                              <Upload className="h-8 w-8 text-muted-foreground" />
-                              <span className="text-sm text-muted-foreground">Görsel Yükle</span>
-                            </label>
-                          </div>
-                        )}
-                      </div>
-
-                      {/* SEO Fields */}
-                      <div className="border-t pt-4">
-                        <h4 className="font-medium mb-3">SEO Ayarları</h4>
-                        <div className="space-y-3">
-                          <div className="space-y-2">
-                            <Label htmlFor="metaTitle">Meta Title</Label>
-                            <Input
-                              id="metaTitle"
-                              placeholder="SEO başlığı (max 60 karakter)"
-                              value={formData.metaTitle}
-                              onChange={(e) => setFormData({ ...formData, metaTitle: e.target.value })}
-                              disabled={submitting}
-                              maxLength={60}
-                            />
-                            <p className="text-xs text-muted-foreground">
-                              {formData.metaTitle.length}/60
-                            </p>
-                          </div>
-                          <div className="space-y-2">
-                            <Label htmlFor="metaDescription">Meta Description</Label>
-                            <Textarea
-                              id="metaDescription"
-                              placeholder="SEO açıklaması (max 160 karakter)"
-                              value={formData.metaDescription}
-                              onChange={(e) => setFormData({ ...formData, metaDescription: e.target.value })}
-                              disabled={submitting}
-                              maxLength={160}
-                              rows={2}
-                            />
-                            <p className="text-xs text-muted-foreground">
-                              {formData.metaDescription.length}/160
-                            </p>
-                          </div>
-                          <div className="space-y-2">
-                            <Label htmlFor="keywords">Anahtar Kelimeler</Label>
-                            <Input
-                              id="keywords"
-                              placeholder="kelime1, kelime2, kelime3"
-                              value={formData.keywords}
-                              onChange={(e) => setFormData({ ...formData, keywords: e.target.value })}
-                              disabled={submitting}
-                            />
-                            <p className="text-xs text-muted-foreground">
-                              Virgülle ayırarak girin
-                            </p>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                    <DialogFooter>
-                      <Button type="button" variant="outline" onClick={() => setDialogOpen(false)} disabled={submitting}>
-                        İptal
-                      </Button>
-                      <Button type="submit" disabled={submitting}>
-                        {submitting ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
-                        {editingCategory ? "Güncelle" : "Ekle"}
-                      </Button>
-                    </DialogFooter>
-                  </form>
-                </DialogContent>
-              </Dialog>
+              <Button size="sm" onClick={() => setAddSheetOpen(true)}>
+                <Plus className="h-4 w-4 mr-2" />
+                Yeni Kategori
+              </Button>
             </div>
           </div>
 
@@ -560,6 +299,21 @@ export default function Categories() {
           </Card>
         </div>
       </SidebarInset>
+
+      {/* Category Add Sheet */}
+      <CategoryAddSheet
+        open={addSheetOpen}
+        onOpenChange={setAddSheetOpen}
+        onSuccess={refresh}
+      />
+
+      {/* Category Edit Sheet */}
+      <CategoryEditSheet
+        open={editSheetOpen}
+        onOpenChange={setEditSheetOpen}
+        category={editingCategory}
+        onSuccess={refresh}
+      />
 
       {/* Delete Confirmation Dialog */}
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>

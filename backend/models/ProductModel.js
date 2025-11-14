@@ -30,6 +30,23 @@ const productSchema = new mongoose.Schema({
     shelfLife: {type: String}, // Raf ömrü/tazeleme bilgisi
     storageInfo: {type: String}, // Saklama koşulları
 
+    // Product Identification Fields
+    sku: {
+        type: String,
+        unique: true,
+        uppercase: true,
+        trim: true,
+        sparse: true, // Allow null during creation, will be auto-generated
+        index: true
+    },
+    barcode: {
+        type: String,
+        trim: true,
+        default: null,
+        sparse: true, // Allow null, optional field for GTIN/EAN
+        index: true
+    },
+
     // SEO Fields
     slug: {
         type: String,
@@ -78,10 +95,50 @@ productSchema.index({ basePrice: 1 });
 productSchema.index({ date: -1 });
 productSchema.index({ 'sizePrices.price': 1 });
 productSchema.index({ active: 1, date: -1 }); // For filtering active products
-// Note: slug index is automatically created by unique: true in schema
+// Note: slug, sku, barcode indexes are automatically created by unique: true in schema
 
-// Auto-generate SEO fields before save
-productSchema.pre('save', function(next) {
+// Auto-generate SKU before save
+productSchema.pre('save', async function(next) {
+    // Auto-generate SKU if not provided
+    if (!this.sku && this.isNew) {
+        try {
+            // Get category to extract code
+            const Category = mongoose.model('category');
+            const category = await Category.findById(this.category);
+
+            // Generate category code from first 3 letters (uppercase)
+            const categoryCode = category ? category.name.substring(0, 3).toUpperCase() : 'PRD';
+
+            // Get first size (gramaj) for SKU
+            const size = this.sizes && this.sizes.length > 0 ? this.sizes[0] : '000';
+
+            // Find the last product with similar SKU pattern to get next counter
+            const lastProduct = await mongoose.model('product')
+                .findOne({ sku: new RegExp(`^${categoryCode}-${size}-`) })
+                .sort({ sku: -1 })
+                .select('sku')
+                .lean();
+
+            let counter = 1;
+            if (lastProduct && lastProduct.sku) {
+                // Extract counter from last SKU (format: CAT-SIZE-###)
+                const parts = lastProduct.sku.split('-');
+                if (parts.length === 3) {
+                    counter = parseInt(parts[2]) + 1;
+                }
+            }
+
+            // Generate SKU: CATEGORY-SIZE-COUNTER
+            // Example: TUL-250-001, TUL-500-002
+            this.sku = `${categoryCode}-${size}-${String(counter).padStart(3, '0')}`;
+        } catch (error) {
+            console.error('SKU generation error:', error);
+            // Fallback to simple counter if category fetch fails
+            const count = await mongoose.model('product').countDocuments();
+            this.sku = `PRD-${String(count + 1).padStart(6, '0')}`;
+        }
+    }
+
     // Auto-generate slug from name
     if (this.isModified('name') || !this.slug) {
         // Turkish character replacement
@@ -130,7 +187,10 @@ productSchema.pre('save', function(next) {
     // Auto-generate keywords if not provided or empty
     if ((this.isModified('name') || this.isModified('category')) && (!this.keywords || this.keywords.length === 0)) {
         const nameWords = this.name.toLowerCase().split(' ').filter(w => w.length > 2);
-        const categoryWords = this.category.toLowerCase().split(' ').filter(w => w.length > 2);
+        // Only use category words if category is populated (has name property)
+        const categoryWords = (typeof this.category === 'string')
+            ? this.category.toLowerCase().split(' ').filter(w => w.length > 2)
+            : [];
         const allWords = [...new Set([...nameWords, ...categoryWords])];
         this.keywords = allWords.slice(0, 10);
     }

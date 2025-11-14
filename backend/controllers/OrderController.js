@@ -1,10 +1,12 @@
 import orderModel from "../models/OrderModel.js";
 import userModel from "../models/UserModel.js";
 import deliveryZoneModel from "../models/DeliveryZoneModel.js";
+import branchModel from "../models/BranchModel.js";
 import { reduceStock, checkLowStockAlert } from "../middleware/StockCheck.js";
 import AssignmentService, { assignBranch, suggestBranch } from "../services/AssignmentService.js";
 import settingsModel from "../models/SettingsModel.js";
 import CourierIntegrationService from "../services/CourierIntegrationService.js";
+import eventEmitter from "../utils/eventEmitter.js";
 import logger from "../utils/logger.js";
 
 // Generate unique tracking ID
@@ -97,13 +99,25 @@ const placeOrder = async (req, res) => {
         }
         
         // Find best branch (suggestion or direct assignment)
-        const bestBranch = assignmentEnabled ? await AssignmentService.findBestBranch({ delivery, address }) : null;
+        let bestBranch = assignmentEnabled ? await AssignmentService.findBestBranch({ delivery, address }) : null;
+
+        // FALLBACK: If no branch found, use default branch (TULUMBAK_MAIN)
+        if (!bestBranch) {
+            try {
+                bestBranch = await branchModel.findOne({ code: 'TULUMBAK_MAIN', status: 'active' });
+                if (bestBranch) {
+                    logger.info('Using default branch for new order', { branchCode: 'TULUMBAK_MAIN' });
+                }
+            } catch (error) {
+                logger.warn('Could not find default branch', { error: error.message });
+            }
+        }
 
         // Build assignment object based on mode
         let assignmentObj = {};
         let branchAssignment = {};
-        
-        if (bestBranch && assignmentEnabled) {
+
+        if (bestBranch) {
             if (assignmentMode === 'auto') {
                 branchAssignment = {
                     branchId: bestBranch._id.toString(),
@@ -190,14 +204,26 @@ const placeOrder = async (req, res) => {
             // SMS notification
             if (user.phone && process.env.SMS_ENABLED === 'true') {
                 const { default: smsService } = await import("../services/SmsService.js");
-                await smsService.sendOrderConfirmation(user.phone, { 
-                    ...orderData, 
+                await smsService.sendOrderConfirmation(user.phone, {
+                    ...orderData,
                     orderId: newOrder._id.toString(),
                     trackingLink
                 });
             }
         }
-        
+
+        // Emit order created event for real-time notification to admin panel
+        try {
+            eventEmitter.emit('order:created', newOrder);
+            logger.info('Order created event emitted', { orderId: newOrder._id });
+        } catch (eventError) {
+            logger.error('Error emitting order created event', {
+                error: eventError.message,
+                orderId: newOrder._id
+            });
+            // Don't fail the order creation if event emission fails
+        }
+
         res.json({ success: true, order: newOrder, trackingId, trackingLink });
     } catch (error) {
         logger.error('Error placing order', { error: error.message, stack: error.stack, userId: req.body.userId });
@@ -515,23 +541,42 @@ const prepareOrder = async (req, res) => {
 const sendToCourier = async (req, res) => {
     try {
         const { orderId } = req.body;
-        
+
+        logger.info('🚚 sendToCourier - Request received', { orderId, body: req.body });
+
         if (!orderId) {
+            logger.warn('❌ sendToCourier - Missing order ID');
             return res.json({ success: false, message: 'Order ID is required' });
         }
-        
+
         const order = await orderModel.findById(orderId);
         if (!order) {
+            logger.warn('❌ sendToCourier - Order not found', { orderId });
             return res.json({ success: false, message: 'Order not found' });
         }
-        
+
+        logger.info('📋 sendToCourier - Order details', {
+            orderId,
+            orderNumber: order.orderNumber,
+            status: order.status,
+            branchId: order.branchId,
+            courierStatus: order.courierStatus,
+            hasAddress: !!order.address
+        });
+
         // Validate: must have branch assigned
         if (!order.branchId) {
+            logger.warn('❌ sendToCourier - No branch assigned', { orderId });
             return res.json({ success: false, message: 'Order must have a branch assigned before sending to courier' });
         }
-        
+
         // Validate: status must be 'Hazırlanıyor'
         if (order.status !== 'Hazırlanıyor') {
+            logger.warn('❌ sendToCourier - Invalid status', {
+                orderId,
+                currentStatus: order.status,
+                requiredStatus: 'Hazırlanıyor'
+            });
             return res.json({ success: false, message: `Order must be in 'Hazırlanıyor' status. Current status: ${order.status}` });
         }
         
@@ -581,6 +626,17 @@ const sendToCourier = async (req, res) => {
 
         await order.save();
 
+        // Emit courier assigned event for real-time notification
+        try {
+            eventEmitter.emit('order:courierAssigned', order);
+            logger.info('Courier assigned event emitted', { orderId: order._id });
+        } catch (eventError) {
+            logger.error('Error emitting courier assigned event', {
+                error: eventError.message,
+                orderId: order._id
+            });
+        }
+
         res.json({
             success: true,
             message: 'Order sent to courier',
@@ -624,20 +680,55 @@ const approveBranchAssignment = async (req, res) => {
     }
 };
 
+// Delete order
+const deleteOrder = async (req, res) => {
+    try {
+        const { orderId } = req.body;
+
+        if (!orderId) {
+            return res.status(400).json({ success: false, message: 'Order ID is required' });
+        }
+
+        const order = await orderModel.findById(orderId);
+        if (!order) {
+            return res.status(404).json({ success: false, message: 'Order not found' });
+        }
+
+        // Delete the order
+        await orderModel.findByIdAndDelete(orderId);
+
+        logger.info('Order deleted successfully', { orderId, orderNumber: order._id });
+
+        res.json({
+            success: true,
+            message: 'Sipariş başarıyla silindi',
+            orderId
+        });
+    } catch (error) {
+        logger.error('Error deleting order', {
+            error: error.message,
+            stack: error.stack,
+            orderId: req.body.orderId
+        });
+        res.status(500).json({ success: false, message: 'Sipariş silinirken hata oluştu: ' + error.message });
+    }
+};
+
 export {
-    placeOrder, 
-    placeOrderStripe, 
-    placeOrderRazorpay, 
-    allOrders, 
-    userOrders, 
-    updateStatus, 
-    bankInfo, 
-    getOrderStatus, 
-    getOrderHistory, 
-    getOrderTimeline, 
+    placeOrder,
+    placeOrderStripe,
+    placeOrderRazorpay,
+    allOrders,
+    userOrders,
+    updateStatus,
+    bankInfo,
+    getOrderStatus,
+    getOrderHistory,
+    getOrderTimeline,
     approveBranchAssignment,
     assignBranchToOrder,
     getBranchSuggestion,
     prepareOrder,
-    sendToCourier
+    sendToCourier,
+    deleteOrder
 };

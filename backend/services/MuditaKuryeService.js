@@ -189,15 +189,30 @@ class MuditaKuryeService {
      * Transform Tulumbak order to MuditaKurye format
      */
     transformOrderData(tulumbakOrder) {
+        // Handle multiple address formats
+        // Format 1: address.address (nested field)
+        // Format 2: address.street + address.city (separate fields)
+        let deliveryAddress = tulumbakOrder.address?.address || '';
+
+        // If no address.address, try building from street + city
+        if (!deliveryAddress && tulumbakOrder.address) {
+            const parts = [
+                tulumbakOrder.address.street,
+                tulumbakOrder.address.district,
+                tulumbakOrder.address.city
+            ].filter(Boolean);
+            deliveryAddress = parts.join(', ');
+        }
+
         const transformed = {
             orderId: tulumbakOrder._id.toString(),
             restaurantId: this.config.restaurantId || tulumbakOrder.muditaRestaurantId || process.env.MUDITA_RESTAURANT_ID,
-            customerName: tulumbakOrder.address?.name || 'Müşteri',
+            customerName: tulumbakOrder.address?.name || tulumbakOrder.address?.firstName || tulumbakOrder.address?.lastName || 'Müşteri',
             customerPhone: tulumbakOrder.address?.phone || tulumbakOrder.phone,
             customerEmail: tulumbakOrder.address?.email || null,
-            deliveryAddress: tulumbakOrder.address?.address || '',
-            deliveryLatitude: tulumbakOrder.address?.latitude || null,
-            deliveryLongitude: tulumbakOrder.address?.longitude || null,
+            deliveryAddress: deliveryAddress,
+            deliveryLatitude: tulumbakOrder.address?.latitude || tulumbakOrder.address?.coordinates?.latitude || null,
+            deliveryLongitude: tulumbakOrder.address?.longitude || tulumbakOrder.address?.coordinates?.longitude || null,
 
             // Payment information
             paymentMethod: this.mapPaymentMethod(tulumbakOrder.paymentMethod),

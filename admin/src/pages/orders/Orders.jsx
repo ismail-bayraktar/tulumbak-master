@@ -20,43 +20,63 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { Search, Download, RefreshCw, Calendar, Bell, BellOff } from "lucide-react"
+import { Search, Download, RefreshCw, Calendar, Truck, Wifi, WifiOff } from "lucide-react"
+import { Badge } from "@/components/ui/badge"
 import { useOrders } from "@/pages/dashboard/hooks/useOrders"
 import { usePolling } from "@/pages/dashboard/hooks/usePolling"
+import { useCourierData } from "@/pages/dashboard/hooks/useCourierData"
+import { useRealtimeStats } from "@/pages/dashboard/hooks/useRealtimeStats"
+import { useToast } from "@/hooks/use-toast"
+import { useNotificationSettings } from "@/hooks/useNotificationSettings"
 import { OrdersTable } from "./components/OrdersTable"
-import { OrderDetailModal } from "./components/OrderDetailModal"
-import { requestNotificationPermission } from "@/lib/notifications"
+import { OrderOffcanvas } from "@/components/OrderOffcanvas"
+import { NotificationSettingsModal } from "@/components/NotificationSettingsModal"
 
 export default function Orders() {
   const { orders, loading, fetchOrders, updateOrderStatus } = useOrders()
+  const { courierData, loading: courierLoading, fetchCourierData } = useCourierData()
+  const { toast } = useToast()
+  const { isEnabled: notificationsEnabled } = useNotificationSettings()
   const [selectedOrder, setSelectedOrder] = useState(null)
+  const [offcanvasOpen, setOffcanvasOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState("")
   const [statusFilter, setStatusFilter] = useState("all")
   const [dateFilter, setDateFilter] = useState("all")
   const [refreshing, setRefreshing] = useState(false)
-  const [notificationsEnabled, setNotificationsEnabled] = useState(false)
+  const [notificationSettingsOpen, setNotificationSettingsOpen] = useState(false)
 
-  // Check notification permission on mount
-  useEffect(() => {
-    if ('Notification' in window) {
-      setNotificationsEnabled(Notification.permission === 'granted')
+  // Real-time SSE connection
+  const { connected: realtimeConnected, reconnect: reconnectRealtime } = useRealtimeStats({
+    onNewOrder: () => {
+      fetchOrders(true)
+      fetchCourierData(true)
+    },
+    onOrderStatusChange: () => {
+      fetchOrders(true)
+    },
+    onCourierAssigned: () => {
+      fetchOrders(true)
+      fetchCourierData(true)
     }
-  }, [])
+  })
 
-  // Auto-refresh every 15 seconds
+  // Fallback polling (reduced frequency since we have SSE)
   usePolling(() => {
-    fetchOrders(true)
-  }, 15000)
+    if (!realtimeConnected) {
+      fetchOrders(true)
+      fetchCourierData(true)
+    }
+  }, 60000)
 
   const handleRefresh = async () => {
     setRefreshing(true)
     await fetchOrders()
+    await fetchCourierData()
     setRefreshing(false)
-  }
-
-  const handleEnableNotifications = async () => {
-    const granted = await requestNotificationPermission()
-    setNotificationsEnabled(granted)
+    toast({
+      title: "Yenilendi",
+      description: "Veriler güncellendi",
+    })
   }
 
   const handleExport = () => {
@@ -131,73 +151,92 @@ export default function Orders() {
     <SidebarProvider>
       <AppSidebar />
       <SidebarInset>
-        <header className="flex h-16 shrink-0 items-center gap-2 border-b">
-          <div className="flex items-center gap-2 px-4">
-            <SidebarTrigger className="-ml-1" />
-            <Separator orientation="vertical" className="mr-2 h-4" />
-            <Breadcrumb>
-              <BreadcrumbList>
-                <BreadcrumbItem className="hidden md:block">
-                  <BreadcrumbLink href="/dashboard">Ana Sayfa</BreadcrumbLink>
-                </BreadcrumbItem>
-                <BreadcrumbSeparator className="hidden md:block" />
-                <BreadcrumbItem>
-                  <BreadcrumbPage>Siparişler</BreadcrumbPage>
-                </BreadcrumbItem>
-              </BreadcrumbList>
-            </Breadcrumb>
+        {/* Main Header - Clean and Simple */}
+        <header className="flex h-16 shrink-0 items-center gap-2 border-b transition-[width,height] ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12">
+          <div className="flex items-center justify-between w-full px-4">
+            <div className="flex items-center gap-2">
+              <SidebarTrigger className="-ml-1" />
+              <Separator orientation="vertical" className="mr-2 h-4" />
+              <Breadcrumb>
+                <BreadcrumbList>
+                  <BreadcrumbItem className="hidden md:block">
+                    <BreadcrumbLink href="/dashboard">Tulumbak Admin</BreadcrumbLink>
+                  </BreadcrumbItem>
+                  <BreadcrumbSeparator className="hidden md:block" />
+                  <BreadcrumbItem>
+                    <BreadcrumbPage>Siparişler</BreadcrumbPage>
+                  </BreadcrumbItem>
+                </BreadcrumbList>
+              </Breadcrumb>
+            </div>
+            {/* Mobil-first Yenile Butonu */}
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleRefresh}
+              disabled={refreshing}
+              className="h-8 px-2 sm:px-3"
+            >
+              <RefreshCw className={`h-4 w-4 ${refreshing ? 'animate-spin' : ''} sm:mr-2`} />
+              <span className="hidden sm:inline">Yenile</span>
+            </Button>
           </div>
         </header>
 
-        <div className="flex flex-1 flex-col gap-6 p-6">
-          {/* Page Header */}
-          <div className="flex items-center justify-between">
+        {/* Status Bar - Desktop Only */}
+        <div className="hidden md:flex items-center gap-3 px-4 py-2.5 bg-muted/30 border-b">
+          <div className="flex items-center gap-2 text-xs text-muted-foreground">
+            <span className="font-medium">Sistem Durumu:</span>
+          </div>
+          <Badge
+            variant={courierData?.todaySummary?.totalDeliveries > 0 ? "default" : "secondary"}
+            className="cursor-pointer"
+            title={courierData?.todaySummary?.totalDeliveries > 0
+              ? `Kurye Entegrasyonu Aktif - ${courierData.todaySummary.totalDeliveries} sipariş`
+              : "Kurye entegrasyonu bağlantısı bekleniyor"}
+          >
+            <Truck className="h-3 w-3 mr-1" />
+            {courierData?.todaySummary?.totalDeliveries > 0 ? "Kurye Bağlı" : "Kurye Bekliyor"}
+          </Badge>
+          <Badge
+            variant={notificationsEnabled ? "outline" : "secondary"}
+            className="cursor-pointer hover:bg-accent"
+            onClick={() => setNotificationSettingsOpen(true)}
+            title="Bildirim ayarlarını aç"
+          >
+            {notificationsEnabled ? (
+              <>
+                <Wifi className="h-3 w-3 mr-1" />
+                Bildirim Aktif
+              </>
+            ) : (
+              <>
+                <WifiOff className="h-3 w-3 mr-1" />
+                Bildirim Kapalı
+              </>
+            )}
+          </Badge>
+        </div>
+
+        <div className="flex flex-1 flex-col gap-4 p-4 sm:gap-6 sm:p-6">
+          {/* Page Header - Mobile Responsive */}
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <h1 className="text-3xl font-bold tracking-tight">Siparişler</h1>
-              <p className="text-muted-foreground mt-1">
+              <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Siparişler</h1>
+              <p className="text-muted-foreground text-sm mt-1">
                 Tüm siparişleri görüntüleyin ve yönetin
               </p>
             </div>
-            <div className="flex gap-2">
-              {!notificationsEnabled && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleEnableNotifications}
-                >
-                  <Bell className="h-4 w-4 mr-2" />
-                  Bildirimleri Aç
-                </Button>
-              )}
-              {notificationsEnabled && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  disabled
-                >
-                  <BellOff className="h-4 w-4 mr-2" />
-                  Bildirimler Aktif
-                </Button>
-              )}
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleRefresh}
-                disabled={refreshing}
-              >
-                <RefreshCw className={`h-4 w-4 mr-2 ${refreshing ? "animate-spin" : ""}`} />
-                Yenile
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleExport}
-                disabled={filteredOrders.length === 0}
-              >
-                <Download className="h-4 w-4 mr-2" />
-                Dışa Aktar
-              </Button>
-            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleExport}
+              disabled={filteredOrders.length === 0}
+              className="self-start sm:self-auto"
+            >
+              <Download className="h-4 w-4 mr-2" />
+              Dışa Aktar
+            </Button>
           </div>
 
           {/* Filters */}
@@ -253,18 +292,35 @@ export default function Orders() {
             orders={filteredOrders}
             loading={loading}
             onStatusUpdate={updateOrderStatus}
-            onViewDetails={setSelectedOrder}
+            onViewDetails={(order) => {
+              setSelectedOrder(order)
+              setOffcanvasOpen(true)
+            }}
           />
 
-          {/* Order Detail Modal */}
-          {selectedOrder && (
-            <OrderDetailModal
-              order={selectedOrder}
-              open={!!selectedOrder}
-              onOpenChange={(open) => !open && setSelectedOrder(null)}
-              onStatusUpdate={updateOrderStatus}
-            />
-          )}
+          {/* Order Details Offcanvas */}
+          <OrderOffcanvas
+            order={selectedOrder}
+            open={offcanvasOpen}
+            onOpenChange={(open) => {
+              setOffcanvasOpen(open)
+              if (!open) setSelectedOrder(null)
+            }}
+            onStatusUpdate={async (orderId, newStatus) => {
+              await updateOrderStatus(orderId, newStatus)
+              // Refresh the order in selectedOrder if it's currently open
+              if (selectedOrder?._id === orderId) {
+                const updatedOrder = orders.find(o => o._id === orderId)
+                setSelectedOrder(updatedOrder)
+              }
+            }}
+          />
+
+          {/* Notification Settings Modal */}
+          <NotificationSettingsModal
+            open={notificationSettingsOpen}
+            onOpenChange={setNotificationSettingsOpen}
+          />
         </div>
       </SidebarInset>
     </SidebarProvider>

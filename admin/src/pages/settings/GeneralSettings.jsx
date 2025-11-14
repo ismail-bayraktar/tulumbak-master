@@ -48,6 +48,8 @@ export default function GeneralSettings() {
     contactPhone: "",
     address: "",
     maintenanceMode: false,
+    notificationsEnabled: true,
+    notificationSound: true,
   })
 
   // SEO Settings
@@ -94,6 +96,9 @@ export default function GeneralSettings() {
     paytrMerchantId: "",
     paytrMerchantKey: "",
     paytrMerchantSalt: "",
+    paytrTestMode: "1",
+    paytrOkUrl: "",
+    paytrFailUrl: "",
   })
 
   // Fetch all settings on mount
@@ -231,26 +236,26 @@ export default function GeneralSettings() {
           </div>
 
           <Tabs defaultValue="general" className="space-y-6">
-            <TabsList>
-              <TabsTrigger value="general">
-                <Settings className="w-4 h-4 mr-2" />
-                Genel
+            <TabsList className="grid w-full grid-cols-2 h-auto md:grid-cols-5">
+              <TabsTrigger value="general" className="flex items-center justify-center gap-2">
+                <Settings className="w-4 h-4" />
+                <span>Genel</span>
               </TabsTrigger>
-              <TabsTrigger value="seo">
-                <Globe className="w-4 h-4 mr-2" />
-                SEO
+              <TabsTrigger value="seo" className="flex items-center justify-center gap-2">
+                <Globe className="w-4 h-4" />
+                <span>SEO</span>
               </TabsTrigger>
-              <TabsTrigger value="currency">
-                <DollarSign className="w-4 h-4 mr-2" />
-                Para Birimi
+              <TabsTrigger value="currency" className="flex items-center justify-center gap-2">
+                <DollarSign className="w-4 h-4" />
+                <span>Para Birimi</span>
               </TabsTrigger>
-              <TabsTrigger value="social">
-                <Share2 className="w-4 h-4 mr-2" />
-                Sosyal Medya
+              <TabsTrigger value="social" className="flex items-center justify-center gap-2">
+                <Share2 className="w-4 h-4" />
+                <span>Sosyal Medya</span>
               </TabsTrigger>
-              <TabsTrigger value="payment">
-                <CreditCard className="w-4 h-4 mr-2" />
-                Ödeme
+              <TabsTrigger value="payment" className="flex items-center justify-center gap-2">
+                <CreditCard className="w-4 h-4" />
+                <span>Ödeme</span>
               </TabsTrigger>
             </TabsList>
 
@@ -342,6 +347,40 @@ export default function GeneralSettings() {
                       }
                     />
                   </div>
+
+                  <div className="flex items-center justify-between p-4 border rounded-lg bg-orange-50 border-orange-200">
+                    <div className="space-y-0.5">
+                      <Label>Sipariş Bildirimleri</Label>
+                      <p className="text-sm text-muted-foreground">
+                        Yeni sipariş geldiğinde gerçek zamanlı bildirim alın
+                      </p>
+                    </div>
+                    <Switch
+                      checked={generalSettings.notificationsEnabled}
+                      onCheckedChange={(checked) => {
+                        setGeneralSettings({ ...generalSettings, notificationsEnabled: checked })
+                        localStorage.setItem('notificationsEnabled', checked.toString())
+                      }}
+                    />
+                  </div>
+
+                  {generalSettings.notificationsEnabled && (
+                    <div className="flex items-center justify-between p-4 border rounded-lg">
+                      <div className="space-y-0.5">
+                        <Label>Bildirim Sesi</Label>
+                        <p className="text-sm text-muted-foreground">
+                          Bildirimler için sesli uyarı çal
+                        </p>
+                      </div>
+                      <Switch
+                        checked={generalSettings.notificationSound}
+                        onCheckedChange={(checked) => {
+                          setGeneralSettings({ ...generalSettings, notificationSound: checked })
+                          localStorage.setItem('notificationSound', checked.toString())
+                        }}
+                      />
+                    </div>
+                  )}
 
                   <div className="flex justify-end">
                     <Button
@@ -775,8 +814,14 @@ export default function GeneralSettings() {
 
                     {paymentSettings.paytrEnabled && (
                       <div className="space-y-4">
+                        <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+                          <p className="text-sm text-yellow-800">
+                            <strong>PayTR Güvenlik Bilgileri:</strong> Merchant key ve salt bilgilerinizi güvenli saklayın. Bu bilgiler ödeme işlemleriniz için kritik öneme sahiptir.
+                          </p>
+                        </div>
+
                         <div className="space-y-2">
-                          <Label htmlFor="paytrMerchantId">PayTR Merchant ID</Label>
+                          <Label htmlFor="paytrMerchantId">PayTR Merchant ID *</Label>
                           <Input
                             id="paytrMerchantId"
                             value={paymentSettings.paytrMerchantId}
@@ -785,9 +830,12 @@ export default function GeneralSettings() {
                             }
                             placeholder="123456"
                           />
+                          <p className="text-xs text-muted-foreground">
+                            PayTR hesabınızdan alacağınız merchant ID
+                          </p>
                         </div>
                         <div className="space-y-2">
-                          <Label htmlFor="paytrMerchantKey">PayTR Merchant Key</Label>
+                          <Label htmlFor="paytrMerchantKey">PayTR Merchant Key *</Label>
                           <Input
                             id="paytrMerchantKey"
                             type="password"
@@ -795,11 +843,14 @@ export default function GeneralSettings() {
                             onChange={(e) =>
                               setPaymentSettings({ ...paymentSettings, paytrMerchantKey: e.target.value })
                             }
-                            placeholder="xxxxxx"
+                            placeholder="xxxxxxxxxxxxxx"
                           />
+                          <p className="text-xs text-muted-foreground">
+                            Merchant key bilgisi (Güvenli saklanır)
+                          </p>
                         </div>
                         <div className="space-y-2">
-                          <Label htmlFor="paytrMerchantSalt">PayTR Merchant Salt</Label>
+                          <Label htmlFor="paytrMerchantSalt">PayTR Merchant Salt *</Label>
                           <Input
                             id="paytrMerchantSalt"
                             type="password"
@@ -807,8 +858,65 @@ export default function GeneralSettings() {
                             onChange={(e) =>
                               setPaymentSettings({ ...paymentSettings, paytrMerchantSalt: e.target.value })
                             }
-                            placeholder="xxxxxx"
+                            placeholder="xxxxxxxxxxxxxx"
                           />
+                          <p className="text-xs text-muted-foreground">
+                            Merchant salt bilgisi (Güvenli saklanır)
+                          </p>
+                        </div>
+
+                        <div className="space-y-2">
+                          <div className="flex items-center justify-between p-4 border rounded-lg bg-muted/50">
+                            <div className="space-y-0.5">
+                              <Label>Test Modu</Label>
+                              <p className="text-sm text-muted-foreground">
+                                Test modunda gerçek ödeme alınmaz (0: Canlı, 1: Test)
+                              </p>
+                            </div>
+                            <Switch
+                              checked={paymentSettings.paytrTestMode === '1'}
+                              onCheckedChange={(checked) =>
+                                setPaymentSettings({ ...paymentSettings, paytrTestMode: checked ? '1' : '0' })
+                              }
+                            />
+                          </div>
+                        </div>
+
+                        <div className="grid grid-cols-1 gap-4">
+                          <div className="space-y-2">
+                            <Label htmlFor="paytrOkUrl">Başarılı Ödeme URL</Label>
+                            <Input
+                              id="paytrOkUrl"
+                              value={paymentSettings.paytrOkUrl}
+                              onChange={(e) =>
+                                setPaymentSettings({ ...paymentSettings, paytrOkUrl: e.target.value })
+                              }
+                              placeholder="https://www.siteniz.com/success"
+                            />
+                            <p className="text-xs text-muted-foreground">
+                              Ödeme başarılı olduğunda kullanıcının yönlendirileceği sayfa
+                            </p>
+                          </div>
+                          <div className="space-y-2">
+                            <Label htmlFor="paytrFailUrl">Başarısız Ödeme URL</Label>
+                            <Input
+                              id="paytrFailUrl"
+                              value={paymentSettings.paytrFailUrl}
+                              onChange={(e) =>
+                                setPaymentSettings({ ...paymentSettings, paytrFailUrl: e.target.value })
+                              }
+                              placeholder="https://www.siteniz.com/failed"
+                            />
+                            <p className="text-xs text-muted-foreground">
+                              Ödeme başarısız olduğunda kullanıcının yönlendirileceği sayfa
+                            </p>
+                          </div>
+                        </div>
+
+                        <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                          <p className="text-sm text-blue-800">
+                            <strong>Callback URL:</strong> PayTR'de ayarlayın → <code className="bg-blue-100 px-1 rounded">https://api.siteniz.com/api/paytr/callback</code>
+                          </p>
                         </div>
                       </div>
                     )}

@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 import { useProductStore } from '@/stores/productStore';
 import { useCartStore } from '@/stores/cartStore';
 import { useAuthStore } from '@/stores/authStore';
@@ -16,6 +17,7 @@ import toast from 'react-hot-toast';
 import { DeliveryInfo, OrderItem } from '@/types/order';
 import apiClient from '@/lib/api/client';
 import { API_ENDPOINTS } from '@/lib/api/endpoints';
+import { getProductImageUrl } from '@/lib/utils/image';
 
 export default function CheckoutPage() {
   const router = useRouter();
@@ -25,6 +27,8 @@ export default function CheckoutPage() {
 
   const [loading, setLoading] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState<string>('cash_on_delivery');
+  const [paytrToken, setPaytrToken] = useState<string | null>(null);
+  const [showPaytrIframe, setShowPaytrIframe] = useState(false);
   const [deliveryInfo, setDeliveryInfo] = useState<DeliveryInfo>({
     firstName: '',
     lastName: '',
@@ -104,6 +108,12 @@ export default function CheckoutPage() {
       return;
     }
 
+    // If credit card payment, get PayTR token first
+    if (paymentMethod === 'credit_card') {
+      await handlePaytrPayment();
+      return;
+    }
+
     setLoading(true);
 
     // 🔍 DEV MODE: Detailed logging
@@ -134,12 +144,12 @@ export default function CheckoutPage() {
         const price = sizePrice ? sizePrice.price : product.basePrice;
 
         return {
-          productId: product._id,
+          id: product._id,  // Backend expects 'id' field for stock validation
           name: product.name,
           size: size,
           quantity: quantity,
           price: price,
-          image: product.image[0] || '',
+          image: getProductImageUrl(product.image, 0, ''),
         };
       });
 
@@ -203,6 +213,53 @@ export default function CheckoutPage() {
     }
   };
 
+  const handlePaytrPayment = async () => {
+    setLoading(true);
+
+    try {
+      const orderItems: OrderItem[] = cartItems.map(({ product, size, quantity }) => {
+        const sizePrice = product.sizePrices.find(
+          (sp) => String(sp.size) === size
+        );
+        const price = sizePrice ? sizePrice.price : product.basePrice;
+
+        return {
+          id: product._id,
+          name: product.name,
+          size: size,
+          quantity: quantity,
+          price: price,
+          image: getProductImageUrl(product.image, 0, ''),
+        };
+      });
+
+      const paymentData = {
+        items: orderItems,
+        amount: total,
+        address: deliveryInfo,
+        user_name: `${deliveryInfo.firstName} ${deliveryInfo.lastName}`,
+        user_email: deliveryInfo.email,
+        user_phone: deliveryInfo.phone,
+        user_address: `${deliveryInfo.street}, ${deliveryInfo.city}/${deliveryInfo.state} ${deliveryInfo.zipcode}`,
+      };
+
+      const response = await apiClient.post('/api/paytr/get-token', paymentData);
+
+      if (response.data.success && response.data.token) {
+        setPaytrToken(response.data.token);
+        setShowPaytrIframe(true);
+        toast.success('Ödeme sayfasına yönlendiriliyorsunuz...');
+      } else {
+        toast.error(response.data.message || 'Ödeme başlatılamadı');
+      }
+    } catch (error: any) {
+      console.error('PayTR Payment Error:', error);
+      toast.error(error.response?.data?.message || 'Ödeme işlemi başlatılamadı');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   if (cartItems.length === 0) {
     return (
       <div className="container mx-auto px-4 py-16">
@@ -214,6 +271,38 @@ export default function CheckoutPage() {
           <Button onClick={() => router.push('/collection')}>
             Ürünlere Git
           </Button>
+        </div>
+      </div>
+    );
+  }
+
+  // PayTR iframe Modal
+  if (showPaytrIframe && paytrToken) {
+    return (
+      <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+        <div className="bg-white rounded-lg w-full max-w-4xl max-h-[90vh] overflow-hidden">
+          <div className="p-4 border-b flex justify-between items-center">
+            <h2 className="text-xl font-bold">Güvenli Ödeme</h2>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => {
+                setShowPaytrIframe(false);
+                setPaytrToken(null);
+              }}
+            >
+              İptal
+            </Button>
+          </div>
+          <div className="p-4 h-[calc(90vh-80px)] overflow-auto">
+            <iframe
+              src={`https://www.paytr.com/odeme/guvenli/${paytrToken}`}
+              id="paytriframe"
+              frameBorder="0"
+              scrolling="yes"
+              className="w-full h-full min-h-[600px]"
+            />
+          </div>
         </div>
       </div>
     );
@@ -430,9 +519,18 @@ export default function CheckoutPage() {
                 return (
                   <div
                     key={`${product._id}-${size}`}
-                    className="flex justify-between text-sm"
+                    className="flex gap-3 text-sm"
                   >
-                    <div>
+                    <div className="relative w-16 h-16 bg-neutral-100 rounded-lg flex-shrink-0 overflow-hidden">
+                      <Image
+                        src={getProductImageUrl(product.image, 0)}
+                        alt={product.name}
+                        fill
+                        className="object-cover"
+                        sizes="64px"
+                      />
+                    </div>
+                    <div className="flex-1">
                       <div className="font-medium">{product.name}</div>
                       <div className="text-neutral-600">
                         {size}g × {quantity}

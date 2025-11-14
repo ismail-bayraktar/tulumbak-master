@@ -33,6 +33,7 @@ import deadLetterQueueRouter from "./routes/DeadLetterQueueRoute.js";
 import cacheManagementRouter from "./routes/CacheManagementRoute.js";
 import outgoingWebhookRouter from "./routes/OutgoingWebhookRoute.js";
 import emailRouter from "./routes/emailRoute.js";
+import notificationRouter from "./routes/NotificationRoute.js";
 import RateLimiterService from "./services/RateLimiter.js";
 import OutgoingWebhookService from "./services/OutgoingWebhookService.js";
 import logger, { logInfo } from "./utils/logger.js";
@@ -172,8 +173,20 @@ app.use(cors({
     allowedHeaders: ['Content-Type', 'Authorization', 'token', 'X-Requested-With']
 }));
 
-// Rate limiting
-app.use('/api', RateLimiterService.createGeneralLimiter(100, 15 * 60 * 1000)); // 100 requests per 15 minutes
+// Rate limiting - with SSE exemption
+// Create rate limiter instance at initialization
+const generalLimiter = RateLimiterService.createGeneralLimiter(100, 15 * 60 * 1000); // 100 requests per 15 minutes
+
+app.use('/api', (req, res, next) => {
+  // Exempt SSE endpoints from rate limiting (long-running connections)
+  if (req.path.startsWith('/notifications/stream')) {
+    logger.debug('SSE endpoint exempted from rate limiting', { path: req.path });
+    return next();
+  }
+
+  // Apply rate limiting to all other endpoints
+  return generalLimiter(req, res, next);
+});
 
 // Maintenance mode middleware - blocks all requests when enabled (except admin routes)
 app.use(maintenanceMode);
@@ -240,6 +253,7 @@ app.use('/api/webhook', webhookRouter);
 app.use('/api/admin/courier-integration', courierIntegrationRouter);
 app.use('/api/dlq', deadLetterQueueRouter);
 app.use('/api/email', emailRouter);
+app.use('/api/notifications', notificationRouter);
 
 // Swagger Documentation
 swaggerDocs(app);

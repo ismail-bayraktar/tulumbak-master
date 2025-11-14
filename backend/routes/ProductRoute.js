@@ -8,7 +8,10 @@ import {
     softDeleteProduct,
     restoreProduct,
     permanentDeleteProduct,
-    quickUpdateProduct
+    quickUpdateProduct,
+    getProductBySKU,
+    getProductByBarcode,
+    getPriceRange
 } from '../controllers/ProductController.js';
 import adminAuth from "../middleware/AdminAuth.js";
 import uploadImagesWithMulter from "../config/uploadImagesWithMulter.js";
@@ -106,5 +109,66 @@ productRouter.get('/list', cache(300), listProducts);
  *         description: Product details
  */
 productRouter.post('/single', cache(300), singleProduct);
+
+/**
+ * @swagger
+ * /api/product/sku/{sku}:
+ *   get:
+ *     summary: Get product by SKU
+ *     tags: [Products]
+ *     parameters:
+ *       - in: path
+ *         name: sku
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Product SKU (e.g., TUL-250-001)
+ *     responses:
+ *       200:
+ *         description: Product details
+ */
+productRouter.get('/sku/:sku', cache(300), getProductBySKU);
+
+/**
+ * @swagger
+ * /api/product/barcode/{barcode}:
+ *   get:
+ *     summary: Get product by barcode
+ *     tags: [Products]
+ *     parameters:
+ *       - in: path
+ *         name: barcode
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Product barcode/GTIN
+ *     responses:
+ *       200:
+ *         description: Product details
+ */
+productRouter.get('/barcode/:barcode', cache(300), getProductByBarcode);
+
+/**
+ * @swagger
+ * /api/product/price-range:
+ *   get:
+ *     summary: Get min and max product prices for filter slider
+ *     tags: [Products]
+ *     responses:
+ *       200:
+ *         description: Price range
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 minPrice:
+ *                   type: number
+ *                 maxPrice:
+ *                   type: number
+ */
+productRouter.get('/price-range', cache(300), getPriceRange);
 
 export default productRouter;

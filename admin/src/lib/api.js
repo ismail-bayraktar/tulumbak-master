@@ -73,6 +73,10 @@ export const orderAPI = {
   // Prepare order
   prepareOrder: (orderId) =>
     api.post('/api/order/prepare', { orderId }),
+
+  // Delete order
+  deleteOrder: (orderId) =>
+    api.post('/api/order/delete', { orderId }),
 }
 
 // Courier Integration API calls

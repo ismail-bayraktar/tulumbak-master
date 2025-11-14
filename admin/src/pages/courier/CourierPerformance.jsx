@@ -43,7 +43,14 @@ import {
   RefreshCw,
   Calendar,
   TruckIcon,
+  Truck,
+  Wifi,
+  WifiOff,
 } from "lucide-react"
+import { NotificationSettingsModal } from "@/components/NotificationSettingsModal"
+import { useCourierData } from "@/pages/dashboard/hooks/useCourierData"
+import { useRealtimeStats } from "@/pages/dashboard/hooks/useRealtimeStats"
+import { useNotificationSettings } from "@/hooks/useNotificationSettings"
 
 export default function CourierPerformance() {
   const { toast } = useToast()
@@ -51,6 +58,21 @@ export default function CourierPerformance() {
   const [stats, setStats] = useState(null)
   const [timeRange, setTimeRange] = useState("today") // today, week, month
   const [refreshing, setRefreshing] = useState(false)
+  const [notificationSettingsOpen, setNotificationSettingsOpen] = useState(false)
+  const { courierData, loading: courierLoading, fetchCourierData } = useCourierData()
+  const { isEnabled: notificationsEnabled } = useNotificationSettings()
+
+  // Real-time SSE connection
+  const { connected: realtimeConnected, reconnect: reconnectRealtime } = useRealtimeStats({
+    onNewOrder: () => {
+      fetchCourierData(true)
+      fetchStats(true)
+    },
+    onCourierAssigned: () => {
+      fetchCourierData(true)
+      fetchStats(true)
+    }
+  })
 
   useEffect(() => {
     fetchStats()
@@ -61,7 +83,24 @@ export default function CourierPerformance() {
       if (!silent) setLoading(true)
       const response = await courierAPI.getStats()
       if (response.data.success) {
-        setStats(response.data.data)
+        // Transform backend statistics to match frontend format
+        const backendStats = response.data.statistics
+
+        // Use real data from backend
+        const transformedStats = {
+          totalDeliveries: backendStats.platforms?.muditakurye?.orders || 0,
+          successfulDeliveries: backendStats.platforms?.muditakurye?.synced || 0,
+          failedDeliveries: backendStats.platforms?.muditakurye?.failed || 0,
+          pendingDeliveries: (backendStats.platforms?.muditakurye?.orders || 0) -
+                            (backendStats.platforms?.muditakurye?.synced || 0) -
+                            (backendStats.platforms?.muditakurye?.failed || 0),
+          averageDeliveryTime: "Hesaplanıyor", // TODO: Calculate from order data
+          onTimeDeliveryRate: backendStats.platforms?.muditakurye?.successRate?.toFixed(1) || 0,
+          todayDeliveries: 0, // TODO: Filter by today's date
+          recentDeliveries: [] // TODO: Fetch recent delivery history
+        }
+
+        setStats(transformedStats)
       }
     } catch (error) {
       toast({
@@ -84,61 +123,19 @@ export default function CourierPerformance() {
     })
   }
 
-  // Mock data for demonstration - will be replaced with real API data
-  const mockStats = {
-    totalDeliveries: 1247,
-    successfulDeliveries: 1189,
-    failedDeliveries: 23,
-    pendingDeliveries: 35,
-    averageDeliveryTime: "42 dakika",
-    onTimeDeliveryRate: 95.2,
-    todayDeliveries: 47,
-    recentDeliveries: [
-      {
-        id: "DEL-2024-001",
-        orderId: "ORD-789",
-        status: "delivered",
-        courier: "MuditaKurye",
-        deliveryTime: "38 dk",
-        timestamp: "2024-01-15 14:30",
-      },
-      {
-        id: "DEL-2024-002",
-        orderId: "ORD-790",
-        status: "in_transit",
-        courier: "MuditaKurye",
-        deliveryTime: "Devam ediyor",
-        timestamp: "2024-01-15 15:15",
-      },
-      {
-        id: "DEL-2024-003",
-        orderId: "ORD-791",
-        status: "failed",
-        courier: "MuditaKurye",
-        deliveryTime: "-",
-        timestamp: "2024-01-15 13:45",
-        failureReason: "Müşteriye ulaşılamadı",
-      },
-      {
-        id: "DEL-2024-004",
-        orderId: "ORD-792",
-        status: "delivered",
-        courier: "MuditaKurye",
-        deliveryTime: "45 dk",
-        timestamp: "2024-01-15 12:20",
-      },
-      {
-        id: "DEL-2024-005",
-        orderId: "ORD-793",
-        status: "pending",
-        courier: "MuditaKurye",
-        deliveryTime: "Bekliyor",
-        timestamp: "2024-01-15 15:30",
-      },
-    ],
+  // Default empty stats when loading
+  const defaultStats = {
+    totalDeliveries: 0,
+    successfulDeliveries: 0,
+    failedDeliveries: 0,
+    pendingDeliveries: 0,
+    averageDeliveryTime: "-",
+    onTimeDeliveryRate: 0,
+    todayDeliveries: 0,
+    recentDeliveries: [],
   }
 
-  const displayStats = stats || mockStats
+  const displayStats = stats || defaultStats
 
   const getStatusBadge = (status) => {
     const statusMap = {
@@ -199,6 +196,41 @@ export default function CourierPerformance() {
             </Breadcrumb>
           </div>
         </header>
+
+        {/* Status Bar - Desktop Only */}
+        <div className="hidden md:flex items-center gap-3 px-4 py-2.5 bg-muted/30 border-b">
+          <div className="flex items-center gap-2 text-xs text-muted-foreground">
+            <span className="font-medium">Sistem Durumu:</span>
+          </div>
+          <Badge
+            variant={courierData?.todaySummary?.totalDeliveries > 0 ? "default" : "secondary"}
+            className="cursor-pointer"
+            title={courierData?.todaySummary?.totalDeliveries > 0
+              ? `Kurye Entegrasyonu Aktif - ${courierData.todaySummary.totalDeliveries} sipariş`
+              : "Kurye entegrasyonu bağlantısı bekleniyor"}
+          >
+            <Truck className="h-3 w-3 mr-1" />
+            {courierData?.todaySummary?.totalDeliveries > 0 ? "Kurye Bağlı" : "Kurye Bekliyor"}
+          </Badge>
+          <Badge
+            variant={notificationsEnabled ? "outline" : "secondary"}
+            className="cursor-pointer hover:bg-accent"
+            onClick={() => setNotificationSettingsOpen(true)}
+            title="Bildirim ayarlarını aç"
+          >
+            {notificationsEnabled ? (
+              <>
+                <Wifi className="h-3 w-3 mr-1" />
+                Bildirim Aktif
+              </>
+            ) : (
+              <>
+                <WifiOff className="h-3 w-3 mr-1" />
+                Bildirim Kapalı
+              </>
+            )}
+          </Badge>
+        </div>
 
         <div className="flex flex-1 flex-col gap-6 p-6">
           {/* Header */}
@@ -386,13 +418,18 @@ export default function CourierPerformance() {
           <Card className="bg-blue-50 border-blue-200">
             <CardContent className="pt-6">
               <p className="text-sm text-blue-900">
-                <strong>Not:</strong> İstatistikler gerçek zamanlı olarak güncellenmektedir.
-                Daha detaylı analiz için zaman aralığını değiştirebilirsiniz. Backend entegrasyonu
-                tamamlandığında tüm metrikler otomatik olarak hesaplanacaktır.
+                <strong>Not:</strong> İstatistikler gerçek sipariş verilerinizden otomatik hesaplanmaktadır.
+                Daha detaylı analiz için zaman aralığını değiştirebilirsiniz.
               </p>
             </CardContent>
           </Card>
         </div>
+
+        {/* Notification Settings Modal */}
+        <NotificationSettingsModal
+          open={notificationSettingsOpen}
+          onOpenChange={setNotificationSettingsOpen}
+        />
       </SidebarInset>
     </SidebarProvider>
   )
