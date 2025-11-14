@@ -1,5 +1,6 @@
 import productModel from "../models/ProductModel.js";
 import Media from "../models/MediaModel.js";
+import { validationResult } from "express-validator";
 import logger from "../utils/logger.js";
 
 
@@ -9,16 +10,25 @@ const parseSizes = (sizes) => {
     return [sizes];
 }
 
+const parsePersonCounts = (personCounts) => {
+    if (!personCounts) return [];
+    if (Array.isArray(personCounts)) return personCounts;
+    if (typeof personCounts === 'string') return personCounts.split(',').map(p => p.trim());
+    return [];
+};
+
 const addProduct = async (req, res) => {
     try {
+        if (req.user.role !== 'admin') {
+            return res.status(403).json({ success: false, message: 'Forbidden' });
+        }
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+            return res.status(400).json({ success: false, errors: errors.array() });
+        }
+
         const { name, description, basePrice, category, subCategory, sizes, personCounts, bestseller, stock, allergens, ingredients, shelfLife, storageInfo, weights, freshType, packaging, giftWrap, labels } = req.body;
         
-        const parsePersonCounts = (personCounts) => {
-            if (!personCounts) return [];
-            if (Array.isArray(personCounts)) return personCounts;
-            if (typeof personCounts === 'string') return personCounts.split(',').map(p => p.trim());
-            return [];
-        };
         const image1 = req.files.image1 && req.files.image1[0];
         const image2 = req.files.image2 && req.files.image2[0];
         const image3 = req.files.image3 && req.files.image3[0];
@@ -144,14 +154,15 @@ const addProduct = async (req, res) => {
 
     const updateProduct = async (req, res) => {
     try {
-        const { id, name, description, basePrice, category, subCategory, sizes, personCounts, bestseller, stock, allergens, ingredients, shelfLife, storageInfo, weights, freshType, packaging, giftWrap, labels } = req.body;
+        if (req.user.role !== 'admin') {
+            return res.status(403).json({ success: false, message: 'Forbidden' });
+        }
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+            return res.status(400).json({ success: false, errors: errors.array() });
+        }
 
-        const parsePersonCounts = (personCounts) => {
-            if (!personCounts) return [];
-            if (Array.isArray(personCounts)) return personCounts;
-            if (typeof personCounts === 'string') return personCounts.split(',').map(p => p.trim());
-            return [];
-        };
+        const { id, name, description, basePrice, category, subCategory, sizes, personCounts, bestseller, stock, allergens, ingredients, shelfLife, storageInfo, weights, freshType, packaging, giftWrap, labels } = req.body;
 
         if (!id) {
             return res.status(400).json({ success: false, message: "Product id is required" });
@@ -278,6 +289,9 @@ const listProducts = async (req, res) => {
 // Remove product
 const removeProduct = async (req, res) => {
     try {
+        if (req.user.role !== 'admin') {
+            return res.status(403).json({ success: false, message: 'Forbidden' });
+        }
         const { id } = req.body;
         await productModel.findByIdAndDelete(id);
         logger.info('Product removed successfully', { productId: id });

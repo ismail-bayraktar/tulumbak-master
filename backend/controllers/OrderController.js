@@ -43,9 +43,16 @@ const addStatusHistory = async (orderId, status, location = '', note = '', updat
     }
 };
 
+import { validationResult } from "express-validator";
+
 // placing orders using cod method
 const placeOrder = async (req, res) => {
     try {
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+            return res.status(400).json({ success: false, errors: errors.array() });
+        }
+
         const { userId, items, amount, address, paymentMethod, delivery, codFee, giftNote } = req.body;
         
         // Validate delivery zone if provided
@@ -218,6 +225,9 @@ const placeOrderRazorpay = async (req, res) => {
 // all order data for admin panel
 const allOrders = async (req, res) => {
     try {
+        if (req.user.role !== 'admin') {
+            return res.status(403).json({ success: false, message: 'Forbidden' });
+        }
         const orders = await orderModel.find({});
         res.json({success: true, orders});
     } catch (error) {
@@ -229,11 +239,11 @@ const allOrders = async (req, res) => {
 // user order data for frontend (my orders page)
 const userOrders = async (req, res) => {
     try {
-        const { userId } = req.body;
+        const userId = req.user.id;
         const orders = await orderModel.find({userId});
         res.json({success: true, orders});
     } catch (error) {
-        logger.error('Error fetching user orders', { error: error.message, stack: error.stack, userId: req.body.userId });
+        logger.error('Error fetching user orders', { error: error.message, stack: error.stack, userId: req.user.id });
         res.status(500).json({success: false, message: error.message});
     }
 }
@@ -241,6 +251,9 @@ const userOrders = async (req, res) => {
 // update order status from admin panel
 const updateStatus = async (req, res) => {
     try {
+        if (req.user.role !== 'admin') {
+            return res.status(403).json({ success: false, message: 'Forbidden' });
+        }
         const { orderId, status } = req.body;
         
         // Get order before update

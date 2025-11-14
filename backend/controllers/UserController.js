@@ -15,7 +15,7 @@ const loginUser = async (req, res,) => {
 
         const user = await userModel.findOne({email});
         if(!user) {
-            return res.json({success: false, message: "Mail does not exist"});
+            return res.json({success: false, message: "Invalid credentials"});
         }
 
         const isMatch = await bcrypt.compare(password, user.password);
@@ -46,8 +46,8 @@ const registerUser = async (req, res) => {
         if (!validator.isEmail(email)) {
             return res.json({success: false, message: 'Please enter a valid email'});
         }
-        if (password.length < 8) {
-            return res.json({success: false, message: 'Please enter strong password'});
+        if (password.length < 8 || !/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/.test(password)) {
+            return res.json({success: false, message: 'Password must be at least 8 characters long and include at least one uppercase letter, one lowercase letter, and one number.'});
         }
 
         // Hashing user password!
@@ -101,7 +101,7 @@ const adminLogin = async (req, res) => {
                 role: admin.role 
             },
             process.env.JWT_SECRET,
-            { expiresIn: '7d' }
+            { expiresIn: '1h' }
         );
 
         logger.info('Admin login successful', { email });

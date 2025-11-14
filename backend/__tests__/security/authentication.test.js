@@ -5,12 +5,9 @@
 
 import { describe, it, expect, beforeEach } from '@jest/globals';
 import jwt from 'jsonwebtoken';
+import bcrypt from 'bcrypt';
 
 describe('Authentication Security', () => {
-  beforeEach(() => {
-    process.env.JWT_SECRET = 'test-secret';
-  });
-
   describe('Token Security', () => {
     it('should generate tokens with expiration', () => {
       const token = jwt.sign(
@@ -66,7 +63,6 @@ describe('Authentication Security', () => {
 
   describe('Password Security', () => {
     it('should hash passwords with bcrypt', async () => {
-      const bcrypt = require('bcrypt');
       const password = 'test-password';
       const hashed = await bcrypt.hash(password, 10);
 
@@ -78,7 +74,6 @@ describe('Authentication Security', () => {
     });
 
     it('should not store plain text passwords', async () => {
-      const bcrypt = require('bcrypt');
       const password = 'test-password';
       const hashed = await bcrypt.hash(password, 10);
 
@@ -86,7 +81,6 @@ describe('Authentication Security', () => {
     });
 
     it('should use appropriate bcrypt salt rounds', async () => {
-      const bcrypt = require('bcrypt');
       const password = 'test-password';
       const hashed = await bcrypt.hash(password, 10);
 

@@ -14,18 +14,6 @@ process.env.MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/
 // Global test timeout
 jest.setTimeout(30000);
 
-// Mock logger to avoid file system operations during tests
-jest.mock('../utils/logger.js', () => ({
-  default: {
-    info: jest.fn(),
-    error: jest.fn(),
-    warn: jest.fn(),
-    debug: jest.fn()
-  },
-  logInfo: jest.fn(),
-  logError: jest.fn()
-}));
-
 // Mock Sentry
 jest.mock('../utils/sentry.js', () => ({
   initSentry: jest.fn(),

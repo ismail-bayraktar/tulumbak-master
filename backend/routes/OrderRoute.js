@@ -19,6 +19,7 @@ import {
 import adminAuth from "../middleware/AdminAuth.js";
 import authUser from "../middleware/Auth.js";
 import {updatePayTrOrderItemsAndAddress} from "../controllers/PayTrController.js";
+import { body } from "express-validator";
 import RateLimiterService from "../services/RateLimiter.js";
 import { checkStockAvailability } from "../middleware/StockCheck.js";
 
@@ -34,7 +35,17 @@ orderRouter.post("/send-to-courier", adminAuth, sendToCourier);
 orderRouter.get("/:id/branch-suggestion", adminAuth, getBranchSuggestion);
 
 // payment features with stock check and rate limiting
-orderRouter.post("/place", authUser, checkStockAvailability, RateLimiterService.createOrderLimiter(), placeOrder);
+orderRouter.post("/place",
+    authUser,
+    [
+        body('items').isArray({ min: 1 }).withMessage('Items must be a non-empty array'),
+        body('amount').isFloat({ gt: 0 }).withMessage('Amount must be a positive number'),
+        body('address').isObject().withMessage('Address must be an object'),
+    ],
+    checkStockAvailability,
+    RateLimiterService.createOrderLimiter(),
+    placeOrder
+);
 orderRouter.post("/stripe", authUser, checkStockAvailability, RateLimiterService.createOrderLimiter(), placeOrderStripe);
 orderRouter.post("/razorpay", authUser, checkStockAvailability, RateLimiterService.createOrderLimiter(), placeOrderRazorpay);
 
